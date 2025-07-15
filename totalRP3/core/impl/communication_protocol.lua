@@ -68,7 +68,7 @@ end
 function onAddonMessageReceived(...)
 	local prefix, packet , distributionType, sender = ...;
 	if prefix == wowCom_prefix then
-		if not sender or not sender:find('-') then
+		if not sender or sender == "" then
 			Log.log("Malformed senderID: " .. tostring(sender), Log.level.WARNING);
 			return;
 		end
@@ -235,7 +235,7 @@ end
 function Comm.sendObject(prefix, object, target, priority)
 	assert(PREFIX_REGISTRATION[prefix] ~= nil, "Unregistered prefix: "..prefix);
 	if not isIDIgnored(target) then
-		if not target:match("[^%-]+%-[^%-]+") then
+		if not target or target == "" then
 			Log.log("Trying to send data to bad formed target: " .. target, Log.level.WARNING);
 			return; -- Avoid display "The player "Pouic-" doesn't seemed to be online".
 		end
