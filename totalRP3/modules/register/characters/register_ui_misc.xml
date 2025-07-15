@@ -245,30 +245,26 @@
 	</Frame>
 
 	<Frame name="TRP3_AtFirstGlanceEditor" inherits="TRP3_HoveredFrame" parent="UIParent" hidden="true">
-		<Size x="300" y="200"/>
+		<Size x="300" y="240"/>
 		<Layers>
 			<Layer level="OVERLAY">
 				<FontString name="$parentTitle" text="[GLANCE_EDITOR]" inherits="GameFontNormal" justifyH="LEFT">
 					<Size x="0" y="10"/>
 					<Anchors>
-						<Anchor point="TOPLEFT" x="30" y="-10"/>
-						<Anchor point="TOPRIGHT" x="-30" y="-10"/>
+						<Anchor point="TOPLEFT" x="20" y="-10"/>
+						<Anchor point="TOPRIGHT" x="-50" y="-10"/>
 					</Anchors>
 					<Color b="0.95" r="0.95" g="0.95"/>
 				</FontString>
 			</Layer>
 		</Layers>
 		<Frames>
-			<CheckButton name="$parentActive" inherits="TRP3_CheckBox" checked="true">
-				<Anchors>
-					<Anchor point="RIGHT" x="0" y="0" relativeTo="$parentTitle" relativePoint="LEFT"/>
-				</Anchors>
-			</CheckButton>
+
 			<EditBox name="$parentName" inherits="TRP3_TitledHelpEditBox">
-				<Size x="120" y="18"/>
+				<Size x="100" y="18"/>
 				<Anchors>
-					<Anchor point="TOPLEFT" x="-10" y="-10" relativeTo="$parentTitle" relativePoint="BOTTOMLEFT"/>
-					<Anchor point="RIGHT" x="-25" y="0"/>
+					<Anchor point="TOPLEFT" x="0" y="-30" relativeTo="$parentTitle" relativePoint="BOTTOMLEFT"/>
+					<Anchor point="RIGHT" x="-40" y="0"/>
 				</Anchors>
 			</EditBox>
 			<Button name="$parentIcon" inherits="TRP3_IconButton">
@@ -276,6 +272,11 @@
 					<Anchor point="LEFT" x="24" y="-15"/>
 				</Anchors>
 			</Button>
+			<CheckButton name="$parentActive" inherits="TRP3_CheckBox" >
+				<Anchors>
+					<Anchor point="LEFT" x="6" y="-1" relativeTo="$parentName" relativePoint="RIGHT"/>
+				</Anchors>
+			</CheckButton>
 			<Button name="$parentApply" inherits="TRP3_CommonButton">
 				<Size x="100" y="20"/>
 				<Anchors>

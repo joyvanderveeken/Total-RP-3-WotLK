@@ -30,7 +30,7 @@
 			</Layer>
 		</Layers>
 		<NormalTexture name="$parentImage" file="Interface\TargetingFrame\UI-TargetingFrame-Seal.blp" />
-		<HighlightTexture file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight" alphaMode="ADD" />
+		<!-- <HighlightTexture file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight" alphaMode="ADD" /> -->
 		<Scripts>
 			<OnEnter>
 				TRP3_RefreshTooltipForFrame(self);
