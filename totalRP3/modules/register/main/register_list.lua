@@ -499,7 +499,6 @@ local function changeMode(tabWidget, value)
 		TRP3_RegisterListCharactFilter:Show();
 	end
 	refreshList();
-	Events.fireEvent(Events.NAVIGATION_TUTORIAL_REFRESH, REGISTER_LIST_PAGEID);
 end
 
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -523,54 +522,7 @@ local function createTabBar()
 	tabGroup:SelectTab(1);
 end
 
-local TUTORIAL_CHARACTER;
-
-local function createTutorialStructure()
-	TUTORIAL_CHARACTER = {
-		{
-			box = {
-				x = 20, y = -45, anchor = "TOPLEFT", width = 28, height = 340
-			},
-			button = {
-				x = 0, y = 0, anchor = "CENTER",
-				text = loc("REG_LIST_CHAR_TUTO_ACTIONS"),
-				arrow = "LEFT"
-			}
-		},
-		{
-			box = {
-				x = 50, y = -45, anchor = "TOPLEFT", width = 470, height = 340
-			},
-			button = {
-				x = 0, y = 0, anchor = "CENTER",
-				text = loc("REG_LIST_CHAR_TUTO_LIST"),
-				textWidth = 400,
-				arrow = "DOWN"
-			}
-		},
-		{
-			box = {
-				x = 20, y = -387, anchor = "TOPLEFT", width = 500, height = 60
-			},
-			button = {
-				x = 0, y = 10, anchor = "CENTER",
-				text = loc("REG_LIST_CHAR_TUTO_FILTER"),
-				textWidth = 400,
-				arrow = "UP"
-			}
-		}
-	}
-end
-
-local function tutorialProvider()
-	if currentMode == MODE_CHARACTER then
-		return TUTORIAL_CHARACTER;
-	end
-end
-
 TRP3_API.events.listenToEvent(TRP3_API.events.WORKFLOW_ON_LOAD, function()
-	createTutorialStructure();
-
 	-- To try, but I'm afraid for performances ...
 	Events.listenToEvent(Events.REGISTER_DATA_UPDATED, function(unitID, profileID, dataType)
 		if getCurrentPageID() == REGISTER_LIST_PAGEID and unitID ~= Globals.player_id and (not dataType or dataType == "characteristics") then
@@ -603,7 +555,6 @@ TRP3_API.events.listenToEvent(TRP3_API.events.WORKFLOW_ON_LOAD, function()
 		frameName = "TRP3_RegisterList",
 		frame = TRP3_RegisterList,
 		onPagePostShow = function() tabGroup:SelectTab(1); end,
-		tutorialProvider = tutorialProvider,
 	});
 
 	TRP3_RegisterListSlider:SetValue(0);

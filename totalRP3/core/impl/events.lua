@@ -28,9 +28,6 @@ TRP3_API.events = {
 	WORKFLOW_ON_LOADED = "WORKFLOW_ON_LOADED",
 	WORKFLOW_ON_FINISH = "WORKFLOW_ON_FINISH",
 	
-	-- Navigation
-	NAVIGATION_TUTORIAL_REFRESH = "NAVIGATION_TUTORIAL_REFRESH",
-	
 	--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 	-- Data changed
 	--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

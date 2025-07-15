@@ -319,27 +319,13 @@ TRP3_API.module.init = function()
 		end
 	end
 	
-	local TUTORIAL_STRUCTURE = {
-		{
-			box = {
-				allPoints = TRP3_ConfigurationModuleFrame,
-			},
-			button = {
-				x = 0, y = 10, anchor = "BOTTOM",
-				text = loc("CO_MODULES_TUTO"),
-				textWidth = 425,
-				arrow = "UP"
-			}
-		},
-	}
-	
 	registerPage({
 		id = "main_config_module",
 		templateName = "TRP3_ConfigurationModule",
 		frameName = "TRP3_ConfigurationModule",
 		frame = TRP3_ConfigurationModule,
-		tutorialProvider = function() return TUTORIAL_STRUCTURE; end,
 	});
+	
 	registerMenu({
 		id = "main_99_config_mod",
 		text = loc("CO_MODULES"),

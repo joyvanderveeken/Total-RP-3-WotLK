@@ -116,21 +116,6 @@ local Button_Cape, Button_Helmet, Button_Status, Button_RPStatus;
 local SendChatMessage, UnitIsDND, UnitIsAFK = SendChatMessage, UnitIsDND, UnitIsAFK;
 
 TRP3_API.dashboard.init = function()
-
-	local TUTORIAL_STRUCTURE = {
-		{
-			box = {
-				allPoints = TRP3_DashboardStatus
-			},
-			button = {
-				x = -50, y = 0, anchor = "RIGHT",
-				text = loc("DB_TUTO_1"):format(TRP3_API.globals.player_id),
-				textWidth = 425,
-				arrow = "UP"
-			}
-		},
-	}
-
 	registerMenu({
 		id = "main_00_dashboard",
 		align = "CENTER",
@@ -142,7 +127,6 @@ TRP3_API.dashboard.init = function()
 		id = DASHBOARD_PAGE_ID,
 		frame = TRP3_Dashboard,
 		onPagePostShow = onShow,
-		tutorialProvider = function() return TUTORIAL_STRUCTURE; end
 	});
 
 	setupFieldSet(TRP3_DashboardStatus, loc("DB_STATUS"), 150);
