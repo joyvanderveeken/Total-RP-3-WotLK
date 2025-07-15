@@ -557,7 +557,6 @@ local function show(targetType, targetID, targetMode)
 				if (targetMode == TYPE_CHARACTER and isIDIgnored(targetID)) then
 					ui_CharacterTT:SetOwner(GameTooltip, "ANCHOR_TOPRIGHT");
 				else
-					-- sse a more reliable anchoring approach that doesn't depend on GameTooltip
 					ui_CharacterTT:SetOwner(UIParent, "ANCHOR_CURSOR");
 				end
 

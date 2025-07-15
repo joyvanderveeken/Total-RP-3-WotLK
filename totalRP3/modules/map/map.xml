@@ -19,11 +19,24 @@
 		limitations under the License.
 	-->
 
-	<Button name="TRP3_WorldMapButton" parent="WorldMapScrollFrame" inherits="TRP3_IconButton" frameStrata="HIGH" toplevel="true">
+<Button name="TRP3_WorldMapButton" parent="WorldMapButton" inherits="TRP3_IconButton" frameStrata="HIGH" toplevel="true" hidden="true">
+		<Size x="40" y="40"/>
 		<Anchors>
 			<Anchor point="BOTTOMLEFT" x="10" y="10"/>
 		</Anchors>
 		<Scripts>
+			<OnLoad>
+				self:RegisterEvent("WORLD_MAP_UPDATE");
+			</OnLoad>
+			<OnEvent>
+				if event == "WORLD_MAP_UPDATE" then
+					if WorldMapFrame:IsShown() then
+						self:Show();
+					else
+						self:Hide();
+					end
+				end
+			</OnEvent>
 			<OnEnter>
 				WorldMapPOIFrame.allowBlobTooltip = false;
 				WorldMapTooltip:Hide();
