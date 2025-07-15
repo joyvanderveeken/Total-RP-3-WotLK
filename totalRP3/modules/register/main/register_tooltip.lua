@@ -48,17 +48,17 @@ local EMPTY = Globals.empty;
 local unitIDToInfo = Utils.str.unitIDToInfo;
 
 -- ICONS
-local AFK_ICON = "|TInterface\\FriendsFrame\\StatusIcon-Away:15:15|t";
-local DND_ICON = "|TInterface\\FriendsFrame\\StatusIcon-DnD:15:15|t";
-local OOC_ICON = "|TInterface\\COMMON\\Indicator-Red:15:15|t";
-local ALLIANCE_ICON = "|TInterface\\GROUPFRAME\\UI-Group-PVP-Alliance:20:20|t";
-local HORDE_ICON = "|TInterface\\GROUPFRAME\\UI-Group-PVP-Horde:20:20|t";
-local PVP_ICON = "|TInterface\\GossipFrame\\BattleMasterGossipIcon:15:15|t";
-local BEGINNER_ICON = "|TInterface\\TARGETINGFRAME\\UI-TargetingFrame-Seal:20:20|t";
-local VOLUNTEER_ICON = "|TInterface\\TARGETINGFRAME\\PortraitQuestBadge:15:15|t";
-local BANNED_ICON = "|TInterface\\EncounterJournal\\UI-EJ-HeroicTextIcon:15:15|t";
-local GLANCE_ICON = "|TInterface\\MINIMAP\\TRACKING\\None:18:18|t";
-local NEW_ABOUT_ICON = "|TInterface\\Buttons\\UI-GuildButton-PublicNote-Up:18:18|t";
+local AFK_ICON = "|TInterface\\FriendsFrame\\StatusIcon-Away:25:25|t";
+local DND_ICON = "|TInterface\\FriendsFrame\\StatusIcon-DnD:25:25|t";
+local OOC_ICON = "|TInterface\\RaidFrame\\ReadyCheck-NotReady:25:25|t";
+local ALLIANCE_ICON = "|TInterface\\GROUPFRAME\\UI-Group-PVP-Alliance:25:25|t";
+local HORDE_ICON = "|TInterface\\GROUPFRAME\\UI-Group-PVP-Horde:25:25|t";
+local PVP_ICON = "|TInterface\\GossipFrame\\BattleMasterGossipIcon:25:25|t";
+local BEGINNER_ICON = "|TInterface\\TARGETINGFRAME\\UI-TargetingFrame-Seal:25:25|t";
+local VOLUNTEER_ICON = "|TInterface\\TARGETINGFRAME\\PortraitQuestBadge:25:25|t";
+local BANNED_ICON = "|TInterface\\EncounterJournal\\UI-EJ-HeroicTextIcon:25:25|t";
+local GLANCE_ICON = "|TInterface\\MINIMAP\\TRACKING\\None:25:25|t";
+local NEW_ABOUT_ICON = "|TInterface\\Buttons\\UI-GuildButton-PublicNote-Up:25:25|t";
 local PEEK_ICON_SIZE = 20;
 
 -- Config keys
