@@ -211,7 +211,7 @@ local function showTemplate2(dataTab)
 				-- header shadow background
 				frame.headerShadow = frame:CreateTexture(frameName .. "_HeaderShadow", "ARTWORK");
 				frame.headerShadow:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\headershadow");
-				frame.headerShadow:SetSize(500, 64);
+				frame.headerShadow:SetSize(500, 68);
 				frame.headerShadow:SetPoint("CENTER", frame, "CENTER", 0, 0);
 				frame.headerShadow:SetAlpha(0.4);
 				
