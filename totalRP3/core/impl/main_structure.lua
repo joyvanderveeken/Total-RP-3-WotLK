@@ -47,9 +47,9 @@ local selectedMenuId;
 -- Placeholder for menu ui button
 local uiMenuWidgets = {};
 -- Determine the original top margin from where the first button is placed
-local marginTop = -5;
+local marginTop = -16;
 -- Menu button height, determine the vertical gap between each button
-local buttonHeight = 25;
+local buttonHeight = 38;
 
 local function onMenuClick(menu)
 	assert(menu.id, "Menu button does not have a attached menu id.");
@@ -122,7 +122,7 @@ local function rebuildMenu()
 			local close = _G[uiButton:GetName().."Close"];
 			close:Hide();
 			if menuStructure.isChildOf then
-				uiButton:SetPoint("LEFT", 30, y);
+				uiButton:SetPoint("LEFT", 10, y);
 				uiButton:SetPoint("RIGHT", -15, y);
 				label:SetTextColor(1, 1, 1);
 				label:SetJustifyH(menuStructure.align or "RIGHT");
@@ -137,13 +137,6 @@ local function rebuildMenu()
 				label:SetJustifyH(menuStructure.align or "LEFT");
 			end
 			label:SetText(menuStructure.text);
-			
-			local icon = _G[uiButton:GetName().."Icon"];
-			icon:Hide();
-			if menuStructure.icon then
-				icon:Show();
-				icon:SetTexture(menuStructure.icon);
-			end
 			
 			latestID = id;
 			uiButton:Show();

@@ -1,6 +1,5 @@
-<Ui xmlns="http://www.blizzard.com/wow/ui/"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	xsi:schemaLocation="http://www.blizzard.com/wow/ui/">
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+https://raw.githubusercontent.com/Meorawr/wow-ui-schema/main/UI.xsd">
 	
 <!--
 	Total RP 3
@@ -20,7 +19,7 @@
 -->	
 
 	<!-- Animated editbox -->
-	<EditBox name="TRP3_DashboardAnimatedEditbox" inherits="TRP3_TitledHelpEditBox" virtual="true">
+	<EditBox name="TRP3_DashboardAnimatedEditbox" inherits="TRP3_TitledHelpEditBox"  virtual="true">
 		<Size x="0" y="18"/>
 		<Scripts>
 			<OnEnterPressed>
@@ -57,40 +56,48 @@
 	</EditBox>
 	
 	<!-- Dashboard -->
-	<Frame name="TRP3_Dashboard" hidden="true">
-	    <Backdrop edgeFile="Interface\GLUES\COMMON\TextPanel-Border" tile="true">
-			<EdgeSize><AbsValue val="24"/></EdgeSize>
-			<BackgroundInsets left="5" right="5" top="5" bottom="5"/>
-			<TileSize val="425"/>
+	<Frame name="TRP3_Dashboard" hidden="true" clipChildren="true">
+		<Backdrop edgeFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-edge" tile="true" clipChildren="true">
+			<EdgeSize>
+				<AbsValue val="8"/>
+			</EdgeSize>
+			<TileSize>
+				<AbsValue val="440"/>
+			</TileSize>
+			<BackgroundInsets>
+				<AbsInset left="3" right="3" top="20" bottom="3"/>
+			</BackgroundInsets>
 		</Backdrop>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture file="Interface\AchievementFrame\UI-Achievement-StatsBackground">
-					<Size x="526" y="0"/>
+				<Texture file="Interface\AddOns\totalRP3\Resources\UI\ui-frame-parchment-background">
+				<!-- <Texture file="Interface\AddOns\totalRP3\Resources\UI\ui-frame-settings-background"> -->
+				<!-- <Texture file="Interface\AddOns\totalRP3\Resources\UI\ui-frame-profiles-background"> -->
 					<Anchors>
-						<Anchor point="TOPRIGHT" x="0" y="0"/>
-						<Anchor point="BOTTOMRIGHT" x="0" y="0"/>
+						<Anchor point="TOPLEFT" x="3" y="-3"/>
+						<Anchor point="BOTTOMRIGHT" x="-3" y="3"/>
 					</Anchors>
-					<TexCoords left="0.07" right="1" top="0" bottom="0.98"/>
+					<TexCoords top="0.015" right="0.77" bottom="0.77109375"/>
 				</Texture>
 			</Layer>
 			<Layer level="ARTWORK">
 				<Texture name="TRP3_DashboardLogo" file="Interface\AddOns\totalRP3\resources\trp3logo">
 			        <Size x="256" y="128"/>
 					<Anchors>
-						<Anchor point="TOP" x="0" y="0"/>
+						<Anchor point="TOP" x="0" y="-10"/>
 					</Anchors>
 				</Texture>
 			</Layer>
 		</Layers>
+
 		<Frames>
 
 			<!-- Status -->
 			<Frame name="TRP3_DashboardStatus" inherits="TRP3_FieldSetFrame">
 				<Size x="0" y="90"/>
 				<Anchors>
-					<Anchor point="RIGHT" x="-10" y="0"/>
-					<Anchor point="LEFT" x="10" y="0"/>
+					<Anchor point="RIGHT" x="-15" y="0"/>
+					<Anchor point="LEFT" x="15" y="0"/>
 					<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="TRP3_DashboardLogo" x="0" y="0"/>
 				</Anchors>
 				<Layers>
@@ -128,29 +135,29 @@
 
 			<!-- What's new / About / Thanks -->
 			<Frame name="TRP3_DashboardBottom">
-				<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background"
-						  edgeFile="Interface\GLUES\COMMON\TextPanel-Border" tile="true">
+				<Backdrop bgFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-fill"
+						  edgeFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-edge" tile="true">
 					<EdgeSize>
-						<AbsValue val="32"/>
+						<AbsValue val="8"/>
 					</EdgeSize>
 					<TileSize>
 						<AbsValue val="380"/>
 					</TileSize>
 					<BackgroundInsets>
-						<AbsInset left="5" right="5" top="5" bottom="5"/>
+						<AbsInset left="5" right="3" top="3" bottom="3"/>
 					</BackgroundInsets>
 				</Backdrop>
 				<Anchors>
-					<Anchor point="RIGHT" x="-10" y="0"/>
-					<Anchor point="LEFT" x="10" y="0"/>
+					<Anchor point="RIGHT" x="-15" y="0"/>
+					<Anchor point="LEFT" x="15" y="0"/>
 					<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="TRP3_DashboardStatus" x="0" y="-35"/>
-					<Anchor point="BOTTOM" x="0" y="10"/>
+					<Anchor point="BOTTOM" x="0" y="14"/>
 				</Anchors>
 				<Frames>
 					<ScrollFrame name="TRP3_DashboardBottomScroll" inherits="UIPanelScrollFrameTemplate">
 						<Anchors>
 							<Anchor point="TOPLEFT" x="10" y="-11"/>
-							<Anchor point="BOTTOMRIGHT" x="-20" y="9"/>
+							<Anchor point="BOTTOMRIGHT" x="-30" y="9"/>
 						</Anchors>
 						<ScrollChild>
 							<Frame>

@@ -68,7 +68,7 @@
 		</Anchors>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture alphaMode="ADD" file="Interface\UNITPOWERBARALT\PandarenTrainingLarge_Circular_Fill" alpha="0.5">
+				<Texture alphaMode="ADD" file="Interface\AddOns\totalRP3\resources\UI\PandarenTrainingLarge_Circular_Fill" alpha="0.5">
 					<Size x="256" y="256"/>
 					<Anchors>
 						<Anchor point="CENTER" x="0" y="0"/>
@@ -76,7 +76,7 @@
 				</Texture>
 			</Layer>
 			<Layer level="BORDER">
-				<Texture alphaMode="ADD" file="Interface\UNITPOWERBARALT\PandarenTrainingLarge_Circular_Flash" alpha="0.5">
+				<Texture alphaMode="ADD" file="Interface\AddOns\totalRP3\resources\UI\PandarenTrainingLarge_Circular_Flash" alpha="0.5">
 					<Size x="300" y="300"/>
 					<Anchors>
 						<Anchor point="CENTER" x="0" y="0"/>
@@ -90,7 +90,7 @@
 						</AnimationGroup>
 					</Animations>
 				</Texture>
-				<Texture alphaMode="ADD" file="Interface\UNITPOWERBARALT\PandarenTrainingLarge_Circular_Flash" alpha="0.5">
+				<Texture alphaMode="ADD" file="Interface\AddOns\totalRP3\resources\UI\PandarenTrainingLarge_Circular_Flash" alpha="0.5">
 					<Size x="400" y="400"/>
 					<Anchors>
 						<Anchor point="CENTER" x="0" y="0"/>
@@ -106,7 +106,7 @@
 				</Texture>
 			</Layer>
 			<Layer level="ARTWORK">
-				<Texture alphaMode="BLEND" file="Interface\Timer\Challenges-Logo">
+				<Texture alphaMode="BLEND" file="Interface\AddOns\totalRP3\resources\UI\Challenges-Logo">
 					<Size x="130" y="130"/>
 					<Anchors>
 						<Anchor point="CENTER" x="0" y="0"/>
@@ -117,9 +117,7 @@
 						</AnimationGroup>
 					</Animations>
 				</Texture>
-				<!--F:\Games\World of Warcraft\BlizzardInterfaceArt\Interface\UNITPOWERBARALT\PandarenTrainingLarge_Circular_Frame.blp-->
-				<!--Mechanical_Circular_Frame-->
-				<Texture alphaMode="BLEND" file="Interface\UNITPOWERBARALT\PandarenTrainingLarge_Circular_Frame">
+				<Texture alphaMode="BLEND" file="Interface\AddOns\totalRP3\resources\UI\PandarenTrainingLarge_Circular_Frame">
 					<Size x="256" y="256"/>
 					<Anchors>
 						<Anchor point="CENTER" x="0" y="0"/>
@@ -129,13 +127,6 @@
 							<Rotation name="$parentRotation" degrees="-360"/>
 						</AnimationGroup>
 					</Animations>
-				</Texture>
-			</Layer>
-			<Layer level="ARTWORK" textureSubLevel="2">
-				<Texture parentKey="Banner" atlas="GarrMission_RewardsBanner-Desaturate" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="CENTER" relativePoint="TOP" x="0" y="10"/>
-					</Anchors>
 				</Texture>
 			</Layer>
 			<Layer level="OVERLAY">

@@ -53,9 +53,9 @@ local ignoreID = TRP3_API.register.ignoreID;
 local buildZoneText = Utils.str.buildZoneText;
 local setupEditBoxesNavigation = TRP3_API.ui.frame.setupEditBoxesNavigation;
 
-local PSYCHO_PRESETS_UNKOWN;
-local PSYCHO_PRESETS;
-local PSYCHO_PRESETS_DROPDOWN;
+local TRAIT_PRESETS_UNKNOWN;
+local TRAIT_PRESETS;
+local TRAIT_PRESETS_DROPDOWN;
 
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 -- SCHEMA
@@ -139,16 +139,77 @@ end
 
 TRP3_API.register.getPlayerCompleteName = getPlayerCompleteName;
 
-local function refreshPsycho(psychoLine, value)
-	local dotIndex;
-	for dotIndex = 1, 6 do
-		_G[psychoLine:GetName() .. "JaugeDot" .. dotIndex]:Show();
-		if dotIndex <= value then
-			_G[psychoLine:GetName() .. "JaugeDot" .. dotIndex]:SetTexCoord(0.375, 0.5, 0, 0.125);
-		else
-			_G[psychoLine:GetName() .. "JaugeDot" .. dotIndex]:SetTexCoord(0, 0.125, 0, 0.125);
-		end
+local function refreshPsycho(psychoLine, value, traitID)
+	-- Convert value from 1-6 range to 0-20 range for StatusBar
+	local normalizedValue = math.max(0, math.min(20, (value or 10)));
+	
+	-- Get dynamic colors for this trait
+	local colors = nil;
+	if traitID and traitID > 0 and traitID <= #TRAIT_PRESETS then
+		colors = TRAIT_PRESETS[traitID];
+	elseif traitID and traitID == 0 then
+		colors = TRAIT_PRESETS_UNKNOWN;
 	end
+	
+	-- Get the container frame (which holds the backdrop and StatusBars)
+	local container = _G[psychoLine:GetName() .. "Bar"];
+	if container then
+		-- Get the actual StatusBars from within the container
+		-- The StatusBar is named $parentStatusBar, so it becomes [ContainerName]StatusBar
+		local statusBar = container.StatusBar or _G[container:GetName() .. "StatusBar"];
+		local backgroundBar = container.BackgroundBar or _G[container:GetName() .. "BackgroundBar"];
+		
+		-- Handle the background bar (always full, use right trait color or default red)
+		if backgroundBar then
+			backgroundBar:SetValue(20); -- Always full
+			if colors then
+				backgroundBar:SetStatusBarColor(colors.rightColor[1], colors.rightColor[2], colors.rightColor[3], 0.8);
+			else
+				backgroundBar:SetStatusBarColor(0.8, 0.2, 0.2, 0.8); -- Default red
+			end
+			backgroundBar:SetAlpha(1);
+			backgroundBar:Show();
+		end
+		
+		-- Handle the main status bar (use left trait color or default green, varies with value)
+		if statusBar then
+			statusBar:SetValue(normalizedValue);
+			
+			-- Set color based on trait or default green
+			if colors then
+				statusBar:SetStatusBarColor(colors.leftColor[1], colors.leftColor[2], colors.leftColor[3], 0.8);
+			else
+				statusBar:SetStatusBarColor(0.2, 0.8, 0.2, 0.8); -- Default green
+			end
+			
+			-- Make sure everything is visible
+			statusBar:SetAlpha(1);
+			statusBar:Show();
+			
+			-- Debug: Print current value to see if it's working
+			-- print("StatusBar value set to:", normalizedValue, "for", psychoLine:GetName());
+		else
+			-- Debug: Print if StatusBar not found
+			-- print("StatusBar not found for", container:GetName());
+		end
+		
+		-- Position the thumb based on value (thumb is on the container)
+		if container.Thumb then
+			-- Calculate position within the StatusBar area (accounting for container insets)
+			local containerWidth = container:GetWidth();
+			local inset = 10; -- Account for StatusBar insets (5 pixels on each side)
+			local barWidth = containerWidth - inset;
+			local fillPercent = normalizedValue / 20;
+			local thumbPos = (fillPercent - 0.5) * barWidth;
+			container.Thumb:ClearAllPoints();
+			container.Thumb:SetPoint("CENTER", container, "CENTER", thumbPos, 0);
+		end
+		
+		-- Make sure container is visible
+		container:SetAlpha(1);
+		container:Show();
+	end
+	
 	psychoLine.VA = value;
 end
 
@@ -222,7 +283,7 @@ local function setConsultDisplay(context)
 		previous = frame;
 	end
 
-	-- Misc chars
+	-- extended character info
 	if type(dataTab.MI) == "table" and #dataTab.MI > 0 then
 		hasMisc = true;
 		TRP3_RegisterCharact_CharactPanel_MiscTitle:Show();
@@ -237,16 +298,33 @@ local function setConsultDisplay(context)
 				tinsert(miscCharFrame, frame);
 			end
 			frame:ClearAllPoints();
-			frame:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, 7);
+			frame:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, -5);
 			frame:SetPoint("RIGHT", 0, 0);
-			_G[frame:GetName() .. "FieldName"]:SetText(strconcat(Utils.str.icon(miscStructure.IC, 18), " ", miscStructure.NA or ""));
+			
+			-- Create SimpleIcon frame if it doesn't exist
+			if not frame.miscIcon then
+				frame.miscIcon = CreateFrame("Frame", frame:GetName() .. "MiscIcon", frame, "TRP3_SimpleIcon");
+				frame.miscIcon:SetSize(32, 32);
+				frame.miscIcon:SetPoint("LEFT", frame, "LEFT", 0, 0);
+			end
+			
+			-- Update the icon texture
+			local iconTexture = _G[frame.miscIcon:GetName() .. "Icon"];
+			if iconTexture then
+				iconTexture:SetTexture("Interface\\ICONS\\" .. (miscStructure.IC or Globals.icons.default));
+			end
+			frame.miscIcon:Show();
+			
+			-- Update text labels with proper spacing for the icon
+			_G[frame:GetName() .. "FieldName"]:SetText(miscStructure.NA or "");
+			_G[frame:GetName() .. "FieldName"]:SetPoint("LEFT", frame.miscIcon, "RIGHT", 5, 0);
 			_G[frame:GetName() .. "FieldValue"]:SetText(miscStructure.VA or "");
 			frame:Show();
 			previous = frame;
 		end
 	end
 
-	-- Psycho chars
+	-- traits
 	if type(dataTab.PS) == "table" and #dataTab.PS > 0 then
 		hasPsycho = true;
 		TRP3_RegisterCharact_CharactPanel_PsychoTitle:Show();
@@ -264,18 +342,59 @@ local function setConsultDisplay(context)
 			end
 
 			-- Preset pointer
+			local originalID = psychoStructure.ID;
 			if psychoStructure.ID then
-				psychoStructure = PSYCHO_PRESETS[psychoStructure.ID] or PSYCHO_PRESETS_UNKOWN;
+				psychoStructure = TRAIT_PRESETS[psychoStructure.ID] or TRAIT_PRESETS_UNKNOWN;
 			end
 
 			frame:ClearAllPoints();
 			frame:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, 0);
 			frame:SetPoint("RIGHT", 0, 0);
-			_G[frame:GetName() .. "LeftText"]:SetText(psychoStructure.LT or "");
-			_G[frame:GetName() .. "RightText"]:SetText(psychoStructure.RT or "");
-			_G[frame:GetName() .. "JaugeLeftIcon"]:SetTexture("Interface\\ICONS\\" .. (psychoStructure.LI or Globals.icons.default));
-			_G[frame:GetName() .. "JaugeRightIcon"]:SetTexture("Interface\\ICONS\\" .. (psychoStructure.RI or Globals.icons.default));
-			refreshPsycho(frame, value or 3);
+			
+			-- Update text labels with dynamic colors
+			local leftText = _G[frame:GetName() .. "LeftText"];
+			local rightText = _G[frame:GetName() .. "RightText"];
+			
+			leftText:SetText(psychoStructure.LT or "");
+			rightText:SetText(psychoStructure.RT or "");
+			
+			-- Apply dynamic colors based on trait ID
+			local colors = nil;
+			if originalID and originalID > 0 and originalID <= #TRAIT_PRESETS then
+				colors = TRAIT_PRESETS[originalID];
+			elseif originalID and originalID == 0 then
+				colors = TRAIT_PRESETS_UNKNOWN;
+			end
+			
+			if colors then
+				leftText:SetTextColor(colors.leftColor[1], colors.leftColor[2], colors.leftColor[3]);
+				rightText:SetTextColor(colors.rightColor[1], colors.rightColor[2], colors.rightColor[3]);
+			else
+				-- Fallback colors if no trait ID or colors defined
+				leftText:SetTextColor(1.0, 0.9, 0.0); -- Yellow
+				rightText:SetTextColor(0.6, 0.8, 1.0); -- Light blue
+			end
+			
+			-- Update icons using TRP3_SimpleIcon template
+			local leftIcon = _G[frame:GetName() .. "LeftIcon"];
+			local rightIcon = _G[frame:GetName() .. "RightIcon"];
+			
+			-- Handle TRP3_SimpleIcon template icons
+			if leftIcon then
+				local iconTexture = _G[leftIcon:GetName() .. "Icon"];
+				if iconTexture then
+					iconTexture:SetTexture("Interface\\ICONS\\" .. (psychoStructure.LI or Globals.icons.default));
+				end
+			end
+			
+			if rightIcon then
+				local iconTexture = _G[rightIcon:GetName() .. "Icon"];
+				if iconTexture then
+					iconTexture:SetTexture("Interface\\ICONS\\" .. (psychoStructure.RI or Globals.icons.default));
+				end
+			end
+			
+			refreshPsycho(frame, value or 10, originalID);
 			frame:Show();
 			previous = frame;
 		end
@@ -290,13 +409,11 @@ end
 -- CHARACTERISTICS - EDIT
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
--- function def
 local setEditDisplay;
 
 local draftData = nil;
 local psychoEditCharFrame = {};
 local miscEditCharFrame = {};
-
 
 local function saveInDraft()
 	assert(type(draftData) == "table", "Error: Nil draftData or not a table.");
@@ -312,19 +429,27 @@ local function saveInDraft()
 	draftData.WE = stEtN(strtrim(TRP3_RegisterCharact_Edit_WeightField:GetText()));
 	draftData.RE = stEtN(strtrim(TRP3_RegisterCharact_Edit_ResidenceField:GetText()));
 	draftData.BP = stEtN(strtrim(TRP3_RegisterCharact_Edit_BirthplaceField:GetText()));
-	-- Save psycho values
 	for index, psychoStructure in pairs(draftData.PS) do
-		psychoStructure.VA = psychoEditCharFrame[index].VA;
-		if not psychoStructure.ID then
-			-- If not a preset
-			psychoStructure.LT = stEtN(_G[psychoEditCharFrame[index]:GetName() .. "LeftField"]:GetText()) or loc("REG_PLAYER_LEFTTRAIT");
-			psychoStructure.RT = stEtN(_G[psychoEditCharFrame[index]:GetName() .. "RightField"]:GetText()) or loc("REG_PLAYER_RIGHTTRAIT");
-		else
-			-- Don't save preset data !
-			psychoStructure.LT = nil;
-			psychoStructure.RT = nil;
-			psychoStructure.LI = nil;
-			psychoStructure.RI = nil;
+		if psychoEditCharFrame[index] then
+			psychoStructure.VA = psychoEditCharFrame[index].VA;
+			if not psychoStructure.ID then
+				psychoStructure.LT = stEtN(_G[psychoEditCharFrame[index]:GetName() .. "LeftField"]:GetText()) or loc("REG_PLAYER_LEFTTRAIT");
+				psychoStructure.RT = stEtN(_G[psychoEditCharFrame[index]:GetName() .. "RightField"]:GetText()) or loc("REG_PLAYER_RIGHTTRAIT");
+				local leftIcon = _G[psychoEditCharFrame[index]:GetName() .. "LeftIcon"];
+				local rightIcon = _G[psychoEditCharFrame[index]:GetName() .. "RightIcon"];
+				if leftIcon and leftIcon.IC then
+					psychoStructure.LI = leftIcon.IC;
+				end
+				if rightIcon and rightIcon.IC then
+					psychoStructure.RI = rightIcon.IC;
+				end
+			else
+				-- Don't save preset data !
+				psychoStructure.LT = nil;
+				psychoStructure.RT = nil;
+				psychoStructure.LI = nil;
+				psychoStructure.RI = nil;
+			end
 		end
 	end
 	-- Save Misc
@@ -358,17 +483,20 @@ local function onClassColorSelected(red, green, blue)
 end
 
 local function onPsychoClick(frame, value, modif)
-	if value + modif < 6 and value + modif > 0 then
-		refreshPsycho(frame, value + modif);
+	local currentValue = value or 10;
+	local newValue = currentValue + modif;
+
+	if newValue >= 0 and newValue <= 20 then
+		refreshPsycho(frame, newValue);
 	end
 end
 
 local function onLeftClick(button)
-	onPsychoClick(button:GetParent(), button:GetParent().VA or 3, 1);
+	onPsychoClick(button:GetParent(), button:GetParent().VA or 10, -1);
 end
 
 local function onRightClick(button)
-	onPsychoClick(button:GetParent(), button:GetParent().VA or 3, -1);
+	onPsychoClick(button:GetParent(), button:GetParent().VA or 10, 1);
 end
 
 local function refreshEditIcon(frame)
@@ -453,13 +581,13 @@ local function psychoAdd(presetID)
 	if presetID == "new" then
 		tinsert(draftData.PS, {
 			LT = loc("REG_PLAYER_LEFTTRAIT"),
-			LI = "TEMP",
+			LI = Globals.icons.default,
 			RT = loc("REG_PLAYER_RIGHTTRAIT"),
-			RI = "TEMP",
-			VA = 3,
+			RI = Globals.icons.default,
+			VA = 10,
 		});
 	else
-		tinsert(draftData.PS, { ID = presetID, VA = 3 });
+		tinsert(draftData.PS, { ID = presetID, VA = 10 });
 	end
 	setEditDisplay();
 end
@@ -502,8 +630,6 @@ function setEditDisplay()
 	TRP3_RegisterCharact_Edit_ResidenceField:SetText(draftData.RE or "");
 	TRP3_RegisterCharact_Edit_BirthplaceField:SetText(draftData.BP or "");
 
-
-
 	-- Misc
 	local previous = TRP3_RegisterCharact_CharactPanel_Edit_MiscTitle;
 	for _, frame in pairs(miscEditCharFrame) do frame:Hide(); end
@@ -530,98 +656,148 @@ function setEditDisplay()
 		_G[frame:GetName() .. "ValueField"]:SetText(miscStructure.VA or loc("CM_VALUE"));
 		refreshEditIcon(_G[frame:GetName() .. "Icon"]);
 		frame:ClearAllPoints();
-		frame:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, 0);
+		frame:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, -6);
 		frame:SetPoint("RIGHT", 0, 0);
 		frame:Show();
 		previous = frame;
 	end
-	TRP3_RegisterCharact_Edit_MiscAdd:ClearAllPoints();
-	TRP3_RegisterCharact_Edit_MiscAdd:SetPoint("TOP", previous, "BOTTOM", 0, -5);
-	previous = TRP3_RegisterCharact_Edit_MiscAdd;
+	-- MiscAdd button uses XML anchors relative to MiscTitle, just ensure it's shown
+	-- TRP3_RegisterCharact_Edit_MiscAdd:Show();
 
-	-- Psycho
+	-- traits
 	TRP3_RegisterCharact_CharactPanel_Edit_PsychoTitle:ClearAllPoints();
-	TRP3_RegisterCharact_CharactPanel_Edit_PsychoTitle:SetPoint("TOP", previous, "BOTTOM", 0, -5);
+	TRP3_RegisterCharact_CharactPanel_Edit_PsychoTitle:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, 0);
 	previous = TRP3_RegisterCharact_CharactPanel_Edit_PsychoTitle;
 	for _, frame in pairs(psychoEditCharFrame) do frame:Hide(); end
 	for frameIndex, psychoStructure in pairs(draftData.PS) do
 		local frame = psychoEditCharFrame[frameIndex];
 		if frame == nil then
-			-- Create psycho attribute widget if not already exists
 			frame = CreateFrame("Frame", "TRP3_RegisterCharact_PsychoEditLine" .. frameIndex, TRP3_RegisterCharact_Edit_CharactPanel_Container, "TRP3_RegisterCharact_PsychoInfoEditLine");
-			_G[frame:GetName() .. "LeftButton"]:SetScript("OnClick", onLeftClick);
-			_G[frame:GetName() .. "RightButton"]:SetScript("OnClick", onRightClick);
 			_G[frame:GetName() .. "Delete"]:SetScript("OnClick", onPsychoDelete);
-			_G[frame:GetName() .. "LeftFieldText"]:SetText(loc("REG_PLAYER_LEFTTRAIT"));
-			_G[frame:GetName() .. "RightFieldText"]:SetText(loc("REG_PLAYER_RIGHTTRAIT"));
 			setTooltipForSameFrame(_G[frame:GetName() .. "LeftIcon"], "TOP", 0, 5, loc("UI_ICON_SELECT"), loc("REG_PLAYER_PSYCHO_LEFTICON_TT"));
 			setTooltipForSameFrame(_G[frame:GetName() .. "RightIcon"], "TOP", 0, 5, loc("UI_ICON_SELECT"), loc("REG_PLAYER_PSYCHO_RIGHTICON_TT"));
 			setTooltipForSameFrame(_G[frame:GetName() .. "Delete"], "TOP", 0, 5, loc("CM_REMOVE"));
 			tinsert(psychoEditCharFrame, frame);
 		end
-		_G[frame:GetName() .. "LeftIcon"]:SetScript("OnClick", function(self)
-			showIconBrowser(function(icon)
-				psychoStructure.LI = icon;
-				setupIconButton(self, icon or Globals.icons.default);
-			end);
-		end);
-		_G[frame:GetName() .. "RightIcon"]:SetScript("OnClick", function(self)
-			showIconBrowser(function(icon)
-				psychoStructure.RI = icon;
-				setupIconButton(self, icon or Globals.icons.default);
-			end);
-		end);
 
 		if psychoStructure.ID then
-			_G[frame:GetName() .. "JaugeLeftIcon"]:Show();
-			_G[frame:GetName() .. "JaugeRightIcon"]:Show();
-			_G[frame:GetName() .. "LeftText"]:Show();
-			_G[frame:GetName() .. "RightText"]:Show();
-			_G[frame:GetName() .. "LeftField"]:Hide();
-			_G[frame:GetName() .. "RightField"]:Hide();
+			local preset = TRAIT_PRESETS[psychoStructure.ID] or TRAIT_PRESETS_UNKNOWN;
+
 			_G[frame:GetName() .. "LeftIcon"]:Hide();
 			_G[frame:GetName() .. "RightIcon"]:Hide();
-			_G[frame:GetName() .. "JaugeLeftIcon"]:ClearAllPoints();
-			_G[frame:GetName() .. "JaugeLeftIcon"]:SetPoint("RIGHT", _G[frame:GetName() .. "Jauge"], "LEFT", -22, 2);
-			_G[frame:GetName() .. "JaugeRightIcon"]:ClearAllPoints();
-			_G[frame:GetName() .. "JaugeRightIcon"]:SetPoint("LEFT", _G[frame:GetName() .. "Jauge"], "RIGHT", 22, 2);
-			local preset = PSYCHO_PRESETS[psychoStructure.ID] or PSYCHO_PRESETS_UNKOWN;
-			_G[frame:GetName() .. "LeftText"]:SetText(preset.LT or "");
-			_G[frame:GetName() .. "RightText"]:SetText(preset.RT or "");
-			_G[frame:GetName() .. "JaugeLeftIcon"]:SetTexture("Interface\\ICONS\\" .. (preset.LI or Globals.icons.default));
-			_G[frame:GetName() .. "JaugeRightIcon"]:SetTexture("Interface\\ICONS\\" .. (preset.RI or Globals.icons.default));
-			setTooltipForSameFrame(_G[frame:GetName() .. "LeftButton"], "TOP", 0, 5, loc("REG_PLAYER_PSYCHO_POINT"), loc("REG_PLAYER_PSYCHO_MORE"):format(preset.LT));
-			setTooltipForSameFrame(_G[frame:GetName() .. "RightButton"], "TOP", 0, 5, loc("REG_PLAYER_PSYCHO_POINT"), loc("REG_PLAYER_PSYCHO_MORE"):format(preset.RT));
+
+			local leftText = _G[frame:GetName() .. "LeftText"];
+			local rightText = _G[frame:GetName() .. "RightText"];
+			leftText:Show();
+			rightText:Show();
+			leftText:SetText(preset.LT or "");
+			rightText:SetText(preset.RT or "");
+			
+			-- Apply dynamic colors in edit mode too
+			local colors = nil;
+			if psychoStructure.ID and psychoStructure.ID > 0 and psychoStructure.ID <= #TRAIT_PRESETS then
+				colors = TRAIT_PRESETS[psychoStructure.ID];
+			elseif psychoStructure.ID and psychoStructure.ID == 0 then
+				colors = TRAIT_PRESETS_UNKNOWN;
+			end
+			
+			if colors then
+				leftText:SetTextColor(colors.leftColor[1], colors.leftColor[2], colors.leftColor[3]);
+				rightText:SetTextColor(colors.rightColor[1], colors.rightColor[2], colors.rightColor[3]);
+			else
+				-- Fallback colors
+				leftText:SetTextColor(1.0, 0.9, 0.0); -- Yellow
+				rightText:SetTextColor(0.6, 0.8, 1.0); -- Light blue
+			end
+
+			_G[frame:GetName() .. "LeftField"]:Hide();
+			_G[frame:GetName() .. "RightField"]:Hide();
+			
+			if not frame.simpleLeftIcon then
+				frame.simpleLeftIcon = CreateFrame("Frame", frame:GetName() .. "SimpleLeftIcon", frame, "TRP3_SimpleIcon");
+				frame.simpleLeftIcon:SetSize(32, 32);
+				frame.simpleLeftIcon:SetPoint("RIGHT", _G[frame:GetName() .. "Bar"], "LEFT", -7, 2);
+			end
+			if not frame.simpleRightIcon then
+				frame.simpleRightIcon = CreateFrame("Frame", frame:GetName() .. "SimpleRightIcon", frame, "TRP3_SimpleIcon");
+				frame.simpleRightIcon:SetSize(32, 32);
+				frame.simpleRightIcon:SetPoint("LEFT", _G[frame:GetName() .. "Bar"], "RIGHT", 7, 2);
+			end
+
+			frame.simpleLeftIcon:Show();
+			frame.simpleRightIcon:Show();
+
+			local leftIconTexture = _G[frame.simpleLeftIcon:GetName() .. "Icon"];
+			local rightIconTexture = _G[frame.simpleRightIcon:GetName() .. "Icon"];
+			
+			if leftIconTexture then
+				leftIconTexture:SetTexture("Interface\\ICONS\\" .. (preset.LI or Globals.icons.default));
+			end
+			if rightIconTexture then
+				rightIconTexture:SetTexture("Interface\\ICONS\\" .. (preset.RI or Globals.icons.default));
+			end
 		else
-			_G[frame:GetName() .. "JaugeLeftIcon"]:Hide();
-			_G[frame:GetName() .. "JaugeRightIcon"]:Hide();
+			local leftIcon = _G[frame:GetName() .. "LeftIcon"];
+			local rightIcon = _G[frame:GetName() .. "RightIcon"];
+
+			leftIcon:Show();
+			rightIcon:Show();
+
 			_G[frame:GetName() .. "LeftText"]:Hide();
 			_G[frame:GetName() .. "RightText"]:Hide();
+
 			_G[frame:GetName() .. "LeftField"]:Show();
 			_G[frame:GetName() .. "RightField"]:Show();
-			_G[frame:GetName() .. "LeftIcon"]:Show();
-			_G[frame:GetName() .. "RightIcon"]:Show();
 			_G[frame:GetName() .. "LeftField"]:SetText(psychoStructure.LT or "");
 			_G[frame:GetName() .. "RightField"]:SetText(psychoStructure.RT or "");
-			_G[frame:GetName() .. "LeftIcon"].IC = psychoStructure.LI or Globals.icons.default;
-			_G[frame:GetName() .. "RightIcon"].IC = psychoStructure.RI or Globals.icons.default;
-			refreshEditIcon(_G[frame:GetName() .. "LeftIcon"]);
-			refreshEditIcon(_G[frame:GetName() .. "RightIcon"]);
-			setTooltipForSameFrame(_G[frame:GetName() .. "LeftButton"], "TOP", 0, 5, loc("REG_PLAYER_PSYCHO_POINT"), loc("REG_PLAYER_PSYCHO_MORE"):format(loc("REG_PLAYER_LEFTTRAIT")));
-			setTooltipForSameFrame(_G[frame:GetName() .. "RightButton"], "TOP", 0, 5, loc("REG_PLAYER_PSYCHO_POINT"), loc("REG_PLAYER_PSYCHO_MORE"):format(loc("REG_PLAYER_RIGHTTRAIT")));
+
+			if frame.simpleLeftIcon then frame.simpleLeftIcon:Hide(); end
+			if frame.simpleRightIcon then frame.simpleRightIcon:Hide(); end
+
+			leftIcon:SetScript("OnClick", function(self)
+				showIconBrowser(function(icon)
+					psychoStructure.LI = icon;
+					self.IC = icon;
+					setupIconButton(self, icon or Globals.icons.default);
+				end);
+			end);
+			rightIcon:SetScript("OnClick", function(self)
+				showIconBrowser(function(icon)
+					psychoStructure.RI = icon;
+					self.IC = icon;
+					setupIconButton(self, icon or Globals.icons.default);
+				end);
+			end);
+			
+			-- Set icons from saved data
+			leftIcon.IC = psychoStructure.LI or Globals.icons.default;
+			rightIcon.IC = psychoStructure.RI or Globals.icons.default;
+			
+			refreshEditIcon(leftIcon);
+			refreshEditIcon(rightIcon);
 		end
 
+		-- store trait index for reference
 		frame.psychoIndex = frameIndex;
 		frame:ClearAllPoints();
 		frame:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, 0);
 		frame:SetPoint("RIGHT", 0, 0);
-		refreshPsycho(frame, psychoStructure.VA or 3);
+
+		local slider = _G[frame:GetName() .. "Slider"];
+		if slider then
+			slider:SetValue(psychoStructure.VA or 10);
+			slider:SetScript("OnValueChanged", function(self, value)
+				local parentFrame = self:GetParent();
+				refreshPsycho(parentFrame, value, psychoStructure.ID);
+			end);
+		end
+		
+		refreshPsycho(frame, psychoStructure.VA or 10, psychoStructure.ID);
 		frame:Show();
 		previous = frame;
 	end
-	TRP3_RegisterCharact_Edit_PsychoAdd:ClearAllPoints();
-	TRP3_RegisterCharact_Edit_PsychoAdd:SetPoint("TOP", previous, "BOTTOM", 0, -5);
-	previous = TRP3_RegisterCharact_Edit_PsychoAdd;
+	-- PsychoAdd button uses XML anchors relative to PsychoTitle, just ensure it's shown
+	TRP3_RegisterCharact_Edit_PsychoAdd:Show();
 end
 
 local function setupRelationButton(profileID, profile)
@@ -769,102 +945,176 @@ end
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 local function initStructures()
-	PSYCHO_PRESETS_UNKOWN = {
+	TRAIT_PRESETS_UNKNOWN = {
 		LT = loc("CM_UNKNOWN"),
 		RT = loc("CM_UNKNOWN"),
 		LI = "INV_Misc_QuestionMark",
-		RI = "INV_Misc_QuestionMark"
+		RI = "INV_Misc_QuestionMark",
+		leftColor = {1.0, 1.0, 0.4}, -- Yellow for both text and bar
+		rightColor = {0.55, 0.55, 0.95} -- Light blue for both text and bar
 	};
 
-	PSYCHO_PRESETS = {
+	TRAIT_PRESETS = {
 		{
-			LT = loc("REG_PLAYER_PSYCHO_CHAOTIC"),
-			RT = loc("REG_PLAYER_PSYCHO_Loyal"),
+			LT = loc("REG_PLAYER_TRAIT_CHAOTIC"),
+			RT = loc("REG_PLAYER_TRAIT_LOYAL"),
 			LI = "Ability_Rogue_WrongfullyAccused",
 			RI = "Ability_Paladin_SanctifiedWrath",
+			leftColor = {0.6, 0.2, 0.8}, -- Purple
+			rightColor = {0.2, 0.6, 1.0} -- Blue
 		},
 		{
-			LT = loc("REG_PLAYER_PSYCHO_Chaste"),
-			RT = loc("REG_PLAYER_PSYCHO_Luxurieux"),
+			LT = loc("REG_PLAYER_TRAIT_CHASTE"),
+			RT = loc("REG_PLAYER_TRAIT_LUSTFUL"),
 			LI = "INV_Belt_27",
 			RI = "Spell_Shadow_SummonSuccubus",
+			leftColor = {1.0, 1.0, 1.0}, -- White
+			rightColor = {1.0, 0.2, 0.2} -- Red
 		},
 		{
-			LT = loc("REG_PLAYER_PSYCHO_Indulgent"),
-			RT = loc("REG_PLAYER_PSYCHO_Rencunier"),
+			LT = loc("REG_PLAYER_TRAIT_FORGIVING"),
+			RT = loc("REG_PLAYER_TRAIT_VENGEFUL"),
 			LI = "INV_RoseBouquet01",
 			RI = "Ability_Hunter_SniperShot",
+			leftColor = {0.4, 0.8, 0.4}, -- Green
+			rightColor = {1.0, 0.6, 0.2} -- Orange
 		},
 		{
-			LT = loc("REG_PLAYER_PSYCHO_Genereux"),
-			RT = loc("REG_PLAYER_PSYCHO_Egoiste"),
+			LT = loc("REG_PLAYER_TRAIT_GENEROUS"),
+			RT = loc("REG_PLAYER_TRAIT_SELFISH"),
 			LI = "INV_Misc_Gift_02",
 			RI = "INV_Misc_Coin_02",
+			leftColor = {1.0, 0.8, 0.2}, -- Gold
+			rightColor = {0.8, 0.2, 0.2} -- Dark Red
 		},
 		{
-			LT = loc("REG_PLAYER_PSYCHO_Sincere"),
-			RT = loc("REG_PLAYER_PSYCHO_Trompeur"),
+			LT = loc("REG_PLAYER_TRAIT_SINCERE"),
+			RT = loc("REG_PLAYER_TRAIT_DECEPTIVE"),
 			LI = "INV_Misc_Toy_07",
 			RI = "Ability_Rogue_Disguise",
+			leftColor = {0.5, 0.8, 1.0}, -- Light Blue
+			rightColor = {0.5, 0.2, 0.6} -- Dark Purple
 		},
 		{
-			LT = loc("REG_PLAYER_PSYCHO_Misericordieux"),
-			RT = loc("REG_PLAYER_PSYCHO_Cruel"),
+			LT = loc("REG_PLAYER_TRAIT_MERCIFUL"),
+			RT = loc("REG_PLAYER_TRAIT_CRUEL"),
 			LI = "INV_ValentinesCandySack",
 			RI = "Ability_Warrior_Trauma",
+			leftColor = {1.0, 0.6, 0.8}, -- Pink
+			rightColor = {0.7, 0.1, 0.1} -- Dark Red
 		},
 		{
-			LT = loc("REG_PLAYER_PSYCHO_Pieux"),
-			RT = loc("REG_PLAYER_PSYCHO_Rationnel"),
+			LT = loc("REG_PLAYER_TRAIT_SPIRITUAL"),
+			RT = loc("REG_PLAYER_TRAIT_RATIONAL"),
 			LI = "Spell_Holy_HolyGuidance",
 			RI = "INV_Gizmo_02",
+			leftColor = {1.0, 0.9, 0.3}, -- Yellow
+			rightColor = {0.3, 0.8, 0.8} -- Cyan
 		},
 		{
-			LT = loc("REG_PLAYER_PSYCHO_Pragmatique"),
-			RT = loc("REG_PLAYER_PSYCHO_Conciliant"),
+			LT = loc("REG_PLAYER_TRAIT_PRAGMATIC"),
+			RT = loc("REG_PLAYER_TRAIT_DIPLOMATIC"),
 			LI = "Ability_Rogue_HonorAmongstThieves",
 			RI = "INV_Misc_GroupNeedMore",
+			leftColor = {0.7, 0.5, 0.3}, -- Brown
+			rightColor = {0.6, 0.9, 0.6} -- Light Green
 		},
 		{
-			LT = loc("REG_PLAYER_PSYCHO_Reflechi"),
-			RT = loc("REG_PLAYER_PSYCHO_Impulsif"),
+			LT = loc("REG_PLAYER_TRAIT_THOUGHTFUL"),
+			RT = loc("REG_PLAYER_TRAIT_IMPULSIVE"),
 			LI = "Spell_Shadow_Brainwash",
 			RI = "Achievement_BG_CaptureFlag_EOS",
+			leftColor = {0.3, 0.5, 0.8}, -- Dark Blue
+			rightColor = {1.0, 0.5, 0.1} -- Bright Orange
 		},
 		{
-			LT = loc("REG_PLAYER_PSYCHO_Acete"),
-			RT = loc("REG_PLAYER_PSYCHO_Bonvivant"),
+			LT = loc("REG_PLAYER_TRAIT_ASCETIC"),
+			RT = loc("REG_PLAYER_TRAIT_HEDONISTIC"),
 			LI = "INV_Misc_Food_PineNut",
 			RI = "INV_Misc_Food_99",
+			leftColor = {0.7, 0.7, 0.7}, -- Gray
+			rightColor = {0.9, 0.3, 0.7} -- Magenta
 		},
 		{
-			LT = loc("REG_PLAYER_PSYCHO_Valeureux"),
-			RT = loc("REG_PLAYER_PSYCHO_Couard"),
+			LT = loc("REG_PLAYER_TRAIT_VALOROUS"),
+			RT = loc("REG_PLAYER_TRAIT_COWARDLY"),
 			LI = "Ability_Paladin_BeaconofLight",
 			RI = "Ability_Druid_Cower",
+			leftColor = {1.0, 0.9, 0.1}, -- Bright Gold
+			rightColor = {0.5, 0.5, 0.5} -- Dark Gray
+		},
+		-- Warcraft Chronicles Cosmology traits
+		{
+			LT = loc("REG_PLAYER_TRAIT_LIGHT"),
+			RT = loc("REG_PLAYER_TRAIT_SHADOW"),
+			LI = "Spell_Holy_DivineIllumination",
+			RI = "Spell_Shadow_ShadowWordPain",
+			leftColor = {1.0, 0.9, 0.2}, -- Yellow/Gold (Holy)
+			rightColor = {0.5, 0.2, 0.8} -- Purple-ish (Void)
+		},
+		{
+			LT = loc("REG_PLAYER_TRAIT_LIFE"),
+			RT = loc("REG_PLAYER_TRAIT_DEATH"),
+			LI = "Spell_Nature_HealingTouch",
+			RI = "Spell_Shadow_RaiseDead",
+			leftColor = {0.2, 0.8, 0.6}, -- Green/Teal (Nature)
+			rightColor = {0.5, 0.5, 0.5} -- Gray (Necromancy)
+		},
+		{
+			LT = loc("REG_PLAYER_TRAIT_ORDER"),
+			RT = loc("REG_PLAYER_TRAIT_DISORDER"),
+			LI = "Spell_Arcane_MassDispel",
+			RI = "Spell_Fire_FelImmolation",
+			leftColor = {0.2, 0.5, 1.0}, -- Blue (Arcane)
+			rightColor = {0.5, 0.8, 0.2} -- Green (Fel)
 		},
 	};
 
-	PSYCHO_PRESETS_DROPDOWN = {
-		{ loc("REG_PLAYER_PSYCHO_SOCIAL") },
-		{ loc("REG_PLAYER_PSYCHO_CHAOTIC") .. " - " .. loc("REG_PLAYER_PSYCHO_Loyal"), 1 },
-		{ loc("REG_PLAYER_PSYCHO_Chaste") .. " - " .. loc("REG_PLAYER_PSYCHO_Luxurieux"), 2 },
-		{ loc("REG_PLAYER_PSYCHO_Indulgent") .. " - " .. loc("REG_PLAYER_PSYCHO_Rencunier"), 3 },
-		{ loc("REG_PLAYER_PSYCHO_Genereux") .. " - " .. loc("REG_PLAYER_PSYCHO_Egoiste"), 4 },
-		{ loc("REG_PLAYER_PSYCHO_Sincere") .. " - " .. loc("REG_PLAYER_PSYCHO_Trompeur"), 5 },
-		{ loc("REG_PLAYER_PSYCHO_Misericordieux") .. " - " .. loc("REG_PLAYER_PSYCHO_Cruel"), 6 },
-		{ loc("REG_PLAYER_PSYCHO_Pieux") .. " - " .. loc("REG_PLAYER_PSYCHO_Rationnel"), 7 },
-		{ loc("REG_PLAYER_PSYCHO_PERSONAL") },
-		{ loc("REG_PLAYER_PSYCHO_Pragmatique") .. " - " .. loc("REG_PLAYER_PSYCHO_Conciliant"), 8 },
-		{ loc("REG_PLAYER_PSYCHO_Reflechi") .. " - " .. loc("REG_PLAYER_PSYCHO_Impulsif"), 9 },
-		{ loc("REG_PLAYER_PSYCHO_Acete") .. " - " .. loc("REG_PLAYER_PSYCHO_Bonvivant"), 10 },
-		{ loc("REG_PLAYER_PSYCHO_Valeureux") .. " - " .. loc("REG_PLAYER_PSYCHO_Couard"), 11 },
-		{ loc("REG_PLAYER_PSYCHO_CUSTOM") },
-		{ loc("REG_PLAYER_PSYCHO_CREATENEW"), "new" },
+	TRAIT_PRESETS_DROPDOWN = {
+		{ loc("REG_PLAYER_TRAIT_SOCIAL") },
+		{ loc("REG_PLAYER_TRAIT_CHAOTIC") .. " - " .. loc("REG_PLAYER_TRAIT_LOYAL"), 1 },
+		{ loc("REG_PLAYER_TRAIT_CHASTE") .. " - " .. loc("REG_PLAYER_TRAIT_LUSTFUL"), 2 },
+		{ loc("REG_PLAYER_TRAIT_FORGIVING") .. " - " .. loc("REG_PLAYER_TRAIT_VENGEFUL"), 3 },
+		{ loc("REG_PLAYER_TRAIT_GENEROUS") .. " - " .. loc("REG_PLAYER_TRAIT_SELFISH"), 4 },
+		{ loc("REG_PLAYER_TRAIT_SINCERE") .. " - " .. loc("REG_PLAYER_TRAIT_DECEPTIVE"), 5 },
+		{ loc("REG_PLAYER_TRAIT_MERCIFUL") .. " - " .. loc("REG_PLAYER_TRAIT_CRUEL"), 6 },
+		{ loc("REG_PLAYER_TRAIT_SPIRITUAL") .. " - " .. loc("REG_PLAYER_TRAIT_RATIONAL"), 7 },
+		{ loc("REG_PLAYER_TRAIT_PERSONAL") },
+		{ loc("REG_PLAYER_TRAIT_PRAGMATIC") .. " - " .. loc("REG_PLAYER_TRAIT_DIPLOMATIC"), 8 },
+		{ loc("REG_PLAYER_TRAIT_THOUGHTFUL") .. " - " .. loc("REG_PLAYER_TRAIT_IMPULSIVE"), 9 },
+		{ loc("REG_PLAYER_TRAIT_ASCETIC") .. " - " .. loc("REG_PLAYER_TRAIT_HEDONISTIC"), 10 },
+		{ loc("REG_PLAYER_TRAIT_VALOROUS") .. " - " .. loc("REG_PLAYER_TRAIT_COWARDLY"), 11 },
+		{ loc("REG_PLAYER_TRAIT_COSMIC") },
+		{ loc("REG_PLAYER_TRAIT_LIGHT") .. " - " .. loc("REG_PLAYER_TRAIT_SHADOW"), 12 },
+		{ loc("REG_PLAYER_TRAIT_LIFE") .. " - " .. loc("REG_PLAYER_TRAIT_DEATH"), 13 },
+		{ loc("REG_PLAYER_TRAIT_ORDER") .. " - " .. loc("REG_PLAYER_TRAIT_DISORDER"), 14 },
+		{ loc("REG_PLAYER_TRAIT_CUSTOM") },
+		{ loc("REG_PLAYER_TRAIT_CREATENEW"), "new" },
 	};
 end
 
 function TRP3_API.register.inits.characteristicsInit()
+	-- Migrate old personality trait values from 1-6 range to 0-20 range
+	local characteristicsData = get("player/characteristics");
+	if characteristicsData and characteristicsData.PS then
+		for _, psychoTrait in pairs(characteristicsData.PS) do
+			-- Check if value is in old range (1-6) and migrate to new range (0-20)
+			if psychoTrait.VA and psychoTrait.VA >= 1 and psychoTrait.VA <= 6 then
+				-- Convert from 1-6 range to 0-20 range
+				-- 1 -> 0, 2 -> 4, 3 -> 8, 4 -> 12, 5 -> 16, 6 -> 20
+				-- Actually, let's map it more intuitively: 1->2, 2->6, 3->10, 4->14, 5->18, 6->20
+				local oldValue = psychoTrait.VA;
+				if oldValue == 1 then psychoTrait.VA = 2;
+				elseif oldValue == 2 then psychoTrait.VA = 6;
+				elseif oldValue == 3 then psychoTrait.VA = 10;
+				elseif oldValue == 4 then psychoTrait.VA = 14;
+				elseif oldValue == 5 then psychoTrait.VA = 18;
+				elseif oldValue == 6 then psychoTrait.VA = 20;
+				end
+			end
+		end
+	end
+
 	initStructures();
 
 	-- UI
@@ -883,7 +1133,7 @@ function TRP3_API.register.inits.characteristicsInit()
 	TRP3_RegisterCharact_Edit_ClassButton.onSelection = onClassColorSelected;
 	TRP3_RegisterCharact_Edit_EyeButton.onSelection = onEyeColorSelected;
 
-	setupDropDownMenu(TRP3_RegisterCharact_Edit_PsychoAdd, PSYCHO_PRESETS_DROPDOWN, psychoAdd, 0, true, false);
+	setupDropDownMenu(TRP3_RegisterCharact_Edit_PsychoAdd, TRAIT_PRESETS_DROPDOWN, psychoAdd, 0, true, false);
 
 	-- Localz
 	setTooltipForSameFrame(TRP3_RegisterCharact_Edit_NamePanel_Icon, "RIGHT", 0, 5, loc("REG_PLAYER_ICON"), loc("REG_PLAYER_ICON_TT"));
@@ -937,12 +1187,12 @@ function TRP3_API.register.inits.characteristicsInit()
 	TRP3_RegisterCharact_Edit_FirstFieldText:SetText(loc("REG_PLAYER_FIRSTNAME"));
 	TRP3_RegisterCharact_Edit_LastFieldText:SetText(loc("REG_PLAYER_LASTNAME"));
 	TRP3_RegisterCharact_Edit_FullTitleFieldText:SetText(loc("REG_PLAYER_FULLTITLE"));
-	TRP3_RegisterCharact_CharactPanel_RegisterTitle:SetText(Utils.str.icon("INV_Misc_Book_09", 25) .. " " .. loc("REG_PLAYER_REGISTER"));
-	TRP3_RegisterCharact_CharactPanel_Edit_RegisterTitle:SetText(Utils.str.icon("INV_Misc_Book_09", 25) .. " " .. loc("REG_PLAYER_REGISTER"));
-	TRP3_RegisterCharact_CharactPanel_PsychoTitle:SetText(Utils.str.icon("Spell_Arcane_MindMastery", 25) .. " " .. loc("REG_PLAYER_PSYCHO"));
-	TRP3_RegisterCharact_CharactPanel_Edit_PsychoTitle:SetText(Utils.str.icon("Spell_Arcane_MindMastery", 25) .. " " .. loc("REG_PLAYER_PSYCHO"));
-	TRP3_RegisterCharact_CharactPanel_MiscTitle:SetText(Utils.str.icon("INV_MISC_NOTE_06", 25) .. " " .. loc("REG_PLAYER_MORE_INFO"));
-	TRP3_RegisterCharact_CharactPanel_Edit_MiscTitle:SetText(Utils.str.icon("INV_MISC_NOTE_06", 25) .. " " .. loc("REG_PLAYER_MORE_INFO"));
+	TRP3_RegisterCharact_CharactPanel_RegisterTitle:SetText(loc("REG_PLAYER_REGISTER"));
+	TRP3_RegisterCharact_CharactPanel_Edit_RegisterTitle:SetText(loc("REG_PLAYER_REGISTER"));
+	TRP3_RegisterCharact_CharactPanel_PsychoTitle:SetText(loc("REG_PLAYER_OTHER"));
+	TRP3_RegisterCharact_CharactPanel_Edit_PsychoTitle:SetText(loc("REG_PLAYER_OTHER"));
+	TRP3_RegisterCharact_CharactPanel_MiscTitle:SetText(loc("REG_PLAYER_MORE_INFO"));
+	TRP3_RegisterCharact_CharactPanel_Edit_MiscTitle:SetText(loc("REG_PLAYER_MORE_INFO"));
 	TRP3_RegisterCharact_Edit_RaceFieldText:SetText(loc("REG_PLAYER_RACE"));
 	TRP3_RegisterCharact_Edit_ClassFieldText:SetText(loc("REG_PLAYER_CLASS"));
 	TRP3_RegisterCharact_Edit_AgeFieldText:SetText(loc("REG_PLAYER_AGE"));

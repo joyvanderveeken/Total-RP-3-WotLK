@@ -20,21 +20,21 @@
 	-->
 
 	<Frame name="TRP3_RegisterRPStyleMain_Edit_Line" virtual="true">
-		<Size x="0" y="28"/>
+		<Size x="0" y="30"/>
 		<Layers>
 			<Layer level="OVERLAY">
 				<FontString name="$parentFieldName" inherits="GameFontNormal" justifyH="LEFT" text="[Field]">
-					<Size x="220" y="10"/>
+					<Size x="220" y="14"/>
 					<Anchors>
-						<Anchor point="LEFT" x="0" y="0"/>
+						<Anchor point="LEFT" x="0" y="-4"/>
 					</Anchors>
 					<Color r="0.95" g="0.75" b="0.10"/>
 				</FontString>
 				<FontString name="$parentFieldValue" inherits="GameFontNormal" justifyH="LEFT" text="[Value]">
-					<Size x="0" y="10"/>
+					<Size x="0" y="14"/>
 					<Anchors>
-						<Anchor point="LEFT" x="0" y="0" relativePoint="RIGHT" relativeTo="$parentFieldName"/>
-						<Anchor point="RIGHT" x="0" y="0"/>
+						<Anchor point="LEFT" x="0" y="-4" relativePoint="RIGHT" relativeTo="$parentFieldName"/>
+						<Anchor point="RIGHT" x="0" y="-4"/>
 					</Anchors>
 					<Color r="0.95" g="0.95" b="0.95"/>
 				</FontString>
@@ -59,9 +59,26 @@
 
 	<!-- Glance consult button : ButtonHilight-Square -->
 	<Button name="TRP3_RegisterMiscGlanceButton" virtual="true">
-		<Size x="40" y="40"/>
+		<Size x="50" y="50"/>
 		<HighlightTexture alphaMode="ADD" file="Interface\Buttons\UI-Quickslot-Depress"/>
-		<NormalTexture file="Interface\ICONS\INV_Misc_QuestionMark"/>
+		<NormalTexture>
+			<Anchors>
+				<Anchor point="TOPLEFT" x="4" y="-4"/>
+				<Anchor point="BOTTOMRIGHT" x="-4" y="4"/>
+			</Anchors>
+			<TexCoords left="0.08" right="0.92" top="0.08" bottom="0.92"/>
+		</NormalTexture>
+		<Backdrop edgeFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-edge" tile="true">
+			<EdgeSize>
+				<AbsValue val="8" />
+			</EdgeSize>
+			<TileSize>
+				<AbsValue val="418" />
+			</TileSize>
+			<BackgroundInsets>
+				<AbsInset left="3" right="3" top="3" bottom="3" />
+			</BackgroundInsets>
+		</Backdrop>
 		<Scripts>
 			<OnEnter>
 				TRP3_RefreshTooltipForFrame(self);
@@ -77,65 +94,69 @@
 
 	<!-- Register Peek panel -->
 	<Frame name="TRP3_RegisterMiscTemplate" virtual="true">
-		<Backdrop edgeFile="Interface\GLUES\COMMON\TextPanel-Border">
+		<Backdrop edgeFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-edge" tile="true" clipChildren="true">
 			<EdgeSize>
-				<AbsValue val="32"/>
+				<AbsValue val="8"/>
 			</EdgeSize>
+			<TileSize>
+				<AbsValue val="440"/>
+			</TileSize>
+			<BackgroundInsets>
+				<AbsInset left="3" right="3" top="20" bottom="3"/>
+			</BackgroundInsets>
 		</Backdrop>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture file="Interface\AchievementFrame\UI-Achievement-StatsBackground">
-					<Size x="506" y="0"/>
+				<Texture file="Interface\AddOns\totalRP3\Resources\UI\ui-frame-parchment-background">
+				<!-- <Texture file="Interface\AddOns\totalRP3\Resources\UI\ui-frame-settings-background"> -->
+				<!-- <Texture file="Interface\AddOns\totalRP3\Resources\UI\ui-frame-profiles-background"> -->
 					<Anchors>
-						<Anchor point="TOPRIGHT" x="-4" y="0"/>
-						<Anchor point="BOTTOMRIGHT" x="-4" y="0"/>
+						<Anchor point="TOPLEFT" x="3" y="-3"/>
+						<Anchor point="BOTTOMRIGHT" x="-3" y="3"/>
 					</Anchors>
-					<TexCoords left="0.07" right="1" top="0" bottom="0.98"/>
+					<TexCoords top="0.015" right="0.77" bottom="0.77109375"/>
 				</Texture>
-			</Layer>
-			<Layer level="OVERLAY">
-
 			</Layer>
 		</Layers>
 		<Frames>
 			<Frame name="TRP3_RegisterMiscView">
 				<Anchors>
-					<Anchor point="TOPLEFT" x="10" y="-20"/>
-					<Anchor point="TOPRIGHT" x="-10" y="-20"/>
-					<Anchor point="BOTTOM" x="0" y="10"/>
+					<Anchor point="TOPLEFT" x="15" y="-15"/>
+					<Anchor point="TOPRIGHT" x="-15" y="-15"/>
+					<Anchor point="BOTTOM" x="0" y="15"/>
 				</Anchors>
 				<Frames>
-					<!-- PEEK -->
-					<Frame name="TRP3_RegisterMiscViewGlance" inherits="TRP3_FieldSetFrame">
+					<!-- At a glance -->
+					<Frame name="TRP3_RegisterMiscViewGlance" inherits="TRP3_FieldSetGlanceFrame">
 						<Size x="0" y="70"/>
 						<Anchors>
-							<Anchor point="TOPLEFT" x="10" y="0"/>
-							<Anchor point="TOPRIGHT" x="-10" y="0"/>
+							<Anchor point="TOPLEFT" x="0" y="0"/>
+							<Anchor point="TOPRIGHT" x="0" y="0"/>
 						</Anchors>
 						<Frames>
-							<Button name="TRP3_RegisterMiscViewGlanceSlot3" inherits="TRP3_RegisterMiscGlanceButton">
+							<Button name="TRP3_RegisterMiscViewGlanceSlot5" inherits="TRP3_RegisterMiscGlanceButton">
 								<Anchors>
-									<Anchor point="CENTER" x="0" y="0"/>
-								</Anchors>
-							</Button>
-							<Button name="TRP3_RegisterMiscViewGlanceSlot2" inherits="TRP3_RegisterMiscGlanceButton">
-								<Anchors>
-									<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="TRP3_RegisterMiscViewGlanceSlot3" x="-45" y="0"/>
-								</Anchors>
-							</Button>
-							<Button name="TRP3_RegisterMiscViewGlanceSlot1" inherits="TRP3_RegisterMiscGlanceButton">
-								<Anchors>
-									<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="TRP3_RegisterMiscViewGlanceSlot2" x="-45" y="0"/>
+									<Anchor point="RIGHT" x="-45" y="0"/>
 								</Anchors>
 							</Button>
 							<Button name="TRP3_RegisterMiscViewGlanceSlot4" inherits="TRP3_RegisterMiscGlanceButton">
 								<Anchors>
-									<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="TRP3_RegisterMiscViewGlanceSlot3" x="45" y="0"/>
+									<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="TRP3_RegisterMiscViewGlanceSlot5" x="-10" y="0"/>
 								</Anchors>
 							</Button>
-							<Button name="TRP3_RegisterMiscViewGlanceSlot5" inherits="TRP3_RegisterMiscGlanceButton">
+							<Button name="TRP3_RegisterMiscViewGlanceSlot3" inherits="TRP3_RegisterMiscGlanceButton">
 								<Anchors>
-									<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="TRP3_RegisterMiscViewGlanceSlot4" x="45" y="0"/>
+									<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="TRP3_RegisterMiscViewGlanceSlot4" x="-10" y="0"/>
+								</Anchors>
+							</Button>
+							<Button name="TRP3_RegisterMiscViewGlanceSlot2" inherits="TRP3_RegisterMiscGlanceButton">
+								<Anchors>
+									<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="TRP3_RegisterMiscViewGlanceSlot3" x="-10" y="0"/>
+								</Anchors>
+							</Button>
+							<Button name="TRP3_RegisterMiscViewGlanceSlot1" inherits="TRP3_RegisterMiscGlanceButton">
+								<Anchors>
+									<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="TRP3_RegisterMiscViewGlanceSlot2" x="-10" y="0"/>
 								</Anchors>
 							</Button>
 							<!--<Button name="TRP3_RegisterMiscViewGlanceAction" inherits="TRP3_ActionButton">-->
@@ -146,25 +167,25 @@
 							<Button name="TRP3_RegisterMiscViewGlanceHelp" inherits="TRP3_HelpButton">
 								<Size x="14" y="14"/>
 								<Anchors>
-									<Anchor point="LEFT" x="25" y="0"/>
+									<Anchor point="RIGHT" x="-15" y="0"/>
 								</Anchors>
 							</Button>
 						</Frames>
 					</Frame>
 
-					<!-- RP Style -->
+					<!-- Currently -->
 					<Frame name="TRP3_RegisterMiscViewCurrently" inherits="TRP3_FieldSetFrame">
-						<Size x="0" y="100"/>
+						<Size x="0" y="180"/>
 						<Anchors>
-							<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="TRP3_RegisterMiscViewGlance" x="0" y="-10"/>
-							<Anchor point="LEFT" x="10" y="0"/>
-							<Anchor point="RIGHT" x="-10" y="0"/>
+							<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="TRP3_RegisterMiscViewGlance" x="0" y="-13"/>
+							<Anchor point="LEFT" x="0" y="0"/>
+							<Anchor point="RIGHT" x="0" y="0"/>
 						</Anchors>
 						<Frames>
 							<Frame name="TRP3_RegisterMiscViewCurrentlyIC" inherits="TRP3_TextArea">
-								<Size x="235" y="0"/>
+								<Size x="255" y="0"/>
 								<Anchors>
-									<Anchor point="TOP" x="0" y="-20"/>
+									<Anchor point="TOP" x="0" y="-39"/>
 									<Anchor point="BOTTOM" x="0" y="10"/>
 									<Anchor point="LEFT" x="10" y="0"/>
 								</Anchors>
@@ -172,8 +193,8 @@
 									<Layer level="OVERLAY">
 										<FontString name="TRP3_RegisterMiscViewCurrentlyICTitle" text="[title]" inherits="GameFontNormalSmall" justifyH="LEFT">
 											<Anchors>
-												<Anchor point="TOPLEFT" x="15" y="10"/>
-												<Anchor point="TOPRIGHT" x="-15" y="10"/>
+												<Anchor point="TOPLEFT" x="15" y="19"/>
+												<Anchor point="TOPRIGHT" x="-15" y="19"/>
 											</Anchors>
 											<Color r="0.95" g="0.75" b="0.1"/>
 										</FontString>
@@ -183,16 +204,16 @@
 									<Button name="TRP3_RegisterMiscViewCurrentlyICHelp" inherits="TRP3_HelpButton">
 										<Size x="14" y="14"/>
 										<Anchors>
-											<Anchor point="TOPRIGHT" x="0" y="13"/>
+											<Anchor point="TOPRIGHT" x="-6" y="20"/>
 										</Anchors>
 									</Button>
 								</Frames>
 							</Frame>
 
 							<Frame name="TRP3_RegisterMiscViewCurrentlyOOC" inherits="TRP3_TextArea">
-								<Size x="235" y="0"/>
+								<Size x="255" y="0"/>
 								<Anchors>
-									<Anchor point="TOP" x="0" y="-20"/>
+									<Anchor point="TOP" x="0" y="-39"/>
 									<Anchor point="BOTTOM" x="0" y="10"/>
 									<Anchor point="RIGHT" x="-10" y="0"/>
 								</Anchors>
@@ -200,8 +221,8 @@
 									<Layer level="OVERLAY">
 										<FontString name="TRP3_RegisterMiscViewCurrentlyOOCTitle" text="[title]" inherits="GameFontNormalSmall" justifyH="LEFT">
 											<Anchors>
-												<Anchor point="TOPLEFT" x="15" y="10"/>
-												<Anchor point="TOPRIGHT" x="-15" y="10"/>
+												<Anchor point="TOPLEFT" x="15" y="19"/>
+												<Anchor point="TOPRIGHT" x="-15" y="19"/>
 											</Anchors>
 											<Color r="0.95" g="0.75" b="0.1"/>
 										</FontString>
@@ -211,7 +232,7 @@
 									<Button name="TRP3_RegisterMiscViewCurrentlyOOCHelp" inherits="TRP3_HelpButton">
 										<Size x="14" y="14"/>
 										<Anchors>
-											<Anchor point="TOPRIGHT" x="0" y="13"/>
+											<Anchor point="TOPRIGHT" x="-6" y="20"/>
 										</Anchors>
 									</Button>
 								</Frames>
@@ -222,10 +243,10 @@
 					<!-- RP Style -->
 					<Frame name="TRP3_RegisterMiscViewRPStyle" inherits="TRP3_FieldSetFrame">
 						<Anchors>
-							<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="TRP3_RegisterMiscViewCurrently" x="0" y="-10"/>
-							<Anchor point="LEFT" x="10" y="0"/>
-							<Anchor point="RIGHT" x="-10" y="0"/>
-							<Anchor point="BOTTOM" x="0" y="10"/>
+							<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="TRP3_RegisterMiscViewCurrently" x="0" y="-13"/>
+							<Anchor point="LEFT" x="0" y="0"/>
+							<Anchor point="RIGHT" x="0" y="0"/>
+							<Anchor point="BOTTOM" x="0" y="0"/>
 						</Anchors>
 						<Layers>
 							<Layer level="OVERLAY">
@@ -267,7 +288,7 @@
 					<Anchor point="RIGHT" x="-40" y="0"/>
 				</Anchors>
 			</EditBox>
-			<Button name="$parentIcon" inherits="TRP3_IconButton">
+			<Button name="$parentIcon" inherits="TRP3_SimpleIcon">
 				<Anchors>
 					<Anchor point="LEFT" x="24" y="-15"/>
 				</Anchors>

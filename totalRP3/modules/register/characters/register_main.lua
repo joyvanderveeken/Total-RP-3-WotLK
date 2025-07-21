@@ -477,10 +477,12 @@ function TRP3_API.register.init()
 	local CONFIG_ENABLE_MAP_LOCATION = "register_map_location";
 	local CONFIG_DISABLE_MAP_LOCATION_ON_OOC = "register_map_location_ooc";
 	local CONFIG_DISABLE_MAP_LOCATION_ON_PVP = "register_map_location_pvp";
+	local CONFIG_ENABLE_WARBORN_MODE = "register_warborn_mode";
 
 	registerConfigKey(CONFIG_ENABLE_MAP_LOCATION, true);
 	registerConfigKey(CONFIG_DISABLE_MAP_LOCATION_ON_OOC, false);
 	registerConfigKey(CONFIG_DISABLE_MAP_LOCATION_ON_PVP, false);
+	registerConfigKey(CONFIG_ENABLE_WARBORN_MODE, false);
 
 	-- Build configuration page
 	TRP3_API.register.CONFIG_STRUCTURE = {
@@ -521,6 +523,12 @@ function TRP3_API.register.init()
 				title = loc("CO_LOCATION_DISABLE_PVP"),
 				help = loc("CO_LOCATION_DISABLE_PVP_TT"),
 				configKey = CONFIG_DISABLE_MAP_LOCATION_ON_PVP,
+			},
+			{
+				inherit = "TRP3_ConfigCheck",
+				title = loc("CO_LOCATION_WARBORN"),
+				help = loc("CO_LOCATION_WARBORN_TT"),
+				configKey = CONFIG_ENABLE_WARBORN_MODE,
 			}
 		}
 	};
@@ -529,6 +537,11 @@ function TRP3_API.register.init()
 	end);
 
 	local function locationEnabled()
+		if getConfigValue(CONFIG_ENABLE_WARBORN_MODE) then
+			return getConfigValue(CONFIG_ENABLE_MAP_LOCATION);
+		end
+		
+		-- Normal logic: check OOC and PVP restrictions
 		return getConfigValue(CONFIG_ENABLE_MAP_LOCATION)
 			and (not getConfigValue(CONFIG_DISABLE_MAP_LOCATION_ON_OOC) or get("player/character/RP") ~= 2)
 			and (not getConfigValue(CONFIG_DISABLE_MAP_LOCATION_ON_PVP) or not UnitIsPVP("player"));
@@ -558,7 +571,7 @@ function TRP3_API.register.init()
 	local function playersCanSeeEachOthers(sender)
 		local currentMapID = GetCurrentMapAreaID();
 		if tContains(phasedZones, currentMapID) then
-			return UnitInParty(Ambiguate(sender, "none"));
+			return UnitInParty(sender);
 		else
 			return true;
 		end
@@ -578,20 +591,52 @@ function TRP3_API.register.init()
 				local currentMapID = GetCurrentMapAreaID();
 				TRP3_WorldMapButton.doNotHide = true;
 				SetMapToCurrentZone();
-				if GetCurrentMapAreaID() == tonumber(zoneID) then
+				local newMapID = GetCurrentMapAreaID();
+				if newMapID == tonumber(zoneID) then
 					local x, y = GetPlayerMapPosition("player");
-					broadcast.sendP2PMessage(sender, CHARACTER_SCAN_COMMAND, x, y, zoneID, Globals.addon_name_short);
+					if x and y and x ~= 0 and y ~= 0 then
+						local isPVP = UnitIsPVP("player");
+						local faction = UnitFactionGroup("player");
+						
+						isPVP = isPVP and true or false;
+						
+						local factionToSend;
+						if getConfigValue(CONFIG_ENABLE_WARBORN_MODE) then
+							factionToSend = faction;
+						else
+							factionToSend = (not isPVP) and faction or nil;
+						end
+						
+						-- we only send the faction icon if we are not pvp enabled (unless Warborn mode is on)
+						broadcast.sendP2PMessage(sender, CHARACTER_SCAN_COMMAND, x, y, zoneID, Globals.addon_name_short, isPVP, factionToSend);
+					end
 				end
-				SetMapByID(currentMapID);
+				-- restores the original map, issue popped up on Teldrassil (triggering a scan moved it to Darkshore, resulting in no characters found)
+				if currentMapID ~= newMapID then
+					SetMapByID(currentMapID);
+				end
 				TRP3_WorldMapButton.doNotHide = false;
 			end;
 		end,
 		canScan = function()
-			return getConfigValue(CONFIG_ENABLE_MAP_LOCATION);
+			return locationEnabled();
 		end,
-		scanAssembler = function(saveStructure, sender, x, y, mapId, addon)
+		scanAssembler = function(saveStructure, sender, x, y, mapId, addon, isPVP, faction)
 			if playersCanSeeEachOthers(sender) then
-				saveStructure[sender] = { x = x, y = y, mapId = mapId, addon = addon };
+				if isPVP ~= nil then
+					isPVP = (isPVP == "true");
+				else
+					isPVP = false;
+				end
+
+				saveStructure[sender] = { 
+					x = x, 
+					y = y, 
+					mapId = mapId, 
+					addon = addon,
+					isPVP = isPVP,
+					faction = faction
+				};
 			end
 		end,
 		scanComplete = function(saveStructure)

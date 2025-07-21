@@ -46,8 +46,8 @@
 	
 	<!-- Icon browser  -->
     <Frame name="TRP3_IconBrowser" parent="TRP3_PopupsFrame" hidden="true">
-		<Backdrop bgFile="Interface\AchievementFrame\UI-Achievement-StatsBackground" edgeFile="Interface\GLUES\COMMON\TextPanel-Border" tile="true">
-			<EdgeSize><AbsValue val="32"/></EdgeSize><TileSize><AbsValue val="415"/></TileSize>
+		<Backdrop bgFile="Interface\AchievementFrame\UI-Achievement-StatsBackground" edgeFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-edge" tile="true">
+			<EdgeSize><AbsValue val="8"/></EdgeSize><TileSize><AbsValue val="415"/></TileSize>
 			<BackgroundInsets><AbsInset left="5" right="5" top="5" bottom="5"/></BackgroundInsets>
 		</Backdrop>
 		<Size x="420" y="400"/>
@@ -67,8 +67,8 @@
 			</Button>
 			<Frame name="TRP3_IconBrowserContent">
 				<Size x="390" y="295"/>
-				<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\GLUES\COMMON\TextPanel-Border" tile="true">
-					<EdgeSize><AbsValue val="32"/></EdgeSize><TileSize><AbsValue val="415"/></TileSize>
+				<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-edge" tile="true">
+					<EdgeSize><AbsValue val="8"/></EdgeSize><TileSize><AbsValue val="415"/></TileSize>
 					<BackgroundInsets><AbsInset left="5" right="5" top="5" bottom="5"/></BackgroundInsets>
 				</Backdrop>
 				<Anchors>
@@ -103,8 +103,8 @@
 			<!-- Filter section -->
 			<Frame name="TRP3_IconBrowserFilter">
 				<Size x="0" y="60"/>
-				<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\GLUES\COMMON\TextPanel-Border" tile="true">
-					<EdgeSize><AbsValue val="32"/></EdgeSize><TileSize><AbsValue val="415"/></TileSize>
+				<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-edge" tile="true">
+					<EdgeSize><AbsValue val="8"/></EdgeSize><TileSize><AbsValue val="415"/></TileSize>
 					<BackgroundInsets><AbsInset left="5" right="5" top="5" bottom="5"/></BackgroundInsets>
 				</Backdrop>
 				<Anchors>
@@ -126,9 +126,15 @@
 				<Frames>
 					<EditBox name="TRP3_IconBrowserFilterBox" inherits="TRP3_TitledEditBox">
 						<Anchors>
-							<Anchor point="BOTTOM" x="0" y="10"/>
+							<Anchor point="BOTTOM" x="-40" y="10"/>
 						</Anchors>
 					</EditBox>
+					<Button name="TRP3_IconBrowserClearIcon" inherits="TRP3_CommonButton" text="No Icon">
+						<Size x="70" y="25"/>
+						<Anchors>
+							<Anchor point="BOTTOMRIGHT" x="-90" y="10"/>
+						</Anchors>
+					</Button>
 					<Button name="TRP3_IconBrowserFilterHelp" inherits="TRP3_HelpButton">
 						<Anchors>
 							<Anchor point="TOPRIGHT" x="-10" y="-10"/>

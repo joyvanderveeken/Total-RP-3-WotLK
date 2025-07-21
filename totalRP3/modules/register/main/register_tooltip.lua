@@ -50,16 +50,16 @@ local unitIDToInfo = Utils.str.unitIDToInfo;
 -- ICONS
 local AFK_ICON = "|TInterface\\FriendsFrame\\StatusIcon-Away:25:25|t";
 local DND_ICON = "|TInterface\\FriendsFrame\\StatusIcon-DnD:25:25|t";
-local OOC_ICON = "|TInterface\\RaidFrame\\ReadyCheck-NotReady:25:25|t";
-local ALLIANCE_ICON = "|TInterface\\GROUPFRAME\\UI-Group-PVP-Alliance:25:25|t";
-local HORDE_ICON = "|TInterface\\GROUPFRAME\\UI-Group-PVP-Horde:25:25|t";
-local PVP_ICON = "|TInterface\\GossipFrame\\BattleMasterGossipIcon:25:25|t";
-local BEGINNER_ICON = "|TInterface\\TARGETINGFRAME\\UI-TargetingFrame-Seal:25:25|t";
-local VOLUNTEER_ICON = "|TInterface\\TARGETINGFRAME\\PortraitQuestBadge:25:25|t";
+local OOC_ICON = "|TInterface\\AddOns\\TotalRP3\\Resources\\UI\\Indicator-Red:25:25|t";
+local ALLIANCE_ICON = "|TInterface\\AddOns\\totalRP3\\resources\\UI\\UI-PVP-Alliance:25:25:0:0:64:64:6:36:3:37|t";
+local HORDE_ICON = "|TInterface\\AddOns\\totalRP3\\resources\\UI\\UI-PVP-Horde:25:25:0:0:64:64:6:34:3:36|t";
+local PVP_ICON = "|TInterface\\AddOns\\totalRP3\\resources\\UI\\UI-StateIcon:25:25:0:0:64:64:34:60:5:27|t";
+local BEGINNER_ICON = "|TInterface\\AddOns\\totalRP3\\resources\\UI\\NewPlayerHelp_Newcomer:20:20:0:0:256:256:72:184:68:188|t";
+local VOLUNTEER_ICON = "|TInterface\\AddOns\\totalRP3\\resources\\UI\\NewPlayerHelp_Guide:20:20:0:0:256:256:72:184:68:188|t";
 local BANNED_ICON = "|TInterface\\EncounterJournal\\UI-EJ-HeroicTextIcon:25:25|t";
 local GLANCE_ICON = "|TInterface\\MINIMAP\\TRACKING\\None:25:25|t";
 local NEW_ABOUT_ICON = "|TInterface\\Buttons\\UI-GuildButton-PublicNote-Up:25:25|t";
-local PEEK_ICON_SIZE = 20;
+local PEEK_ICON_SIZE = 30;
 
 -- Config keys
 local CONFIG_PROFILE_ONLY = "tooltip_profile_only";
@@ -560,11 +560,15 @@ local function show(targetType, targetID, targetMode)
 					ui_CharacterTT:SetOwner(UIParent, "ANCHOR_CURSOR");
 				end
 
-				ui_CharacterTT:SetBackdropBorderColor(1, 1, 1);
+				-- Set default backdrop border color
+				ui_CharacterTT:SetBackdropBorderColor(1, 1, 1, 1);
+				
 				if targetMode == TYPE_CHARACTER then
 					writeTooltipForCharacter(targetID, originalTexts, targetType);
+					-- Update border color based on relation if enabled
 					if showRelationColor() and targetID ~= Globals.player_id and not isIDIgnored(targetID) and IsUnitIDKnown(targetID) and hasProfile(targetID) then
-						ui_CharacterTT:SetBackdropBorderColor(getRelationColors(hasProfile(targetID)));
+						local r, g, b = getRelationColors(hasProfile(targetID));
+						ui_CharacterTT:SetBackdropBorderColor(r, g, b, 1);
 					end
 					-- Only hide GameTooltip if TRP tooltip is actually showing and not ignored
 					if shouldHideGameTooltip() and not isIDIgnored(targetID) and ui_CharacterTT:IsShown() then
@@ -615,8 +619,21 @@ TRP3_API.events.listenToEvent(TRP3_API.events.WORKFLOW_ON_LOAD, function()
 	end);
 end);
 
+local TOOLTIP_BACKDROP = {
+	bgFile = "Interface\\AddOns\\totalRP3\\Resources\\UI\\ui-frame-backdrop-fill",
+	edgeFile = "Interface\\AddOns\\totalRP3\\Resources\\UI\\ui-frame-backdrop-edge",
+	tile = true,
+	tileSize = 16,
+	edgeSize = 6,
+	insets = {left = 1, right = 1, top = 1, bottom = 1}
+};
+
 local function onModuleInit()
 	localeFont = TRP3_API.locale.getLocaleFont();
+
+	ui_CharacterTT:SetBackdrop(TOOLTIP_BACKDROP);
+	ui_CharacterTT:SetBackdropColor(0, 0, 0, 1); 
+	ui_CharacterTT:SetBackdropBorderColor(1, 1, 1, 1);
 
 	Events.listenToEvent(Events.MOUSE_OVER_CHANGED, function(targetID, targetMode)
 		show("mouseover", targetID, targetMode);
@@ -650,7 +667,7 @@ local function onModuleInit()
 	registerConfigKey(CONFIG_CHARACT_GUILD, true);
 	registerConfigKey(CONFIG_CHARACT_TARGET, true);
 	registerConfigKey(CONFIG_CHARACT_TITLE, true);
-	registerConfigKey(CONFIG_CHARACT_NOTIF, true);
+	registerConfigKey(CONFIG_CHARACT_NOTIF, false);
 	registerConfigKey(CONFIG_CHARACT_CURRENT, true);
 	registerConfigKey(CONFIG_CHARACT_OOC, true);
 	registerConfigKey(CONFIG_CHARACT_CURRENT_SIZE, 140);

@@ -259,15 +259,16 @@ local function sendQuery(unitID)
 end
 TRP3_API.r.sendQuery = sendQuery;
 
+-- disabling 264 and 271 checks allows for crossfaction
 local function onMouseOverCharacter(unitID)
-	if UnitFactionGroup("player") == UnitFactionGroup("mouseover") then
+	-- if UnitFactionGroup("player") == UnitFactionGroup("mouseover") then
 		sendQuery(unitID);
-	end
+	-- end
 end
 
 local function onTargetChanged()
 	local unitID = Utils.str.getUnitID("target");
-	if UnitIsPlayer("target") and UnitFactionGroup("player") == UnitFactionGroup("target") then
+	if UnitIsPlayer("target") then -- and UnitFactionGroup("player") == UnitFactionGroup("target") then
 		sendQuery(unitID);
 	end
 end

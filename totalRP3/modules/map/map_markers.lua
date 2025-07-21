@@ -112,15 +112,32 @@ local function displayMarkers(structure)
 			end);
 		end
 
-		-- Default implementation
 		local x = (entry.x or 0) * WorldMapDetailFrame:GetWidth();
 		local y = - (entry.y or 0) * WorldMapDetailFrame:GetHeight();
 		marker:ClearAllPoints();
 		marker:SetPoint("CENTER", "WorldMapDetailFrame", "TOPLEFT", x, y);
-		_G[marker:GetName() .. "Icon"]:SetTexture("Interface\\Minimap\\OBJECTICONS");
-		_G[marker:GetName() .. "Icon"]:SetTexCoord(0, 0.125, 0, 0.125);
 
-		-- Implementation can be adapted by decorator
+		local iconWidget = _G[marker:GetName() .. "Icon"];
+		local targetFaction = entry.faction;
+		
+		-- show faction if target broadcasts it (pvp disabled OR warborn mode)
+		if targetFaction then
+			if targetFaction == "Alliance" then
+				iconWidget:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\UI-PVP-Alliance");
+				iconWidget:SetTexCoord(0.09375, 0.5625, 0.046875, 0.578125);
+			elseif targetFaction == "Horde" then
+				iconWidget:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\UI-PVP-Horde");
+				iconWidget:SetTexCoord(0.09375, 0.53125, 0.046875, 0.5625);
+			else
+				iconWidget:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\OBJECTICONS");
+				iconWidget:SetTexCoord(0.52734375, 0.6015625, 0.09375, 0.390625);
+			end
+		else
+			-- no faction data sent = default marker
+			iconWidget:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\OBJECTICONS");
+			iconWidget:SetTexCoord(0.52734375, 0.6015625, 0.09375, 0.390625);
+		end
+
 		if structure.scanMarkerDecorator then
 			structure.scanMarkerDecorator(key, entry, marker);
 		end
@@ -136,10 +153,15 @@ local function displayMarkers(structure)
 				marker:Show();
 				marker:SetAlpha(0);
 				playAnimation(_G[marker:GetName() .. "Bounce"]);
+				-- Ensure the marker becomes fully visible after animation
+				after(1, function()
+					marker:SetAlpha(1);
+				end);
 			end);
 
 		else
 			marker:Show();
+			marker:SetAlpha(1);
 		end
 		
 		i = i + 1;
@@ -156,7 +178,7 @@ local function launchScan(scanID)
 		if structure.scanDuration and structure.scanComplete then
 			local mapID = GetCurrentMapAreaID();
 			TRP3_WorldMapButton:Disable();
-			setupIconButton(TRP3_WorldMapButton, "ability_mage_timewarp");
+			setupIconButton(TRP3_WorldMapButton, "INV_MISC_ENGGIZMOS_20");
 			TRP3_ScanLoaderFrame.time = structure.scanDuration;
 			TRP3_ScanLoaderFrame:Show();
 			TRP3_ScanLoaderAnimationRotation:SetDuration(structure.scanDuration);
@@ -171,7 +193,7 @@ local function launchScan(scanID)
 			TRP3_API.ui.misc.playSoundKit(40216);
 			after(structure.scanDuration, function()
 				TRP3_WorldMapButton:Enable();
-				setupIconButton(TRP3_WorldMapButton, "icon_treasuremap");
+				setupIconButton(TRP3_WorldMapButton, "INV_MISC_ENGGIZMOS_20");
 				if mapID == GetCurrentMapAreaID() then
 					structure.scanComplete(structure.saveStructure);
 					displayMarkers(structure);
@@ -218,7 +240,7 @@ local function onWorldMapUpdate()
 end
 
 TRP3_API.events.listenToEvent(TRP3_API.events.WORKFLOW_ON_LOAD, function()
-	setupIconButton(TRP3_WorldMapButton, "icon_treasuremap");
+	setupIconButton(TRP3_WorldMapButton, "INV_MISC_ENGGIZMOS_20");
 	TRP3_WorldMapButton.title = loc("MAP_BUTTON_TITLE");
 	TRP3_WorldMapButton.subtitle = "|cffff9900" .. loc("MAP_BUTTON_SUBTITLE");
 	TRP3_WorldMapButton:SetScript("OnClick", onButtonClicked);

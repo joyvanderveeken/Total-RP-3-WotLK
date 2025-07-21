@@ -47,14 +47,14 @@ local CONFIG_UI_ANIMATIONS = "ui_animations";
 
 local tiledBackgrounds = {
 	"Interface\\DialogFrame\\UI-DialogBox-Background",
-	"Interface\\BankFrame\\Bank-Background",
-	"Interface\\FrameGeneral\\UI-Background-Marble",
-	"Interface\\FrameGeneral\\UI-Background-Rock",
-	"Interface\\GuildBankFrame\\GuildVaultBG",
-	"Interface\\HELPFRAME\\DarkSandstone-Tile",
-	"Interface\\HELPFRAME\\Tileable-Parchment",
-	"Interface\\QuestionFrame\\question-background",
-	"Interface\\RAIDFRAME\\UI-RaidFrame-GroupBg",
+	"Interface\\AddOns\\totalRP3\\resources\\UI\\Bank-Background",
+	"Interface\\AddOns\\totalRP3\\resources\\UI\\UI-Background-Marble",
+	"Interface\\AddOns\\totalRP3\\resources\\UI\\UI-Background-Rock",
+	"Interface\\AddOns\\totalRP3\\resources\\UI\\GuildVaultBG",
+	"Interface\\AddOns\\totalRP3\\resources\\UI\\DarkSandstone-Tile",
+	"Interface\\AddOns\\totalRP3\\resources\\UI\\Tileable-Parchment",
+	"Interface\\AddOns\\totalRP3\\resources\\UI\\question-background",
+	"IInterface\\AddOns\\totalRP3\\resources\\UI\\UI-RaidFrame-GroupBg",
 	"Interface\\Destiny\\EndscreenBG",
 	"Interface\\Stationery\\AuctionStationery1",
 	"Interface\\Stationery\\Stationery_ill1",
@@ -549,8 +549,8 @@ end
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 local tabBar_index = 0;
-local tabBar_HEIGHT_SELECTED = 34;
-local tabBar_HEIGHT_NORMAL = 32;
+local tabBar_HEIGHT_SELECTED = 40;
+local tabBar_HEIGHT_NORMAL = 40;
 
 local function tabBar_onSelect(tabGroup, index)
 	assert(#tabGroup.tabs >= index, "Index out of bound.");

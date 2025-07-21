@@ -336,6 +336,12 @@ local function initIconBrowser()
 
 	TRP3_IconBrowserFilterBox:SetScript("OnTextChanged", filteredIconBrowser);
 	TRP3_IconBrowserClose:SetScript("OnClick", onIconClose);
+	TRP3_IconBrowserClearIcon:SetScript("OnClick", function()
+		TRP3_API.popup.hideIconBrowser();
+		if ui_IconBrowserContent.onSelectCallback then
+			ui_IconBrowserContent.onSelectCallback(nil);
+		end
+	end);
 	TRP3_IconBrowserTitle:SetText(loc("UI_ICON_BROWSER"));
 	TRP3_IconBrowserFilterBoxText:SetText(loc("UI_FILTER"));
 	filteredIconBrowser();

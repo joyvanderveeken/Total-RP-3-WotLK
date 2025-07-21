@@ -32,6 +32,7 @@ local getConfigValue = TRP3_API.configuration.getValue;
 local CreateFrame = CreateFrame;
 local tostring, unpack, strtrim = tostring, unpack, strtrim;
 local assert, tinsert, type, wipe, _G, strconcat, tonumber, pairs, tremove, math = assert, tinsert, type, wipe, _G, strconcat, tonumber, pairs, tremove, math;
+local numberToHexa, hexaToNumber = Utils.color.numberToHexa, Utils.color.hexaToNumber;
 local getTiledBackground = TRP3_API.ui.frame.getTiledBackground;
 local getTiledBackgroundList = TRP3_API.ui.frame.getTiledBackgroundList;
 local showIfMouseOver = TRP3_API.ui.frame.showIfMouseOverFrame;
@@ -49,7 +50,7 @@ local getUnitIDProfile = TRP3_API.register.getUnitIDProfile;
 local hasProfile, getProfile = TRP3_API.register.hasProfile, TRP3_API.register.getProfile;
 local showConfirmPopup = TRP3_API.popup.showConfirmPopup;
 
-local refreshTemplate2EditDisplay, saveInDraft, template2SaveToDraft; -- Function reference
+local saveInDraft; -- Function reference
 
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 -- SCHEMA
@@ -62,10 +63,19 @@ getDefaultProfile().player.about = {
 
 	},
 	T2 = {
-
-	},
-	T3 = {
-		PH = {}, PS = {}, HI = {}
+		items = {}
+		-- Flat structure: array of items, each with type "header" or "section"
+		-- Example:
+		-- {
+		--     type = "header",
+		--     text = "Character Background",
+		--     color = {0.8, 0.2, 0.1}
+		-- },
+		-- {
+		--     type = "section", 
+		--     text = "Born in Stormwind...",
+		--     icon = "inv_misc_book_07"  -- optional
+		-- }
 	},
 }
 
@@ -89,11 +99,11 @@ local function setEditBkg(bkg)
 	setBkg(TRP3_RegisterAbout, bkg);
 end
 
-local function selectMusic(music)
-	if music then
-		TRP3_RegisterAbout_Edit_Music_Text:SetText(("%s: |cff00ff00%s"):format(loc("REG_PLAYER_ABOUT_MUSIC"), Utils.music.getTitle(music)));
+local function getCurrentMusicInfo()
+	if draftData.MU then
+		return (Utils.music.getTitle(draftData.MU))
 	else
-		TRP3_RegisterAbout_Edit_Music_Text:SetText(("%s: |cff00ff00%s"):format(loc("REG_PLAYER_ABOUT_MUSIC"), loc("REG_PLAYER_ABOUT_NOMUSIC")));
+		return (loc("REG_PLAYER_ABOUT_NOMUSIC"))
 	end
 end
 
@@ -123,286 +133,413 @@ local function onLinkClicked(self, url)
 end
 
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
--- TEMPLATE 2
+-- TEMPLATE 2 - FLAT STRUCTURE (HEADERS + SECTIONS)
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 local template2Frames = {};
-local TEMPLATE2_PADDING = 30;
+local TEMPLATE2_HEADER_HEIGHT = 55;
+local TEMPLATE2_SECTION_MIN_HEIGHT = 60;
 
 local function shouldShowTemplate2(dataTab)
 	local templateData = dataTab.T2 or {};
-	local atLeastOneFrame = false;
-	for _, frameTab in pairs(templateData) do
-		if frameTab.TX and strtrim(frameTab.TX):len() > 0 then
-			atLeastOneFrame = true;
+	local items = templateData.items or {};
+
+	for _, item in pairs(items) do
+		if item.text and strtrim(item.text):len() > 0 then
+			return true;
 		end
 	end
-	return atLeastOneFrame;
+	return false;
 end
 
 local function showTemplate2(dataTab)
 	local templateData = dataTab.T2 or {};
 
-	-- Hide all
 	for _, frame in pairs(template2Frames) do
 		frame:Hide();
 	end
-
-	local frameIndex = 1;
-	local previous = TRP3_RegisterAbout_AboutPanel_Template2Title;
-	local bool = true;
-	for _, frameTab in pairs(templateData) do
-		local frame = template2Frames[frameIndex];
-		if frame == nil then
-			frame = CreateFrame("Frame", "TRP3_RegisterAbout_Template2_Frame"..frameIndex, TRP3_RegisterAbout_AboutPanel_Template2, "TRP3_RegisterAbout_Template2_Frame");
-			tinsert(template2Frames, frame);
-		end
-		frame:ClearAllPoints();
-		frame:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, -10);
-
-		local icon = _G[frame:GetName().."Icon"];
-		local text = _G[frame:GetName().."Text"];
-		local backdrop = frame:GetBackdrop();
-		backdrop.bgFile = getTiledBackground(frameTab.BK or 1);
-		frame:SetBackdrop(backdrop);
-		setupIconButton(icon, frameTab.IC or Globals.icons.default);
-		text:SetText(convertTextTags(frameTab.TX));
-		icon:ClearAllPoints();
-		text:ClearAllPoints();
-		if bool then
-			icon:SetPoint("LEFT", 15, 0);
-			text:SetPoint("LEFT", icon, "RIGHT", 10, 0);
-			text:SetJustifyH("LEFT")
-		else
-			icon:SetPoint("RIGHT", -15, 0);
-			text:SetPoint("RIGHT", icon, "LEFT", -10, 0);
-			text:SetJustifyH("RIGHT")
-		end
-
-		local height = math.max(text:GetHeight(), icon:GetHeight()) + TEMPLATE2_PADDING;
-		frame:SetHeight(height);
-
-		if frameTab.TX and frameTab.TX:len() > 0 then
-			frame:Show();
-			previous = frame;
-		else
-			frame:Hide();
-		end
-
-		frameIndex = frameIndex + 1;
-		bool = not bool;
-	end
+	wipe(template2Frames);
 
 	if not shouldShowTemplate2(dataTab) then
 		TRP3_RegisterAbout_AboutPanel_Empty:Show();
+		return;
 	end
 
 	TRP3_RegisterAbout_AboutPanel_Template2:Show();
+
+	local items = templateData.items or {};
+	if #items == 0 then
+		TRP3_RegisterAbout_AboutPanel_Template2_PlaceholderText:SetText("Template 2: No content yet");
+		return;
+	end
+
+	TRP3_RegisterAbout_AboutPanel_Template2_PlaceholderText:SetText("");
+
+	local yOffset = 0;
+	local totalHeight = 10;
+	
+	for i, item in ipairs(items) do
+		local frameName = "TRP3_Template2_DisplayItem_" .. (item.id or i);
+		local frame = _G[frameName];
+		
+		if not frame then
+			frame = CreateFrame("Frame", frameName, TRP3_RegisterAbout_AboutPanel_Template2);
+			frame:SetWidth(480);
+			
+			if item.type == "header" then
+				frame:SetHeight(60);
+				
+				-- top divider
+				frame.topDivider = frame:CreateTexture(frameName .. "_TopDivider", "BACKGROUND");
+				frame.topDivider:SetTexture("Interface\\Addons\\totalRP3\\resources\\ui\\weather-sandstorm");
+				frame.topDivider:SetSize(540, 4);
+				frame.topDivider:SetPoint("TOP", frame, "TOP", 0, 6);
+				
+				-- header text
+				frame.text = frame:CreateFontString(frameName .. "_Text", "OVERLAY", "GameFontNormalHuge");
+				frame.text:SetPoint("LEFT", frame, "LEFT", 20, 0);
+				frame.text:SetPoint("RIGHT", frame, "RIGHT", -20, 0);
+				frame.text:SetJustifyH("CENTER");
+				frame.text:SetWordWrap(true);
+				
+				-- bottom divider
+				frame.bottomDivider = frame:CreateTexture(frameName .. "_BottomDivider", "BACKGROUND");
+				frame.bottomDivider:SetTexture("Interface\\Addons\\totalRP3\\resources\\ui\\weather-sandstorm");
+				frame.bottomDivider:SetSize(500, 4);
+				frame.bottomDivider:SetPoint("BOTTOM", frame, "BOTTOM", 0, -6);
+
+				-- header shadow background
+				frame.headerShadow = frame:CreateTexture(frameName .. "_HeaderShadow", "ARTWORK");
+				frame.headerShadow:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\headershadow");
+				frame.headerShadow:SetSize(500, 64);
+				frame.headerShadow:SetPoint("CENTER", frame, "CENTER", 0, 0);
+				frame.headerShadow:SetAlpha(0.4);
+				
+			else
+				frame:SetHeight(60);
+				
+				-- section icon
+				if item.icon then
+					if not frame.icon then
+						frame.icon = CreateFrame("Frame", frameName .. "_Icon", frame, "TRP3_SimpleIcon");
+						frame.icon:SetSize(40, 40);
+						frame.icon:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -10);
+						
+						frame.icon.texture = _G[frameName .. "_IconIcon"];
+					end
+					frame.icon:Show();
+				elseif frame.icon then
+					frame.icon:Hide();
+				end
+				
+				-- section text
+				if not frame.text then
+					frame.text = frame:CreateFontString(frameName .. "_Text", "OVERLAY", "GameFontNormal");
+					frame.text:SetJustifyH("LEFT");
+					frame.text:SetWordWrap(true);
+				end
+				
+				frame.text:ClearAllPoints();
+				if item.icon and frame.icon then
+					frame.text:SetPoint("TOPLEFT", frame.icon, "TOPRIGHT", 10, 0);
+				else
+					frame.text:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -10);
+				end
+			end
+		end
+		
+		if item.type == "header" then
+			frame.text:SetText(item.text or "Header");
+			if item.color then
+				local red, green, blue = item.color.red or 1, item.color.green or 1, item.color.blue or 1;
+				
+				local brightenFactor = 1.6;
+				local brightRed = math.min(red * brightenFactor, 1); 
+				local brightGreen = math.min(green * brightenFactor, 1);
+				local brightBlue = math.min(blue * brightenFactor, 1);
+				
+				local midRed = (brightRed + red) / 2;
+				local midGreen = (brightGreen + green) / 2;
+				local midBlue = (brightBlue + blue) / 2;
+				frame.text:SetTextColor(midRed, midGreen, midBlue);
+				
+				if frame.headerShadow then
+					local shadowRed = red * 0.7;
+					local shadowGreen = green * 0.7;
+					local shadowBlue = blue * 0.7;
+					frame.headerShadow:SetVertexColor(shadowRed, shadowGreen, shadowBlue);
+				end
+				
+				if frame.topDivider then
+					frame.topDivider:SetGradient("HORIZONTAL", red, green, blue, brightRed, brightGreen, brightBlue);
+				end
+				if frame.bottomDivider then
+					frame.bottomDivider:SetGradient("HORIZONTAL", red, green, blue, brightRed, brightGreen, brightBlue);
+				end
+			
+			else
+				frame.text:SetTextColor(1, 0.82, 0);
+				if frame.headerShadow then
+					frame.headerShadow:SetVertexColor(0.7, 0.574, 0);
+				end
+				if frame.topDivider then
+					frame.topDivider:SetGradient("HORIZONTAL", 1, 0.82, 0, 1, 1, 0.6);
+				end
+				if frame.bottomDivider then
+					frame.bottomDivider:SetGradient("HORIZONTAL", 1, 0.82, 0, 1, 1, 0.6);
+				end
+			end
+
+		else
+			frame.text:SetText(item.text or "Section text");
+			frame.text:SetTextColor(1, 1, 1);
+			
+			if item.icon and frame.icon and frame.icon.texture then
+				frame.icon.texture:SetTexture("Interface\\ICONS\\" .. item.icon);
+				frame.icon:Show();
+			elseif frame.icon then
+				frame.icon:Hide();
+			end
+
+			local textWidth;
+			if item.icon and frame.icon then
+				textWidth = 480 - 30 - 20 - 20;
+			else
+				textWidth = 480 - 20;
+			end
+			frame.text:SetWidth(textWidth);
+			
+			local textHeight = frame.text:GetStringHeight();
+			local iconHeight = (item.icon and frame.icon) and 30 or 0;
+			local calculatedHeight = math.max(textHeight + 20, iconHeight + 20, 40);
+			frame:SetHeight(calculatedHeight);
+		end
+		
+		frame:SetPoint("TOPLEFT", TRP3_RegisterAbout_AboutPanel_Template2, "TOPLEFT", 10, yOffset);
+		frame:Show();
+		tinsert(template2Frames, frame);
+		
+		yOffset = yOffset - (frame:GetHeight() + 10);
+		totalHeight = totalHeight + frame:GetHeight() + 10;
+	end
 end
+
+--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+-- TEMPLATE 2 EDIT MANAGEMENT
+--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 local template2EditFrames = {};
+local addTemplate2Item, removeTemplate2Item, moveTemplate2Item;
 
-local function setTemplate2EditBkg(bkg, frame)
-	frame = frame:GetParent();
-	assert(frame.frameData, "No frameData in the frame ...");
-	setBkg(frame, bkg);
-	frame.frameData.BK = bkg;
-end
-
-local function template2DeleteFrame(button)
-	template2SaveToDraft();
-	local frame = button:GetParent();
-	assert(frame.index, "No index in the frame ...");
-	local templateData = draftData.T2;
-	tremove(templateData, frame.index);
-	refreshTemplate2EditDisplay();
-end
-
-local function template2UpFrame(button)
-	template2SaveToDraft();
-	local frame = button:GetParent();
-	assert(frame.index, "No index in the frame ...");
-	local templateData = draftData.T2;
-	local frameData = templateData[frame.index];
-	tremove(templateData, frame.index);
-	tinsert(templateData, frame.index - 1, frameData);
-	refreshTemplate2EditDisplay();
-end
-
-local function template2DownFrame(button)
-	template2SaveToDraft();
-	local frame = button:GetParent();
-	assert(frame.index, "No index in the frame ...");
-	local templateData = draftData.T2;
-	local frameData = templateData[frame.index];
-	tremove(templateData, frame.index);
-	tinsert(templateData, frame.index + 1, frameData);
-	refreshTemplate2EditDisplay();
-end
-
-local function createTemplate2Frame(frameIndex)
-	local frame = CreateFrame("Frame", "TRP3_RegisterAbout_Template2_Edit"..frameIndex, TRP3_RegisterAbout_Edit_Template2_Container, "TRP3_RegisterAbout_Template2_Edit");
-	setupListBox(_G["TRP3_RegisterAbout_Template2_Edit"..frameIndex.."Bkg"], getTiledBackgroundList(), setTemplate2EditBkg, nil, 120, true);
-	_G[frame:GetName().."Delete"]:SetScript("OnClick", template2DeleteFrame);
-	_G[frame:GetName().."Delete"]:SetText(loc("CM_REMOVE"));
-	_G[frame:GetName().."Up"]:SetScript("OnClick", template2UpFrame);
-	_G[frame:GetName().."Down"]:SetScript("OnClick", template2DownFrame);
-	setTooltipAll(_G[frame:GetName().."Up"], "TOP", 0, 0, loc("CM_MOVE_UP"));
-	setTooltipAll(_G[frame:GetName().."Down"], "TOP", 0, 0, loc("CM_MOVE_DOWN"));
-	setTooltipAll(_G[frame:GetName().."Delete"], "TOP", 0, 5, loc("REG_PLAYER_ABOUT_REMOVE_FRAME"));
-	setTooltipAll(_G[frame:GetName().."Icon"], "TOP", 0, 5, loc("UI_ICON_SELECT"));
-	tinsert(template2EditFrames, frame);
-	return frame;
-end
-
-function refreshTemplate2EditDisplay()
-	-- Hide all
+local function refreshTemplate2EditDisplay()
 	for _, frame in pairs(template2EditFrames) do
 		frame:Hide();
-		frame.frameData = nil; -- Helps garbage collection
 	end
-
-	local templateData = draftData.T2;
-	assert(type(templateData) == "table", "Error: Nil template3 data or not a table.");
-
-	local previous = nil;
-	for frameIndex, frameData in pairs(templateData) do
-		local frame = template2EditFrames[frameIndex];
-		if frame == nil then
-			frame = createTemplate2Frame(frameIndex);
+	wipe(template2EditFrames);
+	
+	if not draftData.T2 or not draftData.T2.items then
+		return;
+	end
+	
+	local content = TRP3_RegisterAbout_Edit_Template2_Content;
+	local yOffset = 0;
+	local totalHeight = 10;
+	
+	for i, item in ipairs(draftData.T2.items) do
+		local frameName = "TRP3_Template2_EditItem_" .. (item.id or i);
+		local frame;
+		
+		frame = _G[frameName];
+		if not frame then
+			if item.type == "header" then
+				frame = CreateFrame("Frame", frameName, content, "TRP3_Template2_HeaderFrame");
+			else
+				frame = CreateFrame("Frame", frameName, content, "TRP3_Template2_SectionFrame");
+			end
 		end
-		-- Position
-		frame:ClearAllPoints();
-		if previous == nil then
-			frame:SetPoint("TOPLEFT", TRP3_RegisterAbout_Edit_Template2_Container, "TOPLEFT", -5, -5);
+		
+		local textBox, iconButton, colorButton, textScroll;
+		if item.type == "header" then
+			textBox = _G[frameName .. "_Text"];
+			colorButton = _G[frameName .. "_ColorButton"];
 		else
-			frame:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, -5);
+			iconButton = _G[frameName .. "_IconButton"];
+			textScroll = _G[frameName .. "_TextScroll"];
+			textBox = _G[frameName .. "_TextScrollScrollText"];
 		end
-		-- Values
-		frame.index = frameIndex;
-		frame.frameData = frameData;
-		_G[frame:GetName().."Bkg"]:SetSelectedIndex(frameData.BK or 1);
-		_G[frame:GetName().."TextScrollText"]:SetText(frameData.TX or "");
-		setupIconButton(_G[frame:GetName().."Icon"], frameData.IC or Globals.icons.default);
-		_G[frame:GetName().."Icon"]:SetScript("OnClick", function()
-			showIconBrowser(function(icon)
-				frame.frameData.IC = icon;
-				setupIconButton(_G[frame:GetName().."Icon"], icon);
+		
+		local upButton = _G[frameName .. "_UpButton"];
+		local downButton = _G[frameName .. "_DownButton"];
+		local deleteButton = _G[frameName .. "_DeleteButton"];
+		
+		if textBox then
+			textBox:SetText(item.text or (item.type == "header" and "Title" or "Some text.."));
+			textBox:SetScript("OnTextChanged", function()
+				item.text = textBox:GetText();
 			end);
-		end);
-		-- Buttons
-		if frameIndex == 1 then
-			_G[frame:GetName().."Up"]:Hide();
-		else
-			_G[frame:GetName().."Up"]:Show();
 		end
-		if frameIndex == #templateData then
-			_G[frame:GetName().."Down"]:Hide();
-		else
-			_G[frame:GetName().."Down"]:Show();
+		
+		if item.type == "header" and colorButton then
+			colorButton.onSelection = function(red, green, blue)
+				if red and green and blue then
+					local hexa = strconcat(numberToHexa(red), numberToHexa(green), numberToHexa(blue));
+					item.color = { red = red/255, green = green/255, blue = blue/255 };
+				else
+					item.color = nil;
+				end
+			end;
+			
+			if item.color then
+				local red = math.floor((item.color.red or 1) * 255);
+				local green = math.floor((item.color.green or 1) * 255);
+				local blue = math.floor((item.color.blue or 1) * 255);
+				colorButton.setColor(red, green, blue);
+			else
+				item.color = { red = 1, green = 1, blue = 1 };
+				colorButton.setColor(255, 255, 255);
+			end
 		end
+		
+		if item.type == "section" and iconButton then
+			setupIconButton(iconButton, item.icon or TRP3_API.globals.icons.default);
+			
+			-- no icon state
+			local iconTexture = _G[iconButton:GetName() .. "Icon"];
+			if not item.icon and iconTexture then
+				iconTexture:SetDesaturated(true);
+				iconTexture:SetAlpha(0.5);
+			elseif iconTexture then
+				iconTexture:SetDesaturated(false);
+				iconTexture:SetAlpha(1.0);
+			end
+			
+			-- click handler
+			iconButton:SetScript("OnClick", function()
+				showIconBrowser(function(icon)
+					item.icon = icon;
+					setupIconButton(iconButton, icon or TRP3_API.globals.icons.default);
+					
+					local iconTexture = _G[iconButton:GetName() .. "Icon"];
+					if not icon and iconTexture then
+						iconTexture:SetDesaturated(true);
+						iconTexture:SetAlpha(0.5);
+					elseif iconTexture then
+						iconTexture:SetDesaturated(false);
+						iconTexture:SetAlpha(1.0);
+					end
+				end);
+			end);
+		end
+		
+		frame:SetPoint("TOPLEFT", content, "TOPLEFT", 0, yOffset);
 
+		local itemId = item.id;
+		local upBtn = _G[frameName .. "_UpButton"];
+		local downBtn = _G[frameName .. "_DownButton"];
+		local deleteBtn = _G[frameName .. "_DeleteButton"];
+
+		local isFirstItem = (i == 1);
+		local isLastItem = (i == #draftData.T2.items);
+		
+		if upBtn then
+			upBtn:SetScript("OnClick", function()
+				moveTemplate2Item(itemId, -1);
+			end);
+			if isFirstItem then
+				upBtn:Hide();
+			else
+				upBtn:Show();
+			end
+		end
+		if downBtn then
+			downBtn:SetScript("OnClick", function()
+				moveTemplate2Item(itemId, 1);
+			end);
+			if isLastItem then
+				downBtn:Hide();
+			else
+				downBtn:Show();
+			end
+		end
+		if deleteBtn then
+			deleteBtn:SetScript("OnClick", function()
+				removeTemplate2Item(itemId);
+			end);
+		end
+		
 		frame:Show();
-		previous = frame;
+		tinsert(template2EditFrames, frame);
+		
+		yOffset = yOffset - (frame:GetHeight() + 5);
+		totalHeight = totalHeight + frame:GetHeight() + 5;
 	end
+
+	content:SetHeight(totalHeight);
 end
 
-local function template2AddFrame()
-	template2SaveToDraft();
-	local templateData = draftData.T2;
-	tinsert(templateData, {TX = loc("REG_PLAYER_ABOUT_SOME")});
-	TRP3_RegisterAbout_AboutPanel_Edit:Hide(); -- Hack to prevent invisible ScrollFontString bug
+function addTemplate2Item(itemType)
+	if not draftData.T2 then
+		draftData.T2 = {};
+	end
+	if not draftData.T2.items then
+		draftData.T2.items = {};
+	end
+
+	-- unique id gen
+	local timestamp = GetTime() * 1000;
+	local uniqueId = itemType .. "_" .. math.floor(timestamp);
+	
+	local newItem = {
+		id = uniqueId,
+		type = itemType,
+		text = itemType == "header" and "Title" or "Some text..",
+	};
+	
+	if itemType == "header" then
+		newItem.color = {r = 1, g = 0.75, b = 0};
+	else
+		newItem.icon = nil;
+	end
+	
+	tinsert(draftData.T2.items, newItem);
 	refreshTemplate2EditDisplay();
-	TRP3_RegisterAbout_AboutPanel_Edit:Show();
 end
 
---- Save to draft all the frames texts
-function template2SaveToDraft()
-	for _, frame in pairs(template2EditFrames) do
-		if frame:IsVisible() then
-			assert(frame.frameData, "Frame has no frameData !");
-			frame.frameData.TX = stEtN(_G[frame:GetName().."TextScrollText"]:GetText());
+function removeTemplate2Item(id)
+	if not draftData.T2 or not draftData.T2.items then return end
+	
+	for i, item in ipairs(draftData.T2.items) do
+		if item.id == id then
+			tremove(draftData.T2.items, i);
+			refreshTemplate2EditDisplay();
+			return;
 		end
 	end
 end
 
---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
--- TEMPLATE 3
---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
-local TEMPLATE3_MINIMAL_HEIGHT = 100;
-local TEMPLATE3_MARGIN = 30;
-local TEMPLATE3_ICON_PHYSICAL = "Ability_Warrior_StrengthOfArms";
-local TEMPLATE3_ICON_PSYCHO = "Spell_Arcane_MindMastery";
-local TEMPLATE3_ICON_HISTORY = "INV_Misc_Book_12";
-
-local function setTemplate3PhysBkg(bkg)
-	setBkg(TRP3_RegisterAbout_Edit_Template3_Phys, bkg);
-end
-
-local function setTemplate3PsyBkg(bkg)
-	setBkg(TRP3_RegisterAbout_Edit_Template3_Psy, bkg);
-end
-
-local function setTemplate3HistBkg(bkg)
-	setBkg(TRP3_RegisterAbout_Edit_Template3_Hist, bkg);
-end
-
-local function onPhisIconSelected(icon)
-	draftData.T3.PH.IC = icon;
-	setupIconButton(TRP3_RegisterAbout_Edit_Template3_PhysIcon, icon or TEMPLATE3_ICON_PHYSICAL);
-end
-
-local function onPsychoIconSelected(icon)
-	draftData.T3.PS.IC = icon;
-	setupIconButton(TRP3_RegisterAbout_Edit_Template3_PsyIcon, icon or TEMPLATE3_ICON_PSYCHO);
-end
-
-local function onHistoIconSelected(icon)
-	draftData.T3.HI.IC = icon;
-	setupIconButton(TRP3_RegisterAbout_Edit_Template3_HistIcon, icon or TEMPLATE3_ICON_HISTORY);
-end
-
-local function shouldShowTemplate3(dataTab)
-	local atLeastOneFrame = false;
-	local templateData = dataTab.T3 or {};
-	local datas = {templateData.PH, templateData.PS, templateData.HI};
-	for i=1, 3 do
-		local data = datas[i] or {};
-		if data.TX and strtrim(data.TX):len() > 0 then
-			atLeastOneFrame = true;
+function moveTemplate2Item(id, direction)
+	if not draftData.T2 or not draftData.T2.items then return end
+	
+	local items = draftData.T2.items;
+	local currentIndex = nil;
+	
+	for i, item in ipairs(items) do
+		if item.id == id then
+			currentIndex = i;
+			break;
 		end
 	end
-	return atLeastOneFrame;
-end
-
-local function showTemplate3(dataTab)
-	local templateData = dataTab.T3 or {};
-	local datas = {templateData.PH, templateData.PS, templateData.HI};
-	local titles = {loc("REG_PLAYER_PHYSICAL"), loc("REG_PLAYER_PSYCHO"), loc("REG_PLAYER_HISTORY")};
-	local icons = {TEMPLATE3_ICON_PHYSICAL, TEMPLATE3_ICON_PSYCHO, TEMPLATE3_ICON_HISTORY};
-
-	for i=1, 3 do
-		local data = datas[i] or {};
-		local frame = _G[("TRP3_RegisterAbout_AboutPanel_Template3_%s"):format(i)];
-		if data.TX and data.TX:len() > 0 then
-			local icon = Utils.str.icon(data.IC or icons[i], 25);
-			local title = _G[("TRP3_RegisterAbout_AboutPanel_Template3_%s_Title"):format(i)];
-			local text = _G[("TRP3_RegisterAbout_AboutPanel_Template3_%s_Text"):format(i)];
-			title:SetText(icon .. "    " .. titles[i] .. "    " .. icon);
-			text:SetText(convertTextTags(data.TX));
-			setBkg(frame, data.BK);
-			frame:SetHeight(title:GetHeight() + text:GetHeight() + TEMPLATE3_MARGIN);
-			frame:Show();
-		else
-			frame:Hide();
-			frame:SetHeight(1);
-		end
+	
+	if not currentIndex then return end
+	
+	local newIndex = currentIndex + direction;
+	
+	if newIndex >= 1 and newIndex <= #items then
+		local temp = items[currentIndex];
+		items[currentIndex] = items[newIndex];
+		items[newIndex] = temp;
+		refreshTemplate2EditDisplay();
 	end
-	if not shouldShowTemplate3(dataTab) then
-		TRP3_RegisterAbout_AboutPanel_Empty:Show();
-	end
-	TRP3_RegisterAbout_AboutPanel_Template3:Show();
 end
 
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -417,18 +554,20 @@ local VOTE_MESSAGE_R_PRIORITY = "ALERT";
 
 local function refreshVoteDisplay(aboutTab)
 	if aboutTab.vote == 1 then
-		TRP3_RegisterAbout_AboutPanel_ThumbUp:LockHighlight();
-		TRP3_RegisterAbout_AboutPanel_ThumbUp:GetHighlightTexture():SetVertexColor(0, 1, 0);
+		TRP3_RegisterAbout_AboutPanel_LikeButton:LockHighlight();
+		TRP3_RegisterAbout_AboutPanel_LikeButton:GetHighlightTexture():SetVertexColor(0, 1, 0);
+		TRP3_RegisterAbout_AboutPanel_DislikeButton:UnlockHighlight();
+		TRP3_RegisterAbout_AboutPanel_DislikeButton:GetHighlightTexture():SetVertexColor(1, 1, 1);
+	elseif aboutTab.vote == -1 then
+		TRP3_RegisterAbout_AboutPanel_DislikeButton:LockHighlight();
+		TRP3_RegisterAbout_AboutPanel_DislikeButton:GetHighlightTexture():SetVertexColor(0, 1, 0);
+		TRP3_RegisterAbout_AboutPanel_LikeButton:UnlockHighlight();
+		TRP3_RegisterAbout_AboutPanel_LikeButton:GetHighlightTexture():SetVertexColor(1, 1, 1);
 	else
-		TRP3_RegisterAbout_AboutPanel_ThumbUp:UnlockHighlight();
-		TRP3_RegisterAbout_AboutPanel_ThumbUp:GetHighlightTexture():SetVertexColor(1, 1, 1);
-	end
-	if aboutTab.vote == -1 then
-		TRP3_RegisterAbout_AboutPanel_ThumbDown:LockHighlight();
-		TRP3_RegisterAbout_AboutPanel_ThumbDown:GetHighlightTexture():SetVertexColor(0, 1, 0);
-	else
-		TRP3_RegisterAbout_AboutPanel_ThumbDown:UnlockHighlight();
-		TRP3_RegisterAbout_AboutPanel_ThumbDown:GetHighlightTexture():SetVertexColor(1, 1, 1);
+		TRP3_RegisterAbout_AboutPanel_LikeButton:UnlockHighlight();
+		TRP3_RegisterAbout_AboutPanel_LikeButton:GetHighlightTexture():SetVertexColor(1, 1, 1);
+		TRP3_RegisterAbout_AboutPanel_DislikeButton:UnlockHighlight();
+		TRP3_RegisterAbout_AboutPanel_DislikeButton:GetHighlightTexture():SetVertexColor(1, 1, 1);
 	end
 end
 
@@ -484,10 +623,26 @@ local function refreshPlayerVoteDisplay()
 	if getCurrentPageID() == "player_main" then
 		local context = getCurrentContext();
 		if context and context.isPlayer and context.profile and context.profile.about then
-			setTooltipForSameFrame(TRP3_RegisterAbout_AboutPanel_ThumbResult,
-			"LEFT", 0, 5, loc("REG_PLAYER_ABOUT_VOTES"),
-			loc("REG_PLAYER_ABOUT_VOTES_R"):format(aggregateVotes(context.profile.about.vote))
-			);
+			local voteUp, voteDown = aggregateVotes(context.profile.about.vote);
+
+			voteUp = voteUp or 0;
+			voteDown = voteDown or 0;
+			
+			if not TRP3_RegisterAbout_AboutPanel_LikeButton:GetFontString() then
+				TRP3_RegisterAbout_AboutPanel_LikeButton:SetText("");
+			end
+			TRP3_RegisterAbout_AboutPanel_LikeButton:SetText(tostring(voteUp));
+			if TRP3_RegisterAbout_AboutPanel_LikeButton:GetFontString() then
+				TRP3_RegisterAbout_AboutPanel_LikeButton:GetFontString():SetTextColor(1, 1, 1); 
+			end
+
+			if not TRP3_RegisterAbout_AboutPanel_DislikeButton:GetFontString() then
+				TRP3_RegisterAbout_AboutPanel_DislikeButton:SetText("");
+			end
+			TRP3_RegisterAbout_AboutPanel_DislikeButton:SetText(tostring(voteDown));
+			if TRP3_RegisterAbout_AboutPanel_DislikeButton:GetFontString() then
+				TRP3_RegisterAbout_AboutPanel_DislikeButton:GetFontString():SetTextColor(1, 1, 1); 
+			end
 		end
 	end
 end
@@ -542,9 +697,6 @@ local function getOptimizedData()
 	if template ~= 2 then
 		dataToSend.T2 = nil;
 	end
-	if template ~= 3 then
-		dataToSend.T3 = nil;
-	end
 	return dataToSend;
 end
 
@@ -575,28 +727,48 @@ end
 
 local templatesFunction = {
 	showTemplate1,
-	showTemplate2,
-	showTemplate3
+	showTemplate2
 }
 
 local function refreshConsultDisplay(context)
 	local dataTab = context.profile.about or Globals.empty;
 	local template = dataTab.TE or 1;
 	TRP3_RegisterAbout_AboutPanel.isMine = context.isPlayer;
-	TRP3_RegisterAbout_AboutPanel_ThumbResult:Hide();
-	TRP3_RegisterAbout_AboutPanel_ThumbUp:Hide();
-	TRP3_RegisterAbout_AboutPanel_ThumbDown:Hide();
+	
+	if TRP3_RegisterAbout_AboutPanel_LikeButton then
+		TRP3_RegisterAbout_AboutPanel_LikeButton:Hide();
+	end
+	if TRP3_RegisterAbout_AboutPanel_DislikeButton then
+		TRP3_RegisterAbout_AboutPanel_DislikeButton:Hide();
+	end
 
 	if context.isPlayer then
-		TRP3_RegisterAbout_AboutPanel_ThumbResult:Show();
+		TRP3_RegisterAbout_AboutPanel_DislikeButton:ClearAllPoints();
+		if TRP3_RegisterAbout_AboutPanel_LikeButton then
+			TRP3_RegisterAbout_AboutPanel_LikeButton:Show();
+			TRP3_RegisterAbout_AboutPanel_LikeButton:Disable();
+		end
+		if TRP3_RegisterAbout_AboutPanel_DislikeButton then
+			TRP3_RegisterAbout_AboutPanel_DislikeButton:Show();
+			TRP3_RegisterAbout_AboutPanel_DislikeButton:Disable();
+			TRP3_RegisterAbout_AboutPanel_DislikeButton:SetPoint("RIGHT", TRP3_RegisterAbout_AboutPanel_LikeButton, "LEFT", -10, 0);
+		end
 		refreshPlayerVoteDisplay();
 	else
 		if dataTab ~= Globals.empty then
 			dataTab.read = true;
 		end
 		Events.fireEvent(Events.REGISTER_ABOUT_READ);
-		TRP3_RegisterAbout_AboutPanel_ThumbUp:Show();
-		TRP3_RegisterAbout_AboutPanel_ThumbDown:Show();
+		if TRP3_RegisterAbout_AboutPanel_LikeButton then
+			TRP3_RegisterAbout_AboutPanel_LikeButton:Show();
+			TRP3_RegisterAbout_AboutPanel_LikeButton:Enable();
+			TRP3_RegisterAbout_AboutPanel_LikeButton:SetText("");
+		end
+		if TRP3_RegisterAbout_AboutPanel_DislikeButton then
+			TRP3_RegisterAbout_AboutPanel_DislikeButton:Show();
+			TRP3_RegisterAbout_AboutPanel_DislikeButton:Enable();
+			TRP3_RegisterAbout_AboutPanel_DislikeButton:SetText("");
+		end
 		refreshVoteDisplay(dataTab);
 	end
 
@@ -605,12 +777,27 @@ local function refreshConsultDisplay(context)
 	assert(type(templatesFunction[template]) == "function", "Error: no function for about template: " .. tostring(template));
 
 	TRP3_RegisterAbout_AboutPanel.musicURL = dataTab.MU;
-	if dataTab.MU then
-		TRP3_RegisterAbout_AboutPanel_MusicPlayer_URL:SetText(Utils.music.getTitle(dataTab.MU));
+	
+	local shouldShowMusicButton = dataTab.MU or not context.isPlayer;
+	if shouldShowMusicButton then
+		TRP3_RegisterAbout_AboutPanel_MusicButton:Show();
+		TRP3_RegisterAbout_AboutPanel_MusicButton:ClearAllPoints();
+		if context.isPlayer then
+			TRP3_RegisterAbout_AboutPanel_MusicButton:SetPoint("RIGHT", TRP3_RegisterAbout_AboutPanel_EditButton, "LEFT", -6, 0);
+		else
+			TRP3_RegisterAbout_AboutPanel_MusicButton:SetPoint("TOPRIGHT", 15, 37);
+		end
+
+		if not dataTab.MU then
+			TRP3_RegisterAbout_AboutPanel_MusicButton:SetAlpha(0);
+		else
+			TRP3_RegisterAbout_AboutPanel_MusicButton:SetAlpha(1);
+		end
+	else
+		TRP3_RegisterAbout_AboutPanel_MusicButton:Hide();
 	end
 
 	TRP3_RegisterAbout_AboutPanel_EditButton:Hide();
-	TRP3_RegisterAbout_AboutPanel_Thumb:Hide();
 	TRP3_RegisterAbout_AboutPanel:Show();
 	-- Putting the right templates
 	templatesFunction[template](dataTab);
@@ -622,25 +809,23 @@ function saveInDraft()
 	assert(type(draftData) == "table", "Error: Nil draftData or not a table.");
 	draftData.BK = TRP3_RegisterAbout_Edit_BckField:GetSelectedValue();
 	draftData.TE = TRP3_RegisterAbout_Edit_TemplateField:GetSelectedValue();
-	-- Template 1
 	draftData.T1.TX = TRP3_RegisterAbout_Edit_Template1ScrollText:GetText();
-	-- Template 2
-	template2SaveToDraft();
-	-- Template 3
-	draftData.T3.PH.BK = TRP3_RegisterAbout_Edit_Template3_PhysBkg:GetSelectedValue();
-	draftData.T3.PS.BK = TRP3_RegisterAbout_Edit_Template3_PsyBkg:GetSelectedValue();
-	draftData.T3.HI.BK = TRP3_RegisterAbout_Edit_Template3_HistBkg:GetSelectedValue();
-	draftData.T3.PH.TX = stEtN(TRP3_RegisterAbout_Edit_Template3_PhysTextScrollText:GetText());
-	draftData.T3.PS.TX = stEtN(TRP3_RegisterAbout_Edit_Template3_PsyTextScrollText:GetText());
-	draftData.T3.HI.TX = stEtN(TRP3_RegisterAbout_Edit_Template3_HistTextScrollText:GetText());
 end
 
 local function setEditTemplate(value)
 	TRP3_RegisterAbout_Edit_Template1:Hide();
 	TRP3_RegisterAbout_Edit_Template2:Hide();
-	TRP3_RegisterAbout_Edit_Template3:Hide();
+
+	for _, frame in pairs(template2EditFrames) do
+		frame:Hide();
+	end
+	
 	_G["TRP3_RegisterAbout_Edit_Template"..value]:Show();
 	draftData.TE = value;
+
+	if value == 2 then
+		refreshTemplate2EditDisplay();
+	end
 end
 
 local function save()
@@ -649,14 +834,14 @@ local function save()
 	local dataTab = get("player/about");
 	assert(type(dataTab) == "table", "Error: Nil about data or not a table.");
 	wipe(dataTab);
-	-- By simply copy the draftData we get everything we need about ordering and structures.
+
 	tcopy(dataTab, draftData);
-	-- Reinit votes
+
 	if dataTab.vote then
 		wipe(dataTab.vote);
 	end
 	dataTab.vote = nil;
-	-- version increment
+
 	assert(type(dataTab.v) == "number", "Error: No version in draftData or not a number.");
 	dataTab.v = Utils.math.incrementNumber(dataTab.v, 2);
 
@@ -665,7 +850,6 @@ local function save()
 end
 
 local function refreshEditDisplay()
-	-- Copy character's data into draft structure : We never work directly on saved_variable structures !
 	if not draftData then
 		local dataTab = get("player/about");
 		assert(type(dataTab) == "table", "Error: Nil about data or not a table.");
@@ -675,28 +859,32 @@ local function refreshEditDisplay()
 
 	TRP3_RegisterAbout_Edit_BckField:SetSelectedIndex(draftData.BK or 1);
 	TRP3_RegisterAbout_Edit_TemplateField:SetSelectedIndex(draftData.TE or 1);
-	selectMusic(draftData.MU);
 	-- Template 1
 	local template1Data = draftData.T1;
 	assert(type(template1Data) == "table", "Error: Nil template1 data or not a table.");
 	TRP3_RegisterAbout_Edit_Template1ScrollText:SetText(template1Data.TX or "");
-	-- Template 2
-	refreshTemplate2EditDisplay();
-	-- Template 3
-	local template3Data = draftData.T3;
-	assert(type(template3Data) == "table", "Error: Nil template3 data or not a table.");
-	setTemplate3PhysBkg(template3Data.PH.BK or 1);
-	setTemplate3PsyBkg(template3Data.PS.BK or 1);
-	setTemplate3HistBkg(template3Data.HI.BK or 1);
-	TRP3_RegisterAbout_Edit_Template3_PhysBkg:SetSelectedIndex(template3Data.PH.BK or 1);
-	TRP3_RegisterAbout_Edit_Template3_PsyBkg:SetSelectedIndex(template3Data.PS.BK or 1);
-	TRP3_RegisterAbout_Edit_Template3_HistBkg:SetSelectedIndex(template3Data.HI.BK or 1);
-	setupIconButton(TRP3_RegisterAbout_Edit_Template3_PhysIcon, template3Data.PH.IC or TEMPLATE3_ICON_PHYSICAL);
-	setupIconButton(TRP3_RegisterAbout_Edit_Template3_PsyIcon, template3Data.PS.IC or TEMPLATE3_ICON_PSYCHO);
-	setupIconButton(TRP3_RegisterAbout_Edit_Template3_HistIcon, template3Data.HI.IC or TEMPLATE3_ICON_HISTORY);
-	TRP3_RegisterAbout_Edit_Template3_PhysTextScrollText:SetText(template3Data.PH.TX or "");
-	TRP3_RegisterAbout_Edit_Template3_PsyTextScrollText:SetText(template3Data.PS.TX or "");
-	TRP3_RegisterAbout_Edit_Template3_HistTextScrollText:SetText(template3Data.HI.TX or "");
+
+	if not draftData.T2 then
+		draftData.T2 = {};
+	end
+	if not draftData.T2.items then
+		draftData.T2.items = {};
+	end
+	for i, item in ipairs(draftData.T2.items) do
+		if not item.id then
+			local timestamp = GetTime() * 1000 + i;
+			item.id = item.type .. "_" .. math.floor(timestamp);
+		end
+	end
+
+	if #draftData.T2.items == 0 then
+		local timestamp = GetTime() * 1000;
+		draftData.T2.items = {
+			{id = "header_" .. math.floor(timestamp), type = "header", text = "About Me", color = {r = 1, g = 0.75, b = 0}},
+			{id = "section_" .. math.floor(timestamp + 1), type = "section", text = "Write your character description here.", icon = nil}
+		};
+	end
+	local template2Data = draftData.T2;
 
 	TRP3_RegisterAbout_AboutPanel_Edit:Show();
 	setEditTemplate(draftData.TE or 1);
@@ -707,10 +895,8 @@ local function refreshDisplay()
 	assert(context, "No context for page player_main !");
 	assert(context.profile, "No profile in context");
 
-	--Hide all templates
 	TRP3_RegisterAbout_AboutPanel_Template1:Hide();
 	TRP3_RegisterAbout_AboutPanel_Template2:Hide();
-	TRP3_RegisterAbout_AboutPanel_Template3:Hide();
 	TRP3_RegisterAbout_AboutPanel_Empty:Hide();
 	TRP3_RegisterAbout_AboutPanel:Hide();
 	TRP3_RegisterAbout_AboutPanel_Edit:Hide();
@@ -724,7 +910,6 @@ local function refreshDisplay()
 end
 
 local function showAboutTab()
-	TRP3_RegisterAbout_AboutPanel_MusicPlayer:Hide();
 	TRP3_RegisterAbout:Show();
 	getCurrentContext().isEditMode = false;
 	refreshDisplay();
@@ -744,8 +929,7 @@ function TRP3_API.register.ui.shouldShowAboutTab(profile)
 	if profile and profile.about then
 		local dataTab = profile.about;
 		return (dataTab.TE == 1 and shouldShowTemplate1(dataTab))
-		or (dataTab.TE == 2 and shouldShowTemplate2(dataTab))
-		or (dataTab.TE == 3 and shouldShowTemplate3(dataTab));
+		or (dataTab.TE == 2 and shouldShowTemplate2(dataTab));
 	end
 	return false;
 end
@@ -756,7 +940,6 @@ end
 
 local function onMusicSelected(music)
 	draftData.MU = music;
-	selectMusic(draftData.MU);
 end
 
 local function onMusicEditSelected(value, button)
@@ -764,7 +947,6 @@ local function onMusicEditSelected(value, button)
 		TRP3_API.popup.showMusicBrowser(onMusicSelected);
 	elseif value == 2 and draftData.MU then
 		draftData.MU = nil;
-		selectMusic(draftData.MU);
 	elseif value == 3 and draftData.MU then
 		Utils.music.play(draftData.MU);
 	elseif value == 4 and draftData.MU then
@@ -775,6 +957,9 @@ end
 local function onMusicEditClicked(button)
 	local profileID = button:GetParent().profileID;
 	local values = {};
+	
+	-- current track is in dropdown instead
+	tinsert(values, {getCurrentMusicInfo()});
 	tinsert(values, {loc("REG_PLAYER_ABOUT_MUSIC_SELECT"), 1});
 	if draftData.MU then
 		tinsert(values, {loc("REG_PLAYER_ABOUT_MUSIC_REMOVE"), 2});
@@ -796,20 +981,15 @@ end
 -- UI MISC
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-local TRP3_RegisterAbout_AboutPanel_Thumb = TRP3_RegisterAbout_AboutPanel_Thumb;
 local TRP3_RegisterAbout_AboutPanel_EditButton = TRP3_RegisterAbout_AboutPanel_EditButton;
-local TRP3_RegisterAbout_AboutPanel_MusicPlayer = TRP3_RegisterAbout_AboutPanel_MusicPlayer;
+local TRP3_RegisterAbout_AboutPanel_MusicButton = TRP3_RegisterAbout_AboutPanel_MusicButton;
 
 local function onPlayerAboutRefresh()
 	local profile = getCurrentContext().profile;
-	if getConfigValue("register_about_use_vote") and (getCurrentContext().isPlayer or (not profile.msp and profile.link and tsize(profile.link) > 0)) then
-		showIfMouseOver(TRP3_RegisterAbout_AboutPanel_Thumb, TRP3_RegisterAbout_AboutPanel);
-	end
 	if TRP3_RegisterAbout_AboutPanel.isMine then
-		showIfMouseOver(TRP3_RegisterAbout_AboutPanel_EditButton, TRP3_RegisterAbout_AboutPanel);
-	end
-	if TRP3_RegisterAbout_AboutPanel.musicURL then
-		showIfMouseOver(TRP3_RegisterAbout_AboutPanel_MusicPlayer, TRP3_RegisterAbout_AboutPanel);
+		TRP3_RegisterAbout_AboutPanel_EditButton:Show();
+	else
+		TRP3_RegisterAbout_AboutPanel_EditButton:Hide();
 	end
 end
 
@@ -821,7 +1001,8 @@ end
 local function onAboutReceived(profileID)
 	local aboutData = getProfile(profileID);
 	-- Check that there is a description. If not => set read to true !
-	local noDescr = (aboutData.TE == 1 and not shouldShowTemplate1(aboutData)) or (aboutData.TE == 2 and not shouldShowTemplate2(aboutData)) or (aboutData.TE == 3 and not shouldShowTemplate3(aboutData))
+	local noDescr = (aboutData.TE == 1 and not shouldShowTemplate1(aboutData)) or
+	                (aboutData.TE == 2 and not shouldShowTemplate2(aboutData))
 	if noDescr then
 		aboutData.read = true;
 		Events.fireEvent(Events.REGISTER_ABOUT_READ);
@@ -864,25 +1045,26 @@ function TRP3_API.register.inits.aboutInit()
 	Comm.registerProtocolPrefix(VOTE_MESSAGE_PREFIX, vote);
 	Comm.registerProtocolPrefix(VOTE_MESSAGE_R_PREFIX, voteResponse);
 
-	-- UI
 	createRefreshOnFrame(TRP3_RegisterAbout_AboutPanel, 0.2, onPlayerAboutRefresh);
 	local bkgTab = getTiledBackgroundList();
 	setupListBox(TRP3_RegisterAbout_Edit_BckField, bkgTab, setEditBkg, nil, 120, true);
-	setupListBox(TRP3_RegisterAbout_Edit_TemplateField, {{"Template 1", 1}, {"Template 2", 2}, {"Template 3", 3}}, setEditTemplate, nil, 120, true);
-	setupListBox(TRP3_RegisterAbout_Edit_Template3_PhysBkg, bkgTab, setTemplate3PhysBkg, nil, 120, true);
-	setupListBox(TRP3_RegisterAbout_Edit_Template3_PsyBkg, bkgTab, setTemplate3PsyBkg, nil, 120, true);
-	setupListBox(TRP3_RegisterAbout_Edit_Template3_HistBkg, bkgTab, setTemplate3HistBkg, nil, 120, true);
-	TRP3_RegisterAbout_Edit_Template3_PhysIcon:SetScript("OnClick", function() showIconBrowser(onPhisIconSelected) end );
-	TRP3_RegisterAbout_Edit_Template3_PsyIcon:SetScript("OnClick", function() showIconBrowser(onPsychoIconSelected) end );
-	TRP3_RegisterAbout_Edit_Template3_HistIcon:SetScript("OnClick", function() showIconBrowser(onHistoIconSelected) end );
+	setupListBox(TRP3_RegisterAbout_Edit_TemplateField, {{"Template 1", 1}, {"Template 2", 2}}, setEditTemplate, nil, 120, true);
 	TRP3_RegisterAbout_Edit_Music_Action:SetScript("OnClick", onMusicEditClicked);
-	TRP3_RegisterAbout_Edit_Template2_Add:SetScript("OnClick", template2AddFrame);
 	TRP3_RegisterAbout_AboutPanel_EditButton:SetScript("OnClick", onEdit);
 	TRP3_RegisterAbout_Edit_SaveButton:SetScript("OnClick", onSave);
 	TRP3_RegisterAbout_Edit_CancelButton:SetScript("OnClick", showAboutTab);
 
 	TRP3_RegisterAbout_AboutPanel_Empty:SetText(loc("REG_PLAYER_ABOUT_EMPTY"));
 	TRP3_API.ui.text.setupToolbar("TRP3_RegisterAbout_Edit_Template1_Toolbar", TRP3_RegisterAbout_Edit_Template1ScrollText);
+
+	TRP3_RegisterAbout_Edit_Template2:Hide();
+	
+	TRP3_RegisterAbout_Edit_Template2_AddHeader:SetScript("OnClick", function()
+		addTemplate2Item("header");
+	end);
+	TRP3_RegisterAbout_Edit_Template2_AddSection:SetScript("OnClick", function()
+		addTemplate2Item("section");
+	end);
 
 	TRP3_RegisterAbout_AboutPanel_Template1:SetScript("OnHyperlinkClick", onLinkClicked);
 	TRP3_RegisterAbout_AboutPanel_Template1:SetScript("OnHyperlinkEnter", function(self, link, text)
@@ -894,19 +1076,9 @@ function TRP3_API.register.inits.aboutInit()
 	end);
 	TRP3_RegisterAbout_AboutPanel_Template1:SetScript("OnHyperlinkLeave", function() TRP3_MainTooltip:Hide(); end);
 
-	TRP3_RegisterAbout_AboutPanel_Template3_1_Text:SetWidth(450);
-	TRP3_RegisterAbout_AboutPanel_Template3_2_Text:SetWidth(450);
-	TRP3_RegisterAbout_AboutPanel_Template3_3_Text:SetWidth(450);
-	TRP3_RegisterAbout_Edit_Template3_PhysTitle:SetText(loc("REG_PLAYER_PHYSICAL"));
-	TRP3_RegisterAbout_Edit_Template3_PsyTitle:SetText(loc("REG_PLAYER_PSYCHO"));
-	TRP3_RegisterAbout_Edit_Template3_HistTitle:SetText(loc("REG_PLAYER_HISTORY"));
-	TRP3_RegisterAbout_Edit_Template2_Add:SetText(loc("REG_PLAYER_ABOUT_ADD_FRAME"));
 	TRP3_RegisterAbout_AboutPanel_EditButton:SetText(loc("CM_EDIT"));
 	TRP3_RegisterAbout_Edit_SaveButton:SetText(loc("CM_SAVE"));
 	TRP3_RegisterAbout_Edit_CancelButton:SetText(loc("CM_CANCEL"));
-	TRP3_RegisterAbout_AboutPanel_MusicPlayer_Play:SetText(loc("CM_PLAY"));
-	TRP3_RegisterAbout_AboutPanel_MusicPlayer_Stop:SetText(loc("CM_STOP"));
-	TRP3_RegisterAbout_AboutPanel_MusicPlayer_Title:SetText(loc("REG_PLAYER_ABOUT_MUSIC"));
 
 	TRP3_RegisterAbout_AboutPanel_Template1:SetFontObject("p", GameFontNormal);
 	TRP3_RegisterAbout_AboutPanel_Template1:SetFontObject("h1", GameFontNormalHuge3);
@@ -916,21 +1088,62 @@ function TRP3_API.register.inits.aboutInit()
 	TRP3_RegisterAbout_AboutPanel_Template1:SetTextColor("h2", 1, 1, 1);
 	TRP3_RegisterAbout_AboutPanel_Template1:SetTextColor("h3", 1, 1, 1);
 
-	setupIconButton(TRP3_RegisterAbout_AboutPanel_ThumbResult, "INV_Inscription_RunescrollOfFortitude_Green");
-	setupIconButton(TRP3_RegisterAbout_AboutPanel_ThumbUp, "THUMBUP");
-	setupIconButton(TRP3_RegisterAbout_AboutPanel_ThumbDown, "THUMBSDOWN");
+	if TRP3_RegisterAbout_AboutPanel_LikeButton then
+		if TRP3_RegisterAbout_AboutPanel_LikeButton:GetName() then
+			setTooltipForSameFrame(TRP3_RegisterAbout_AboutPanel_LikeButton, "LEFT", 0, 5, loc("REG_PLAYER_ABOUT_VOTE_UP"), loc("REG_PLAYER_ABOUT_VOTE_TT") .. "\n\n" .. Utils.str.color("y") .. loc("REG_PLAYER_ABOUT_VOTE_TT2"));
+		end
 
-	setTooltipForSameFrame(TRP3_RegisterAbout_AboutPanel_ThumbUp, "LEFT", 0, 5, loc("REG_PLAYER_ABOUT_VOTE_UP"), loc("REG_PLAYER_ABOUT_VOTE_TT") .. "\n\n" .. Utils.str.color("y") .. loc("REG_PLAYER_ABOUT_VOTE_TT2"));
-	setTooltipForSameFrame(TRP3_RegisterAbout_AboutPanel_ThumbDown, "LEFT", 0, 5, loc("REG_PLAYER_ABOUT_VOTE_DOWN"), loc("REG_PLAYER_ABOUT_VOTE_TT") .. "\n\n" .. Utils.str.color("y") .. loc("REG_PLAYER_ABOUT_VOTE_TT2"));
-	TRP3_RegisterAbout_AboutPanel_ThumbUp:SetScript("OnClick", function() showVotingOption(1) end);
-	TRP3_RegisterAbout_AboutPanel_ThumbDown:SetScript("OnClick", function() showVotingOption(-1) end);
+		if not TRP3_RegisterAbout_AboutPanel_LikeButton:GetFontString() then
+			local fontString = TRP3_RegisterAbout_AboutPanel_LikeButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall");
+			fontString:SetPoint("LEFT", TRP3_RegisterAbout_AboutPanel_LikeButton, "LEFT", -7, 1);
+			TRP3_RegisterAbout_AboutPanel_LikeButton:SetFontString(fontString);
+		end
+		
+		TRP3_RegisterAbout_AboutPanel_LikeButton:SetScript("OnClick", function() 
+			local context = getCurrentContext();
+			if context and not context.isPlayer then
+				showVotingOption(1);
+			end
+		end);
+	end
+	
+	if TRP3_RegisterAbout_AboutPanel_DislikeButton then
+		if TRP3_RegisterAbout_AboutPanel_DislikeButton:GetName() then
+			setTooltipForSameFrame(TRP3_RegisterAbout_AboutPanel_DislikeButton, "LEFT", 0, 5, loc("REG_PLAYER_ABOUT_VOTE_DOWN"), loc("REG_PLAYER_ABOUT_VOTE_TT") .. "\n\n" .. Utils.str.color("y") .. loc("REG_PLAYER_ABOUT_VOTE_TT2"));
+		end
 
-	TRP3_RegisterAbout_AboutPanel_MusicPlayer_Play:SetScript("OnClick", function()
-		Utils.music.play(TRP3_RegisterAbout_AboutPanel.musicURL);
-	end);
-	TRP3_RegisterAbout_AboutPanel_MusicPlayer_Stop:SetScript("OnClick", function()
-		Utils.music.stop();
-	end);
+		if not TRP3_RegisterAbout_AboutPanel_DislikeButton:GetFontString() then
+			local fontString = TRP3_RegisterAbout_AboutPanel_DislikeButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall");
+			fontString:SetPoint("LEFT", TRP3_RegisterAbout_AboutPanel_DislikeButton, "LEFT", -7, 1);
+			TRP3_RegisterAbout_AboutPanel_DislikeButton:SetFontString(fontString);
+		end
+		
+		TRP3_RegisterAbout_AboutPanel_DislikeButton:SetScript("OnClick", function() 
+			local context = getCurrentContext();
+			if context and not context.isPlayer then
+				showVotingOption(-1);
+			end
+		end);
+	end
+
+	if TRP3_RegisterAbout_AboutPanel_MusicButton then
+		TRP3_RegisterAbout_AboutPanel_MusicButton:RegisterForClicks("LeftButtonUp", "RightButtonUp");
+		TRP3_RegisterAbout_AboutPanel_MusicButton:SetScript("OnClick", function(self, button)
+			if TRP3_RegisterAbout_AboutPanel.musicURL then
+				if button == "LeftButton" then
+					Utils.music.play(TRP3_RegisterAbout_AboutPanel.musicURL);
+				elseif button == "RightButton" then
+					Utils.music.stop();
+				end
+			end
+		end);
+
+		if TRP3_RegisterAbout_AboutPanel_MusicButton:GetName() then
+			setTooltipForSameFrame(TRP3_RegisterAbout_AboutPanel_MusicButton, "LEFT", 0, 5, 
+				loc("REG_PLAYER_ABOUT_MUSIC"), 
+				loc("CM_L_CLICK") .. ": " .. loc("CM_PLAY") .. "\n" .. loc("CM_R_CLICK") .. ": " .. loc("CM_STOP"));
+		end
+	end
 
 	Events.listenToEvent(Events.REGISTER_PROFILES_LOADED, compressData); -- On profile change, compress the new data
 	compressData();
@@ -940,4 +1153,54 @@ function TRP3_API.register.inits.aboutInit()
 			onAboutReceived(profileID);
 		end
 	end);
+	
+	local function createSampleTemplate2Data()
+		if not draftData then
+			onEdit();
+		end
+		
+		if not draftData.T2 then
+			draftData.T2 = { items = {} };
+		end
+		
+		wipe(draftData.T2.items);
+		
+		tinsert(draftData.T2.items, {
+			id = "sample_header_1",
+			type = "header",
+			text = "Character Background",
+			color = { red = 1, green = 0.8, blue = 0.2 }
+		});
+		
+		tinsert(draftData.T2.items, {
+			id = "sample_section_1",
+			type = "section",
+			text = "Born in the misty mountains of Dun Morogh, this dwarf has seen many adventures across Azeroth. From the frozen peaks of Northrend to the burning sands of Tanaris, countless tales could be told of valor and friendship.",
+			icon = "Achievement_Character_Dwarf_Male"
+		});
+
+		tinsert(draftData.T2.items, {
+			id = "sample_header_2",
+			type = "header",
+			text = "Recent Adventures",
+			color = { red = 0.2, green = 1, blue = 0.4 }
+		});
+
+		tinsert(draftData.T2.items, {
+			id = "sample_section_2",
+			type = "section",
+			text = "Recently returned from a expedition to the Dragon Isles, bringing back ancient artifacts and stories of magnificent dragons. Currently seeking new allies for future adventures.",
+			icon = "Achievement_Dungeon_DragonSoulRaid_KillDeathwing"
+		});
+
+		draftData.TE = 2;
+		TRP3_RegisterAbout_Edit_TemplateField:SetSelectedValue(2);
+		setEditTemplate(2);
+
+		refreshTemplate2EditDisplay();
+		
+		Utils.message.displayMessage("Sample Template 2 data created! You can now test the display and edit features.");
+	end
+
+	TRP3_API.CreateSampleTemplate2Data = createSampleTemplate2Data;
 end

@@ -21,7 +21,7 @@
 		<Size x="20" y="20" />
 		<Layers>
 			<Layer level="OVERLAY">
-				<Texture file="Interface\MINIMAP\MiniMap-TrackingBorder.blp">
+				<Texture file="Interface\ACHIEVEMENTFRAME\UI-Achievement-IconFrame">
 					<Size x="40" y="40" />
 					<Anchors>
 						<Anchor point="CENTER" x="8" y="-8" />
@@ -41,9 +41,9 @@
 	</Button>
 
 	<Frame name="TRP3_GlanceBarTemplate" hidden="true" frameStrata="MEDIUM" toplevel="true" enableMouse="true" virtual="true">
-		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\GLUES\COMMON\TextPanel-Border" tile="false">
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-edge" tile="false">
 			<EdgeSize>
-				<AbsValue val="24" />
+				<AbsValue val="8" />
 			</EdgeSize>
 			<TileSize>
 				<AbsValue val="300" />

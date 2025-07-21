@@ -1,8 +1,7 @@
-<Ui xmlns="http://www.blizzard.com/wow/ui/"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	xsi:schemaLocation="http://www.blizzard.com/wow/ui/">
-	
-<!--
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Meorawr/wow-ui-schema/main/UI.xsd">
+
+	<!--
 	Total RP 3
 	Copyright 2014 Sylvain Cossement (telkostrasz@telkostrasz.be)
 
@@ -18,218 +17,169 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 -->
-		
-    <Frame name="TRP3_MainFrame" toplevel="true" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" clampedToScreen="true" hidden="true">
-		<TitleRegion setAllPoints="true"/>
-		<Size x="768" y="500"/>
-		<Anchors>	
-			<Anchor point="CENTER" x="0" y="0"/>
+
+	<Frame name="TRP3_MainFrame" toplevel="true" parent="UIParent" frameStrata="MEDIUM"
+		enableMouse="true" clampedToScreen="true" hidden="true">
+		<TitleRegion setAllPoints="true" />
+		<Size x="840" y="600" />
+		<Anchors>
+			<Anchor point="CENTER" />
 		</Anchors>
-		<Backdrop edgeFile="Interface\AchievementFrame\UI-Achievement-WoodBorder" tile="true">
-			<EdgeSize>
-				<AbsValue val="64"/>
-			</EdgeSize>
-			<TileSize>
-				<AbsValue val="32"/>
-			</TileSize>
-			<BackgroundInsets>
-				<AbsInset left="5" right="5" top="5" bottom="5"/>
-			</BackgroundInsets>
-		</Backdrop>
-		<Scripts>
+		<!-- <Scripts>
 			<OnLoad>
 				tinsert(UISpecialFrames, self:GetName());
 			</OnLoad>
-		</Scripts>
-		<Layers>
-			<Layer level="BACKGROUND">
-			    <Texture file="Interface\TutorialFrame\TutorialFrameBackground">
-					<Anchors>
-						<Anchor point="TOPLEFT" x="16" y="-16"/>
-						<Anchor point="BOTTOMRIGHT" x="-16" y="16"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-			<Layer level="ARTWORK">
-				<!-- inner border -->
-				<Texture file="Interface\AchievementFrame\UI-Achievement-MetalBorder-Left">
-					<Size x="16" y="436"/>
-					<Anchors>
-						<Anchor point="LEFT" x="14" y="0"/>
-					</Anchors>
-					<TexCoords left="0" right="1" top="0" bottom=".87"/>
-				</Texture>
-				<Texture file="Interface\AchievementFrame\UI-Achievement-MetalBorder-Left">
-					<Size x="16" y="436"/>
-					<Anchors>
-						<Anchor point="RIGHT" x="-13" y="0"/>
-					</Anchors>
-					<TexCoords left="1" right="0" top=".87" bottom="0"/>
-				</Texture>
-				<Texture file="Interface\AchievementFrame\UI-Achievement-MetalBorder-Top">
-					<Size x="450" y="16"/>
-					<Anchors>
-						<Anchor point="BOTTOMLEFT" x="28" y="13"/>
-						<Anchor point="BOTTOMRIGHT" x="-28" y="13"/>
-					</Anchors>
-					<TexCoords left="0" right=".87" top="1.0" bottom="0"/>
-				</Texture>
-				<Texture file="Interface\AchievementFrame\UI-Achievement-MetalBorder-Top">
-					<Size x="450" y="16"/>
-					<Anchors>
-						<Anchor point="TOPLEFT" x="28" y="-12"/>
-						<Anchor point="TOPRIGHT" x="-28" y="-12"/>
-					</Anchors>
-					<TexCoords left=".87" right="0" top="0" bottom="1"/>
-				</Texture>
-				<!-- background of menu -->
-				<Texture file="Interface\AchievementFrame\UI-Achievement-Parchment">
-					<Size x="195" y="0"/>
-					<Anchors>
-						<Anchor point="TOPLEFT" x="22" y="-20"/>
-						<Anchor point="BOTTOMLEFT" x="20" y="23"/>
-					</Anchors>
-					<TexCoords left="0" right="0.5" top="0" bottom="1"/>
-				</Texture>
-				
-			</Layer>
-			<Layer level="OVERLAY">
-				<!-- inner border corners -->
-				<Texture file="Interface\AchievementFrame\UI-Achievement-MetalBorder-Joint">
-					<Size x="32" y="32"/>
-					<Anchors>
-						<Anchor point="TOPLEFT" x="9" y="-7"/>
-					</Anchors>
-					<TexCoords left="1" right="0" top="1" bottom="0"/>
-				</Texture>
-				<Texture file="Interface\AchievementFrame\UI-Achievement-MetalBorder-Joint">
-					<Size x="32" y="32"/>
-					<Anchors>
-						<Anchor point="TOPRIGHT" x="-8" y="-7"/>
-					</Anchors>
-					<TexCoords left="0" right="1" top="1" bottom="0"/>
-				</Texture>
-				<Texture file="Interface\AchievementFrame\UI-Achievement-MetalBorder-Joint">
-					<Size x="32" y="32"/>
-					<Anchors>
-						<Anchor point="BOTTOMLEFT" x="9" y="8"/>
-					</Anchors>
-					<TexCoords left="1" right="0" top="0" bottom="1"/>				
-				</Texture>
-				<Texture file="Interface\AchievementFrame\UI-Achievement-MetalBorder-Joint">
-					<Size x="32" y="32"/>
-					<Anchors>
-						<Anchor point="BOTTOMRIGHT" x="-8" y="8"/>
-					</Anchors>
-					<TexCoords left="0" right="1" top="0" bottom="1"/>				
-				</Texture>
-				<Texture file="Interface\AchievementFrame\UI-Achievement-WoodBorder-Corner">
-					<Size x="64" y="64"/>
-					<Anchors>
-						<Anchor point="TOPLEFT" x="4" y="-2"/>
-					</Anchors>
-					<TexCoords left="0" right="1" top="0" bottom="1"/>
-				</Texture>
-				<Texture file="Interface\AchievementFrame\UI-Achievement-WoodBorder-Corner">
-					<Size x="64" y="64"/>
-					<Anchors>
-						<Anchor point="TOPRIGHT" x="-4" y="-2"/>
-					</Anchors>
-					<TexCoords left="1" right="0" top="0" bottom="1"/>
-				</Texture>		
-				<Texture file="Interface\AchievementFrame\UI-Achievement-WoodBorder-Corner">
-					<Size x="64" y="64"/>
-					<Anchors>
-						<Anchor point="BOTTOMLEFT" x="4" y="3"/>
-					</Anchors>
-					<TexCoords left="0" right="1" top="1" bottom="0"/>
-				</Texture>		
-				<Texture file="Interface\AchievementFrame\UI-Achievement-WoodBorder-Corner">
-					<Size x="64" y="64"/>
-					<Anchors>
-						<Anchor point="BOTTOMRIGHT" x="-4" y="3"/>
-					</Anchors>
-					<TexCoords left="1" right="0" top="1" bottom="0"/>
-				</Texture>
-			</Layer>
-		</Layers>
+		</Scripts> -->
 		<Frames>
-			<!-- RIGHT PART : Place for content -->
-		    <Frame name="TRP3_MainFramePageContainer">
-		        <Size x="533" y="0"/>
+			<Frame name="TRP3_MainFrameBackdrop" setAllPoints="true">
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="TRP3_MainFrameBackground"
+							file="Interface\AddOns\totalRP3\Resources\UI\ui-frame-neutral-background"
+							horizTile="true" vertTile="true">
+							<Anchors>
+								<Anchor point="TOPLEFT" x="4" y="-4" />
+								<Anchor point="BOTTOMRIGHT" x="-4" y="4" />
+							</Anchors>
+							<Color r="0.6" g="0.6" b="0.6" />
+						</Texture>
+					</Layer>
+					<Layer level="BORDER" textureSubLevel="-3">
+						<Texture name="TRP3_MainFrameTopWoodBorder"
+							file="Interface\AddOns\totalRP3\Resources\UI\_ui-frame-wooden-border"
+							horizTile="true">
+							<Size y="22" />
+							<Anchors>
+								<Anchor point="TOPLEFT" x="6" y="-4" />
+								<Anchor point="TOPRIGHT" x="-6" y="-4" />
+							</Anchors>
+							<Color r="1" g="0.8" b="0.8" />
+							<TexCoords top="0.444375" bottom="0.93" />
+						</Texture>
+						<Texture name="TRP3_MainFrameBottomWoodBorder"
+							file="Interface\AddOns\totalRP3\Resources\UI\_ui-frame-wooden-border"
+							horizTile="true">
+							<Size y="22" />
+							<Anchors>
+								<Anchor point="BOTTOMLEFT" x="6" y="5" />
+								<Anchor point="BOTTOMRIGHT" x="-6" y="5" />
+							</Anchors>
+							<Color r="1" g="0.8" b="0.8" />
+							<TexCoords top="0.015625" bottom="0.433125" />
+						</Texture>
+					</Layer>
+					<Layer level="BORDER" textureSubLevel="-2">
+						<Texture name="TRP3_MainFrameLeftWoodBorder"
+							file="Interface\AddOns\totalRP3\Resources\UI\!ui-frame-wooden-border"
+							vertTile="true">
+							<Size x="10" />
+							<Anchors>
+								<Anchor point="TOPLEFT" x="4" y="-22" />
+								<Anchor point="BOTTOMLEFT" x="4" y="22" />
+							</Anchors>
+							<Color r="1" g="0.8" b="0.8" />
+							<TexCoords left="0.0" right="0.9" />
+						</Texture>
+						<Texture name="TRP3_MainFrameRightWoodBorder"
+							file="Interface\AddOns\totalRP3\Resources\UI\!ui-frame-wooden-border"
+							vertTile="true">
+							<Size x="10" />
+							<Anchors>
+								<Anchor point="TOPRIGHT" x="-4" y="-22" />
+								<Anchor point="BOTTOMRIGHT" x="-4" y="22" />
+							</Anchors>
+							<Color r="1" g="0.8" b="0.8" />
+							<TexCoords left="0.9" right="0.0" />
+						</Texture>
+					</Layer>
+
+				</Layers>
+			</Frame>
+
+			<!-- RIGHT PART : Place for content. Needs to be defined first as the menu scroll
+			invokes OnSizeChanged. -->
+			<Frame name="TRP3_MainFramePageContainer">
 				<Anchors>
-					<Anchor point="TOPRIGHT" x="-20" y="-20"/>
-					<Anchor point="BOTTOMRIGHT" x="-20" y="17"/>
+					<Anchor point="TOPRIGHT" x="-27" y="-20" />
+					<Anchor point="BOTTOMRIGHT" x="-27" y="21" />
+					<Anchor point="LEFT" x="246" y="0" />
 				</Anchors>
-		    </Frame>
-		    <!-- LEFT PART : Menu -->
-		    <ScrollFrame name="TRP3_MainFrameMenuScroll" inherits="UIPanelScrollFrameTemplate">
-				<Size x="175" y="0"/>
+			</Frame>
+
+			<!-- LEFT PART : Menu -->
+			<Frame name="TRP3_MainFrameMenuScroll">
+				<Size x="190" y="0" />
 				<Anchors>
-					<Anchor point="TOPLEFT" x="20" y="-23"/>
-					<Anchor point="BOTTOM" x="0" y="20"/>
+					<Anchor point="TOPLEFT" x="40" y="-24" />
+					<Anchor point="BOTTOM" y="24" />
 				</Anchors>
-				<ScrollChild>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="TRP3_MainFrameMenuBackground"
+							file="Interface\AddOns\totalRP3\Resources\UI\ui-frame-neutral-background"
+							horizTile="true" vertTile="true">
+							<Color r="0.6" g="0.6" b="0.6" />
+							<Anchors>
+								<Anchor point="TOPLEFT" x="-8" y="8" />
+								<Anchor point="BOTTOMRIGHT" x="8" y="-8" />
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="BORDER" textureSubLevel="-3">
+						<Texture name="TRP3_MainFrameSidebarWoodBorder"
+							file="Interface\AddOns\totalRP3\Resources\UI\!ui-frame-wooden-border">
+							<Size x="22" />
+							<Anchors>
+								<Anchor point="TOP" y="4" />
+								<Anchor point="LEFT" x="80" />
+								<Anchor point="BOTTOM" y="-4" />
+							</Anchors>
+							<Color r="1" g="0.8" b="0.8" />
+							<TexCoords left="0.9" right="0" />
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
 					<Frame name="TRP3_MainFrameMenuContainer">
-						<Size x="195" y="10"/>
+						<Size x="190" y="10" />
+						<Anchors>
+							<Anchor point="TOPLEFT" x="0" y="0" />
+							<Anchor point="TOPRIGHT" x="0" y="0" />
+						</Anchors>
 						<Frames>
 						</Frames>
 					</Frame>
-				</ScrollChild>
-			</ScrollFrame>
-			
+				</Frames>
+			</Frame>
+
 			<!-- RIGHT PART : STATIC POPUP : blocking access to content behind it -->
 			<Frame name="TRP3_PopupsFrame" frameStrata="DIALOG" enableMouse="true" hidden="true">
-				<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\GLUES\COMMON\TextPanel-Border" tile="true">
-					<EdgeSize><AbsValue val="16"/></EdgeSize><TileSize><AbsValue val="415"/></TileSize>
-					<BackgroundInsets><AbsInset left="5" right="5" top="5" bottom="5"/></BackgroundInsets>
+				<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background"
+					edgeFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-edge"
+					tile="true">
+					<EdgeSize>
+						<AbsValue val="16" />
+					</EdgeSize>
+					<TileSize>
+						<AbsValue val="415" />
+					</TileSize>
+					<BackgroundInsets>
+						<AbsInset left="5" right="5" top="5" bottom="5" />
+					</BackgroundInsets>
 				</Backdrop>
-				<Size x="535" y="0"/>
 				<Anchors>
-					<Anchor point="TOPRIGHT" x="-20" y="-20"/>
-					<Anchor point="BOTTOMRIGHT" x="-20" y="20"/>
+					<Anchor point="TOPLEFT" x="211" y="-18" />
+					<Anchor point="BOTTOMRIGHT" x="-18" y="18" />
 				</Anchors>
 			</Frame>
+
 			<!-- CLOSE MAIN FRAME -->
 			<Button name="TRP3_MainFrameClose" inherits="UIPanelCloseButton">
 				<Anchors>
-					<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="0" y="0"/>
+					<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="-1" y="-1" />
 				</Anchors>
 			</Button>
 		</Frames>
 	</Frame>
-	
-	<!-- <ScrollFrame name="TRP3_DEBUG_CODE_FRAME" inherits="UIPanelScrollFrameTemplate" parent="UIParent" hidden="true">
-		<Backdrop edgeFile="Interface\GLUES\COMMON\TextPanel-Border" tile="true" bgFile="Interface\DialogFrame\UI-DialogBox-Background">
-			<EdgeSize><AbsValue val="32"/></EdgeSize><TileSize><AbsValue val="400"/></TileSize>
-			<BackgroundInsets><AbsInset left="5" right="5" top="5" bottom="5"/></BackgroundInsets>
-		</Backdrop>
-		<Size x="200" y="200"/>
-		<Anchors>
-			<Anchor point="CENTER" x="0" y="0"/>
-		</Anchors>
-		<ScrollChild>
-			<EditBox name="TRP3_DEBUG_CODE_FRAME_TEXT" multiLine="true" enableMouse="false" autoFocus="false">
-				<Size x="200" y="200"/>
-				<Scripts>
-					<OnTextChanged>
-						if self:IsVisible() and self:GetCursorPosition() == string.len(self:GetText()) then
-							self:GetParent():SetVerticalScroll(self:GetParent():GetVerticalScrollRange());
-						end
-					</OnTextChanged>
-					<OnEscapePressed>
-						self:ClearFocus();
-					</OnEscapePressed>
-					<OnEditFocusGained>
-						self:HighlightText();
-					</OnEditFocusGained>
-					<OnEditFocusLost>
-						self:HighlightText(0,0);
-					</OnEditFocusLost>
-				</Scripts>
-				<FontString inherits="GameFontNormalSmall"/>
-			</EditBox>
-		</ScrollChild>
-	</ScrollFrame> -->
 
 </Ui>

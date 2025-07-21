@@ -83,11 +83,11 @@ local LOCALE_EN = {
 		REG_PLAYER_TRP2_TRAITS = "Physiognomy",
 		REG_PLAYER_TRP2_PIERCING = "Piercings",
 		REG_PLAYER_TRP2_TATTOO = "Tattoos",
-		REG_PLAYER_PSYCHO = "Personality traits",
+		REG_PLAYER_OTHER = "Personality traits",
 		REG_PLAYER_ADD_NEW = "Create new",
 		REG_PLAYER_HISTORY = "History",
 		REG_PLAYER_MORE_INFO = "Extended character records",
-		REG_PLAYER_PHYSICAL = "Physical Description",
+		REG_PLAYER_PHYSICAL = "Personality & Physical",
 		REG_PLAYER_NO_CHAR = "No characteristics",
 		REG_PLAYER_SHOWPSYCHO = "Show personality frame",
 		REG_PLAYER_SHOWPSYCHO_TT = "Check if you want to use the personality description.\n\nIf you don't want to indicate your character's personality this way, keep this box unchecked and the personality frame will remain totally hidden.",
@@ -123,6 +123,41 @@ local LOCALE_EN = {
 		REG_PLAYER_PSYCHO_Couard = "Spineless";
 		REG_PLAYER_PSYCHO_CUSTOM = "Custom trait",
 		REG_PLAYER_PSYCHO_CREATENEW = "Create a trait",
+		-- New trait system localization
+		REG_PLAYER_TRAIT_SOCIAL = "Social traits",
+		REG_PLAYER_TRAIT_PERSONAL = "Personal traits",
+		REG_PLAYER_TRAIT_CHAOTIC = "Chaotic",
+		REG_PLAYER_TRAIT_LOYAL = "Lawful",
+		REG_PLAYER_TRAIT_CHASTE = "Chaste",
+		REG_PLAYER_TRAIT_LUSTFUL = "Lustful",
+		REG_PLAYER_TRAIT_FORGIVING = "Forgiving",
+		REG_PLAYER_TRAIT_VENGEFUL = "Vindictive",
+		REG_PLAYER_TRAIT_GENEROUS = "Generous",
+		REG_PLAYER_TRAIT_SELFISH = "Selfish",
+		REG_PLAYER_TRAIT_SINCERE = "Sincere",
+		REG_PLAYER_TRAIT_DECEPTIVE = "Deceptive",
+		REG_PLAYER_TRAIT_MERCIFUL = "Merciful",
+		REG_PLAYER_TRAIT_CRUEL = "Cruel",
+		REG_PLAYER_TRAIT_SPIRITUAL = "Spiritual",
+		REG_PLAYER_TRAIT_RATIONAL = "Rational",
+		REG_PLAYER_TRAIT_PRAGMATIC = "Pragmatic",
+		REG_PLAYER_TRAIT_DIPLOMATIC = "Diplomatic",
+		REG_PLAYER_TRAIT_THOUGHTFUL = "Thoughtful",
+		REG_PLAYER_TRAIT_IMPULSIVE = "Impulsive",
+		REG_PLAYER_TRAIT_ASCETIC = "Ascetic",
+		REG_PLAYER_TRAIT_HEDONISTIC = "Hedonistic",
+		REG_PLAYER_TRAIT_VALOROUS = "Valorous",
+		REG_PLAYER_TRAIT_COWARDLY = "Cowardly",
+		REG_PLAYER_TRAIT_CUSTOM = "Custom trait",
+		REG_PLAYER_TRAIT_CREATENEW = "Create a trait",
+		-- Warcraft Chronicles Cosmology traits
+		REG_PLAYER_TRAIT_COSMIC = "Cosmic traits",
+		REG_PLAYER_TRAIT_LIGHT = "Light",
+		REG_PLAYER_TRAIT_SHADOW = "Shadow",
+		REG_PLAYER_TRAIT_LIFE = "Life",
+		REG_PLAYER_TRAIT_DEATH = "Death",
+		REG_PLAYER_TRAIT_ORDER = "Order",
+		REG_PLAYER_TRAIT_DISORDER = "Disorder",
 		REG_PLAYER_LEFTTRAIT = "Left attribute",
 		REG_PLAYER_RIGHTTRAIT = "Right attribute",
 		REG_DELETE_WARNING = "Are you sure you want to delete %s's profile?\n",
@@ -190,7 +225,7 @@ local LOCALE_EN = {
 		REG_PLAYER_CURRENT = "Currently",
 		REG_PLAYER_CURRENTOOC = "Currently (OOC)",
 		REG_PLAYER_CURRENT_OOC = "This is a OOC information";
-		REG_PLAYER_GLANCE = "At first glance",
+		REG_PLAYER_GLANCE = "At first glance..",
 		REG_PLAYER_GLANCE_USE = "Activate this slot",
 		REG_PLAYER_GLANCE_TITLE = "Attribute name",
 		REG_PLAYER_GLANCE_UNUSED = "Unused slot",
@@ -545,12 +580,13 @@ Possible status:
 		CO_LOCATION = "Location settings",
 		CO_LOCATION_ACTIVATE = "Enable character location",
 		CO_LOCATION_ACTIVATE_TT = "Enable the character location system, allowing you to scan for other Total RP users on the world map and allowing them to find you.",
-		CO_LOCATION_DISABLE_OOC = "Disable location when OOC",
+		CO_LOCATION_DISABLE_OOC = "Disable OOC location",
 		CO_LOCATION_DISABLE_OOC_TT = "You will not respond to location request from other players when you've set your RP status to Out Of Character.",
-		CO_LOCATION_DISABLE_PVP = "Disable location when flaged for PVP",
-		CO_LOCATION_DISABLE_PVP_TT = "You will not respond to location request from other players when you are flaged for PvP.\n\nThis option is particularly useful on PvP realms where players from the other faction can abuse the location system to track you.",
+		CO_LOCATION_DISABLE_PVP = "Disable PVP location",
+		CO_LOCATION_DISABLE_PVP_TT = "You will not respond to location request from other players when you are flagged for PvP.\n\nThis option is particularly useful on PvP realms where players from the other faction can abuse the location system to track you.",
+		CO_LOCATION_WARBORN = "Enable Warborn mode",
+		CO_LOCATION_WARBORN_TT = "Enable the Warborn mode, allowing you to always broadcast your location and faction icon even when PvP flagged. This overrides PvP and OOC location restrictions, making you always visible on scans.",
 
-		
 		--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 		-- TOOLBAR AND UI BUTTONS
 		--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -821,16 +857,14 @@ Total RP is not responsible for links leading to harmful content.]],
 		COM_RESET_USAGE = "Usage: |cff00ff00/trp3 reset frames|r to reset all frames positions.",
 		COM_RESET_RESET = "The frames positions have been reset!",
 
-		WHATS_NEW = [[{h3:c}New in version {col:6eff51}1.0{/col}{/h3}
-{h3}1. Character location system{/h3}
-You can now query for character location on your map. {link*map*Open your map} and use the bottom left button to launch the scan!
-|cffff9900Don't want to be visible? {link*scandisable*You can disable the scan}.
+		WHATS_NEW = [[{h3:c}For clients running {col:6eff51}3.3.5{/col}{/h3}
+			{h3}1. Merged templates{/h3}
+			Templates 2 and 3 have been merged into a single template allowing for more customisation. Template 1 remains unchanged and still fully supports markdown!
 
-{h3}2. New UI for "At first glance" edition{/h3}
-We improved the way you can edit your "At first glance" slots information. {link*glance*Check it out!}
-
-{h3}3. New language switching button{/h3}
-A new button has been added to the toolbar for quickly switching between the languages known by your character. {link*language*Check it out!}]]
+			{h3}2. Cross-faction compatibility{/h3}
+			Scans and registering now work across factions, allowing you to find and register characters from the opposite faction. This is a major change that will allow for more roleplay opportunities between factions.
+			
+			Also introduces Warborn Mode, for those who enjoy the thrill of being hunted by the opposing faction.]]
 	},
 };
 

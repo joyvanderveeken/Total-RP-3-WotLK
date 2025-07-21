@@ -140,8 +140,8 @@ TRP3_API.dashboard.init = function()
 	setupListBox(TRP3_DashboardStatus_CharactStatusList, statusTab, onStatusChange, nil, 170, true);
 
 	TRP3_DashboardStatus_XPStatus:SetText(loc("DB_STATUS_XP"));
-	local BEGINNER_ICON = "|TInterface\\TARGETINGFRAME\\UI-TargetingFrame-Seal:20|t";
-	local VOLUNTEER_ICON = "|TInterface\\TARGETINGFRAME\\PortraitQuestBadge:15|t";
+	local BEGINNER_ICON = "|TInterface\\AddOns\\totalRP3\\resources\\UI\\NewPlayerHelp_Newcomer:20:20:0:0:256:256:72:184:68:188|t";
+	local VOLUNTEER_ICON = "|TInterface\\AddOns\\totalRP3\\resources\\UI\\NewPlayerHelp_Guide:20:20:0:0:256:256:72:184:68:188|t";
 	local xpTab = {
 		{BEGINNER_ICON .. " " .. loc("DB_STATUS_XP_BEGINNER"), 1, loc("DB_STATUS_XP_BEGINNER_TT")},
 		{loc("DB_STATUS_RP_EXP"), 2, loc("DB_STATUS_RP_EXP_TT")},
@@ -236,7 +236,7 @@ TRP3_API.dashboard.init = function()
 	TRP3_DashboardBottomContent:SetScript("OnHyperlinkLeave", function() TRP3_MainTooltip:Hide(); end);
 	local frame = CreateFrame("Frame", "TRP3_DashboardBottomTabBar", TRP3_DashboardBottom);
 	frame:SetSize(400, 30);
-	frame:SetPoint("TOPLEFT", 17, 30);
+	frame:SetPoint("TOPLEFT", 17, 33);
 	frame:SetFrameLevel(1);
 	local tabGroup = TRP3_API.ui.frame.createTabPanel(frame,
 		{
