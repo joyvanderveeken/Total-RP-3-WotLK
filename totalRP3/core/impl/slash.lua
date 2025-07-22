@@ -45,6 +45,7 @@ end
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 SLASH_TOTALRP31, SLASH_TOTALRP32 = '/trp3', '/totalrp3';
+SLASH_TRP1 = '/trp';
 local sortTable = {};
 
 function SlashCmdList.TOTALRP3(msg, editbox)
@@ -69,3 +70,18 @@ function SlashCmdList.TOTALRP3(msg, editbox)
 		end
 	end
 end
+
+-- /trp opens characteristics page by default
+function SlashCmdList.TRP(msg, editbox)
+	if not msg or msg == "" or strtrim(msg) == "" then
+		TRP3_API.navigation.openMainFrame();
+		TRP3_API.navigation.menu.selectMenu("main_12_player_character");
+		if TRP3_API.register.ui.showCharacteristicsTab then
+			TRP3_API.register.ui.showCharacteristicsTab();
+		end
+	else
+		SlashCmdList.TOTALRP3(msg, editbox);
+	end
+end
+
+TRP3_API.slash.handler = SlashCmdList.TOTALRP3;

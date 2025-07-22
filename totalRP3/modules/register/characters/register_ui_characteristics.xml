@@ -501,10 +501,11 @@
 			</Frame>
 
 			<!-- edit button (top right) -->
-			<Button name="TRP3_RegisterCharact_ActionButton" inherits="TRP3_IconButton">
+			<Button name="TRP3_RegisterCharact_ActionButton" inherits="TRP3_SimpleIconButton">
+				<Size x="28" y="28" />
 				<Anchors>
 					<Anchor point="TOP" relativePoint="BOTTOM"
-						relativeTo="TRP3_RegisterCharact_NamePanel_EditButton" x="0" y="5" />
+						relativeTo="TRP3_RegisterCharact_NamePanel_EditButton" x="-8" y="24" />
 				</Anchors>
 			</Button>
 

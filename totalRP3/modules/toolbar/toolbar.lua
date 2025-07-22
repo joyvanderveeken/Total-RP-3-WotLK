@@ -22,6 +22,7 @@ local toolbar;
 -- Always build UI on init. Because maybe other modules would like to anchor it on start.
 local function onInit()
 	toolbar = CreateFrame("Frame", "TRP3_Toolbar", UIParent, "TRP3_ToolbarTemplate");
+	toolbar:Hide();
 end
 
 local function onStart()
@@ -192,7 +193,7 @@ local function onStart()
 		setConfigValue(CONFIG_TOOLBAR_POS_A, "TOP");
 		setConfigValue(CONFIG_TOOLBAR_POS_X, 0);
 		setConfigValue(CONFIG_TOOLBAR_POS_Y, -30);
-		setConfigValue(CONFIG_SHOW_ON_LOGIN, true);
+		setConfigValue(CONFIG_SHOW_ON_LOGIN, false);
 	end
 
 	--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -204,7 +205,7 @@ local function onStart()
 
 		TRP3_ToolbarTopFrameText:SetText(Globals.addon_name);
 
-		registerConfigKey(CONFIG_SHOW_ON_LOGIN, true);
+		registerConfigKey(CONFIG_SHOW_ON_LOGIN, false);
 		registerConfigKey(CONFIG_ICON_SIZE, 25);
 		registerConfigKey(CONFIG_ICON_MAX_PER_LINE, 7);
 		registerConfigHandler({CONFIG_ICON_SIZE, CONFIG_ICON_MAX_PER_LINE}, buildToolbar);
@@ -263,8 +264,8 @@ local function onStart()
 
 		buildToolbar();
 
-		if not getConfigValue(CONFIG_SHOW_ON_LOGIN) then
-			toolbar:Hide();
+		if getConfigValue(CONFIG_SHOW_ON_LOGIN) then
+			toolbar:Show();
 		end
 
 	end);

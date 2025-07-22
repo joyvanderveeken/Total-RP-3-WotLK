@@ -106,6 +106,10 @@ end
 TRP3_API.register.glance.removeSlotPreset = removeSlotPreset;
 
 local function saveSlotPreset(glanceTab)
+	if not glanceTab then
+		glanceTab = {};
+	end
+	
 	local presetTitle = glanceTab.TI or UNKNOWN;
 	local presetText = glanceTab.TX or "";
 	local presetIcon = glanceTab.IC or Globals.icons.unknown;
@@ -265,6 +269,10 @@ local function onGlanceSelection(presetAction, button)
 	local slot = button.data;
 
 	if presetAction == -1 then
+		if not slot or not slot.AC then
+			presetMessage(loc("REG_PLAYER_GLANCE_PRESET_ALERT1") or "Cannot save preset from empty slot", 2);
+			return;
+		end
 		saveSlotPreset(slot);
 		return;
 	end
@@ -511,9 +519,9 @@ local function onStart()
 			widgetName = "TRP3_ConfigurationTooltip_GlanceTT_Anchor",
 			title = loc("CO_GLANCE_TT_ANCHOR"),
 			listContent = {
-				{loc("CO_ANCHOR_TOP_LEFT"), "TOPLEFT"},
+				{loc("CO_ANCHOR_TOP_LEFT"), "TOPRIGHT"},
 				{loc("CO_ANCHOR_TOP"), "TOP"},
-				{loc("CO_ANCHOR_TOP_RIGHT"), "TOPRIGHT"},
+				{loc("CO_ANCHOR_TOP_RIGHT"), "TOPLEFT"},
 				{loc("CO_ANCHOR_RIGHT"), "RIGHT"},
 				{loc("CO_ANCHOR_BOTTOM_RIGHT"), "BOTTOMRIGHT"},
 				{loc("CO_ANCHOR_BOTTOM"), "BOTTOM"},

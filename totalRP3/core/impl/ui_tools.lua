@@ -366,21 +366,44 @@ local function refreshTooltip(Frame)
 	if Frame.titleText and Frame.GenFrame and Frame.GenFrameX and Frame.GenFrameY and Frame.GenFrameAnch then
 		TRP3_MainTooltip:Hide();
 		TRP3_MainTooltip:SetOwner(Frame.GenFrame, Frame.GenFrameAnch,Frame.GenFrameX,Frame.GenFrameY);
+		
+		-- check if ElvUI tooltip styling is active
+		local isElvUIStyled = false
+		local elvUIHeaderFont, elvUIHeaderSize = localeFont, getTooltipSize() + 4
+		local elvUITextFont, elvUITextSize = localeFont, getTooltipSize() + 1
+		
+		if TRP3_API and TRP3_API.configuration then
+			local getConfigValue = TRP3_API.configuration.getValue
+			if getConfigValue and getConfigValue("tooltip_char_elvui_style") then
+				local E = _G.ElvUI and _G.ElvUI[1]
+				isElvUIStyled = E and TRP3_MainTooltip.SetTemplate
+				if isElvUIStyled and E.media then
+					elvUIHeaderFont = E.media.normFont or localeFont
+					elvUITextFont = E.media.normFont or localeFont
+					
+					if E.db and E.db.tooltip then
+						elvUIHeaderSize = E.db.tooltip.headerFontSize or (getTooltipSize() + 4)
+						elvUITextSize = E.db.tooltip.fontSize or (getTooltipSize() + 1)
+					end
+				end
+			end
+		end
+		
 		if not Frame.rightText then
-			TRP3_MainTooltip:AddLine(Frame.titleText, 1, 1, 1, true);
+			TRP3_MainTooltip:AddLine(Frame.titleText, 1, 1, 1, elvUIHeaderSize, not isElvUIStyled);
 		else
 			TRP3_MainTooltip:AddDoubleLine(Frame.titleText, Frame.rightText);
-			TRP3_MainTooltipTextRight1:SetFont(localeFont, getTooltipSize() + 4);
-			TRP3_MainTooltipTextRight1:SetNonSpaceWrap(true);
+			TRP3_MainTooltipTextRight1:SetFont(elvUIHeaderFont, elvUIHeaderSize);
+			TRP3_MainTooltipTextRight1:SetNonSpaceWrap(not isElvUIStyled);
 			TRP3_MainTooltipTextRight1:SetTextColor(1, 1, 1);
 		end
-		TRP3_MainTooltipTextLeft1:SetFont(localeFont, getTooltipSize() + 4);
-		TRP3_MainTooltipTextLeft1:SetNonSpaceWrap(true);
+		TRP3_MainTooltipTextLeft1:SetFont(elvUIHeaderFont, elvUIHeaderSize);
+		TRP3_MainTooltipTextLeft1:SetNonSpaceWrap(not isElvUIStyled);
 		TRP3_MainTooltipTextLeft1:SetTextColor(1, 1, 1);
 		if Frame.bodyText then
-			TRP3_MainTooltip:AddLine(Frame.bodyText, 1, 0.6666, 0, true);
-			TRP3_MainTooltipTextLeft2:SetFont(localeFont, getTooltipSize());
-			TRP3_MainTooltipTextLeft2:SetNonSpaceWrap(true);
+			TRP3_MainTooltip:AddLine(Frame.bodyText, 1, 0.6666, 0, elvUITextSize, false);
+			TRP3_MainTooltipTextLeft2:SetFont(elvUITextFont, elvUITextSize);
+			TRP3_MainTooltipTextLeft2:SetNonSpaceWrap(false);
 			TRP3_MainTooltipTextLeft2:SetTextColor(1, 0.75, 0);
 		end
 		TRP3_MainTooltip:Show();
@@ -483,7 +506,7 @@ TRP3_Toast:SetScript("OnUpdate", toastUpdate);
 function TRP3_API.ui.tooltip.toast(text, duration)
 	TRP3_Toast:Hide();
 	TRP3_Toast:SetOwner(TRP3_MainFramePageContainer, "ANCHOR_BOTTOM", 0, 60);
-	TRP3_Toast:AddLine(text, 1, 1, 1, true);
+	TRP3_Toast:AddLine(text, 1, 1, 1, getTooltipSize(), true);
 	TRP3_ToastTextLeft1:SetFont("Fonts\\FRIZQT__.TTF", getTooltipSize());
 	TRP3_ToastTextLeft1:SetNonSpaceWrap(true);
 	TRP3_ToastTextLeft1:SetTextColor(1, 1, 1);

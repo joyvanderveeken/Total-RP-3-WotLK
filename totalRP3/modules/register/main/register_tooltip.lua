@@ -29,6 +29,7 @@ local getCharacterUnitID = Utils.str.getUnitID;
 local get = TRP3_API.profile.getData;
 local getConfigValue = TRP3_API.configuration.getValue;
 local registerConfigKey = TRP3_API.configuration.registerConfigKey;
+local registerConfigHandler = TRP3_API.configuration.registerHandler;
 local strconcat = strconcat;
 local getCompleteName = TRP3_API.register.getCompleteName;
 local getOtherCharacter = TRP3_API.register.getUnitIDCharacter;
@@ -67,6 +68,7 @@ local CONFIG_CHARACT_COMBAT = "tooltip_char_combat";
 local CONFIG_CHARACT_ANCHORED_FRAME = "tooltip_char_AnchoredFrame";
 local CONFIG_CHARACT_ANCHOR = "tooltip_char_Anchor";
 local CONFIG_CHARACT_HIDE_ORIGINAL = "tooltip_char_HideOriginal";
+local CONFIG_CHARACT_ELVUI_STYLE = "tooltip_char_elvui_style";
 local CONFIG_CHARACT_MAIN_SIZE = "tooltip_char_mainSize";
 local CONFIG_CHARACT_SUB_SIZE = "tooltip_char_subSize";
 local CONFIG_CHARACT_TER_SIZE = "tooltip_char_terSize";
@@ -84,6 +86,151 @@ local CONFIG_CHARACT_RELATION = "tooltip_char_relation";
 local CONFIG_CHARACT_SPACING = "tooltip_char_spacing";
 
 local ANCHOR_TAB;
+
+-- default tooltip style
+local TOOLTIP_BACKDROP = {
+	bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+	edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+	tile = true,
+	tileSize = 16,
+	edgeSize = 16,
+	insets = {left = 1, right = 1, top = 1, bottom = 1}
+};
+
+local cachedElvUIEnabled = false;
+
+local function updateElvUIEnabledCache()
+	cachedElvUIEnabled = getConfigValue(CONFIG_CHARACT_ELVUI_STYLE);
+end
+
+--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+-- Tooltip styling
+--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+local TRP3_ElvUI_StyleData = nil
+
+local function applyTooltipStyling()
+	local E = _G.ElvUI and _G.ElvUI[1]
+
+	if cachedElvUIEnabled and E then
+		TRP3_ElvUI_StyleData = {
+			enabled = true,
+			E = E
+		}
+	else
+		TRP3_ElvUI_StyleData = {
+			enabled = false,
+			E = nil
+		}
+	end
+
+	local trp3Tooltips = {
+		ui_CharacterTT,
+		_G.TRP3_MainTooltip
+	}
+	
+	if cachedElvUIEnabled and E then
+		for _, tooltip in ipairs(trp3Tooltips) do
+			if tooltip and tooltip.SetTemplate then
+				local success = false
+				local templates = {"Transparent", "Default", nil}
+				
+				for i, template in ipairs(templates) do
+					success = pcall(function()
+						if template then
+							tooltip:SetTemplate(template)
+						else
+							tooltip:SetTemplate()
+						end
+					end)
+					
+					if success then
+						break
+					end
+				end
+				
+				if success then
+					if E.frames then
+						E.frames[tooltip] = true
+					elseif E.createdFrames then
+						E.createdFrames[tooltip] = true
+					end
+				else
+					tooltip:SetBackdrop(TOOLTIP_BACKDROP);
+					tooltip:SetBackdropColor(0, 0, 0, 1); 
+					tooltip:SetBackdropBorderColor(1, 1, 1, 1);
+				end
+			end
+		end
+
+		if E.UpdateBackdropColors then
+			E:UpdateBackdropColors()
+		end
+		
+		if E.UpdateFrameTemplates then
+			E:UpdateFrameTemplates()
+		end
+		
+		if E.UpdateFontTemplates then
+			E:UpdateFontTemplates()
+		end
+	else
+		if E and E.frames then
+			for _, tooltip in ipairs(trp3Tooltips) do
+				if tooltip then
+					E.frames[tooltip] = nil
+				end
+			end
+		end
+
+		for _, tooltip in ipairs(trp3Tooltips) do
+			if tooltip then
+				tooltip:SetBackdrop(TOOLTIP_BACKDROP);
+				tooltip:SetBackdropColor(0, 0, 0, 1); 
+				tooltip:SetBackdropBorderColor(1, 1, 1, 1);
+			end
+		end
+	end
+end
+
+local function applyElvUIStyleToTooltip(tooltip)
+	if not tooltip or not TRP3_ElvUI_StyleData or not TRP3_ElvUI_StyleData.enabled then
+		return false
+	end
+	
+	local E = TRP3_ElvUI_StyleData.E
+	if not E or not tooltip.SetTemplate then
+		return false
+	end
+	
+	local success = false
+	local templates = {"Transparent", "Default", nil}
+	
+	for i, template in ipairs(templates) do
+		success = pcall(function()
+			if template then
+				tooltip:SetTemplate(template)
+			else
+				tooltip:SetTemplate()
+			end
+		end)
+		
+		if success then
+			break
+		end
+	end
+	
+	if success then
+		if E.frames then
+			E.frames[tooltip] = true
+		elseif E.createdFrames then
+			E.createdFrames[tooltip] = true
+		end
+		return true
+	end
+	
+	return false
+end
 
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 -- Config getters
@@ -166,7 +313,10 @@ end
 -- UTIL METHOD
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-local localeFont;
+local function isElvUITooltipStylingActive()
+	local E = _G.ElvUI and _G.ElvUI[1]
+	return cachedElvUIEnabled and E and ui_CharacterTT.SetTemplate
+end
 
 local function getGameTooltipTexts()
 	local tab = {};
@@ -176,13 +326,73 @@ local function getGameTooltipTexts()
 	return tab;
 end
 
+-- util to get ElvUI font(size)
+-- fontType: "header", "text", "small" - determines which ElvUI font size to use
+local function getElvUIFontSettings(fallbackFont, fallbackSize, fontType)
+	if not cachedElvUIEnabled then
+		return fallbackFont, fallbackSize
+	end
+	
+	local E = _G.ElvUI and _G.ElvUI[1]
+	if not (E and E.media) then
+		return fallbackFont, fallbackSize
+	end
+	
+	local currentFont = E.media.normFont or fallbackFont
+	local currentFontSize = fallbackSize
+	
+	if E.db and E.db.tooltip then
+		if fontType == "header" and E.db.tooltip.headerFontSize then
+			currentFontSize = E.db.tooltip.headerFontSize
+		elseif fontType == "small" and E.db.tooltip.smallTextFontSize then
+			currentFontSize = E.db.tooltip.smallTextFontSize
+		elseif fontType == "text" and E.db.tooltip.fontSize then
+		currentFontSize = E.db.tooltip.fontSize
+		elseif E.db.tooltip.fontSize then
+			currentFontSize = E.db.tooltip.fontSize
+		end
+	elseif E.media.normFontSize then
+		currentFontSize = E.media.normFontSize
+	end
+	
+	return currentFont, currentFontSize
+end
+
+-- util to determine ElvUI font type based on TRP3 font size
+local function getFontTypeFromSize(fontSize)
+	local mainSize = getMainLineFontSize() or 16
+	local subSize = getSubLineFontSize() or 12  
+	local smallSize = getSmallLineFontSize() or 10
+	
+	if fontSize >= mainSize then
+		return "header"
+	elseif fontSize <= smallSize then
+		return "small"
+	else
+		return "text"
+	end
+end
+
+-- util to apply font to a specific text element
+local function applyFontToElement(element, fontSize)
+	if element and element.SetFont then
+	local baseFont = TRP3_API.locale.getLocaleFont()
+		local fontType = getFontTypeFromSize(fontSize)
+		local currentFont, currentFontSize = getElvUIFontSettings(baseFont, fontSize, fontType)
+		element:SetFont(currentFont, currentFontSize)
+	end
+end
+
 local function setLineFont(tooltip, lineIndex, fontSize)
-	_G[strconcat(tooltip:GetName(), "TextLeft", lineIndex)]:SetFont(localeFont, fontSize);
+	local leftText = _G[strconcat(tooltip:GetName(), "TextLeft", lineIndex)]
+	applyFontToElement(leftText, fontSize)
 end
 
 local function setDoubleLineFont(tooltip, lineIndex, fontSize)
-	setLineFont(tooltip, lineIndex, fontSize);
-	_G[strconcat(tooltip:GetName(), "TextRight", lineIndex)]:SetFont(localeFont, fontSize);
+	local leftText = _G[strconcat(tooltip:GetName(), "TextLeft", lineIndex)]
+	local rightText = _G[strconcat(tooltip:GetName(), "TextRight", lineIndex)]
+	applyFontToElement(leftText, fontSize)
+	applyFontToElement(rightText, fontSize)
 end
 
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -234,7 +444,7 @@ local function Build(self)
 	local tooltipLineIndex = 1;
 	for lineIndex, line in pairs(self._content) do
 		if line.type == BUILDER_TYPE_LINE then
-			self.tooltip:AddLine(line.text, line.red, line.green, line.blue, line.lineWrap);
+			self.tooltip:AddLine(line.text, line.red, line.green, line.blue, line.lineSize, line.lineWrap);
 			setLineFont(self.tooltip, tooltipLineIndex, line.lineSize);
 			tooltipLineIndex = tooltipLineIndex + 1;
 		elseif line.type == BUILDER_TYPE_DOUBLELINE then
@@ -242,7 +452,7 @@ local function Build(self)
 			setDoubleLineFont(self.tooltip, tooltipLineIndex, line.lineSize);
 			tooltipLineIndex = tooltipLineIndex + 1;
 		elseif line.type == BUILDER_TYPE_SPACE and showSpacing() and lineIndex ~= size then
-			self.tooltip:AddLine(" ", 1, 0.50, 0);
+			self.tooltip:AddLine(" ", 1, 0.50, 0, getSubLineFontSize());
 			setLineFont(self.tooltip, tooltipLineIndex, getSubLineFontSize());
 			tooltipLineIndex = tooltipLineIndex + 1;
 		end
@@ -557,22 +767,42 @@ local function show(targetType, targetID, targetMode)
 				if (targetMode == TYPE_CHARACTER and isIDIgnored(targetID)) then
 					ui_CharacterTT:SetOwner(GameTooltip, "ANCHOR_TOPRIGHT");
 				else
-					ui_CharacterTT:SetOwner(UIParent, "ANCHOR_CURSOR");
+					local anchorFrame = getAnchoredFrame();
+					local anchorPosition = getAnchoredPosition();
+					if anchorPosition == "ANCHOR_CURSOR" then
+						ui_CharacterTT:SetOwner(UIParent, "ANCHOR_CURSOR");
+					elseif anchorFrame and anchorFrame:IsShown() then
+						ui_CharacterTT:SetOwner(anchorFrame, anchorPosition);
+					else
+						ui_CharacterTT:SetOwner(UIParent, "ANCHOR_CURSOR");
+					end
 				end
 
-				-- Set default backdrop border color
-				ui_CharacterTT:SetBackdropBorderColor(1, 1, 1, 1);
+				if not isElvUITooltipStylingActive() then
+					ui_CharacterTT:SetBackdropBorderColor(1, 1, 1, 1);
+				else
+					local E = _G.ElvUI and _G.ElvUI[1]
+					if E and E.media and E.media.bordercolor then
+						ui_CharacterTT:SetBackdropBorderColor(unpack(E.media.bordercolor, 1, 3))
+					end
+				end
 				
 				if targetMode == TYPE_CHARACTER then
 					writeTooltipForCharacter(targetID, originalTexts, targetType);
-					-- Update border color based on relation if enabled
 					if showRelationColor() and targetID ~= Globals.player_id and not isIDIgnored(targetID) and IsUnitIDKnown(targetID) and hasProfile(targetID) then
 						local r, g, b = getRelationColors(hasProfile(targetID));
 						ui_CharacterTT:SetBackdropBorderColor(r, g, b, 1);
+					elseif not isElvUITooltipStylingActive() then
+						ui_CharacterTT:SetBackdropBorderColor(1, 1, 1, 1);
+					else
+						local E = _G.ElvUI and _G.ElvUI[1]
+						if E and E.media and E.media.bordercolor then
+							ui_CharacterTT:SetBackdropBorderColor(unpack(E.media.bordercolor, 1, 3))
+						end
 					end
 					-- Only hide GameTooltip if TRP tooltip is actually showing and not ignored
 					if shouldHideGameTooltip() and not isIDIgnored(targetID) and ui_CharacterTT:IsShown() then
-						GameTooltip:Hide();
+						GameTooltip:SetAlpha(0);
 					end
 				end
 			end
@@ -580,10 +810,6 @@ local function show(targetType, targetID, targetMode)
 			-- ui_CharacterTT:ClearAllPoints(); -- Prevent to break parent frame fade out if parent is a tooltip.
 		end
 	end
-end
-
-local function getFadeTime()
-	return getAnchoredPosition() == "ANCHOR_CURSOR" and 0 or 0.5;
 end
 
 local function onUpdate(self, elapsed)
@@ -595,13 +821,21 @@ local function onUpdate(self, elapsed)
 		self:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", (x / effScale) + 10, (y / effScale) + 10);
 	end
 
-	if (self.TimeSinceLastUpdate > getFadeTime()) then
+	-- prevents original tooltip from showing when modifier is pressed (ctrl, shift, alt)
+	if self:IsShown() and self.target and shouldHideGameTooltip() and not isIDIgnored(self.target) then
+		if GameTooltip:GetAlpha() > 0 then
+			GameTooltip:SetAlpha(0);
+		end
+	end
+
+	if (self.TimeSinceLastUpdate > 0) then
 		self.TimeSinceLastUpdate = 0;
 		if self.target and self.targetType and not self.isFading then
 			if self.target ~= getUnitID(self.targetType) then
 				self.isFading = true;
 				self.target = nil;
-				self:FadeOut();
+				self:Hide();
+				self.isFading = nil;
 			end
 		end
 	end
@@ -619,22 +853,7 @@ TRP3_API.events.listenToEvent(TRP3_API.events.WORKFLOW_ON_LOAD, function()
 	end);
 end);
 
-local TOOLTIP_BACKDROP = {
-	bgFile = "Interface\\AddOns\\totalRP3\\Resources\\UI\\ui-frame-backdrop-fill",
-	edgeFile = "Interface\\AddOns\\totalRP3\\Resources\\UI\\ui-frame-backdrop-edge",
-	tile = true,
-	tileSize = 16,
-	edgeSize = 6,
-	insets = {left = 1, right = 1, top = 1, bottom = 1}
-};
-
 local function onModuleInit()
-	localeFont = TRP3_API.locale.getLocaleFont();
-
-	ui_CharacterTT:SetBackdrop(TOOLTIP_BACKDROP);
-	ui_CharacterTT:SetBackdropColor(0, 0, 0, 1); 
-	ui_CharacterTT:SetBackdropBorderColor(1, 1, 1, 1);
-
 	Events.listenToEvent(Events.MOUSE_OVER_CHANGED, function(targetID, targetMode)
 		show("mouseover", targetID, targetMode);
 	end);
@@ -649,15 +868,23 @@ local function onModuleInit()
 	ui_CharacterTT.TimeSinceLastUpdate = 0;
 	ui_CharacterTT:SetScript("OnUpdate", onUpdate);
 
+	ui_CharacterTT:SetScript("OnHide", function()
+		if shouldHideGameTooltip() and GameTooltip:GetAlpha() == 0 then
+			GameTooltip:SetAlpha(1);
+		end
+	end);
+
 	IC_GUILD = " |cff00ff00(" .. loc("REG_TT_GUILD_IC") .. ")";
 	OOC_GUILD = " |cffff0000(" .. loc("REG_TT_GUILD_OOC") .. ")";
 
 	-- Config default value
+	local E = _G.ElvUI and _G.ElvUI[1]
 	registerConfigKey(CONFIG_PROFILE_ONLY, false);
 	registerConfigKey(CONFIG_CHARACT_COMBAT, false);
 	registerConfigKey(CONFIG_CHARACT_ANCHORED_FRAME, "GameTooltip");
 	registerConfigKey(CONFIG_CHARACT_ANCHOR, "ANCHOR_CURSOR");
 	registerConfigKey(CONFIG_CHARACT_HIDE_ORIGINAL, true);
+	registerConfigKey(CONFIG_CHARACT_ELVUI_STYLE, false);
 	registerConfigKey(CONFIG_CHARACT_MAIN_SIZE, 16);
 	registerConfigKey(CONFIG_CHARACT_SUB_SIZE, 12);
 	registerConfigKey(CONFIG_CHARACT_TER_SIZE, 10);
@@ -673,6 +900,59 @@ local function onModuleInit()
 	registerConfigKey(CONFIG_CHARACT_CURRENT_SIZE, 140);
 	registerConfigKey(CONFIG_CHARACT_RELATION, true);
 	registerConfigKey(CONFIG_CHARACT_SPACING, true);
+
+	updateElvUIEnabledCache();
+	applyTooltipStyling();
+
+	registerConfigHandler(CONFIG_CHARACT_ELVUI_STYLE, function()
+		updateElvUIEnabledCache();
+		if ui_CharacterTT then
+			applyTooltipStyling();
+		end
+	end);
+
+	-- hook into tooltip creation to apply elvui styling
+	local function ensureMainTooltipStyling()
+		if _G.TRP3_MainTooltip then
+			if TRP3_ElvUI_StyleData and TRP3_ElvUI_StyleData.enabled then
+				if not applyElvUIStyleToTooltip(_G.TRP3_MainTooltip) then
+					_G.TRP3_MainTooltip:SetBackdrop(TOOLTIP_BACKDROP);
+					_G.TRP3_MainTooltip:SetBackdropColor(0, 0, 0, 1); 
+					_G.TRP3_MainTooltip:SetBackdropBorderColor(1, 1, 1, 1);
+				end
+				
+				local defaultFontSize = 12
+				
+				for i = 1, 30 do
+					local leftText = _G[_G.TRP3_MainTooltip:GetName() .. "TextLeft" .. i]
+					local rightText = _G[_G.TRP3_MainTooltip:GetName() .. "TextRight" .. i]
+					
+					applyFontToElement(leftText, defaultFontSize)
+					applyFontToElement(rightText, defaultFontSize)
+				end
+			else
+				-- Apply TRP3 styling
+				_G.TRP3_MainTooltip:SetBackdrop(TOOLTIP_BACKDROP);
+				_G.TRP3_MainTooltip:SetBackdropColor(0, 0, 0, 1); 
+				_G.TRP3_MainTooltip:SetBackdropBorderColor(1, 1, 1, 1);
+			end
+		end
+	end
+
+	local tooltipCheckFrame = CreateFrame("Frame")
+	local timeSinceLastCheck = 0
+	tooltipCheckFrame:SetScript("OnUpdate", function(self, elapsed)
+		timeSinceLastCheck = timeSinceLastCheck + elapsed
+		if timeSinceLastCheck >= 1 then  -- Check every second
+			timeSinceLastCheck = 0
+			ensureMainTooltipStyling()
+		end
+	end)
+
+	-- Also hook the OnShow event if the tooltip exists
+	if _G.TRP3_MainTooltip then
+		_G.TRP3_MainTooltip:HookScript("OnShow", ensureMainTooltipStyling)
+	end
 
 	ANCHOR_TAB = {
 		{loc("CO_ANCHOR_TOP_LEFT"), "ANCHOR_TOPLEFT"},
@@ -724,6 +1004,12 @@ local function onModuleInit()
 				inherit = "TRP3_ConfigCheck",
 				title = loc("CO_TOOLTIP_HIDE_ORIGINAL"),
 				configKey = CONFIG_CHARACT_HIDE_ORIGINAL,
+			},
+			{
+				inherit = "TRP3_ConfigCheck",
+				title = "Enable ElvUI tooltips",
+				help = "Apply ElvUI's style to TotalRP3 tooltips. Requires ElvUI to be installed and loaded.",
+				configKey = CONFIG_CHARACT_ELVUI_STYLE,
 			},
 			{
 				inherit = "TRP3_ConfigSlider",

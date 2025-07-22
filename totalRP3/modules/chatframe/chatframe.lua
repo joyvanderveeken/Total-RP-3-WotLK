@@ -22,6 +22,7 @@ local Globals, Utils = TRP3_API.globals, TRP3_API.utils;
 local loc = TRP3_API.locale.getText;
 local unitIDToInfo, unitInfoToID = Utils.str.unitIDToInfo, Utils.str.unitInfoToID;
 local get = TRP3_API.profile.getData;
+local getCompleteName = TRP3_API.register.getCompleteName;
 local IsUnitIDKnown = TRP3_API.register.isUnitIDKnown;
 local getUnitIDCurrentProfile, isIDIgnored = TRP3_API.register.getUnitIDCurrentProfile, TRP3_API.register.isIDIgnored;
 local strsub, strlen, format, _G, pairs, tinsert, time, strtrim = strsub, strlen, format, _G, pairs, tinsert, time, strtrim;
@@ -39,6 +40,8 @@ local POSSIBLE_CHANNELS
 
 local CONFIG_NAME_METHOD = "chat_name";
 local CONFIG_NAME_COLOR = "chat_color";
+local CONFIG_NAME_ICON = "chat_name_icon";
+local CONFIG_NAME_ICON_SIZE = "chat_name_icon_size";
 local CONFIG_NPC_TALK = "chat_npc_talk";
 local CONFIG_NPC_TALK_PREFIX = "chat_npc_talk_p";
 local CONFIG_EMOTE = "chat_emote";
@@ -59,6 +62,14 @@ end
 
 local function configShowNameCustomColors()
 	return getConfigValue(CONFIG_NAME_COLOR);
+end
+
+local function configShowNameIcons()
+	return getConfigValue(CONFIG_NAME_ICON);
+end
+
+local function configNameIconSize()
+	return getConfigValue(CONFIG_NAME_ICON_SIZE);
 end
 
 local function configIsChannelUsed(channel)
@@ -97,6 +108,8 @@ local function createConfigPage(useWIM)
 	-- Config default value
 	registerConfigKey(CONFIG_NAME_METHOD, 3);
 	registerConfigKey(CONFIG_NAME_COLOR, true);
+	registerConfigKey(CONFIG_NAME_ICON, true);
+	registerConfigKey(CONFIG_NAME_ICON_SIZE, 16);
 	registerConfigKey(CONFIG_NPC_TALK, true);
 	registerConfigKey(CONFIG_NPC_TALK_PREFIX, "|| ");
 	registerConfigKey(CONFIG_EMOTE, true);
@@ -110,6 +123,7 @@ local function createConfigPage(useWIM)
 		{loc("CO_CHAT_MAIN_NAMING_1"), 1},
 		{loc("CO_CHAT_MAIN_NAMING_2"), 2},
 		{loc("CO_CHAT_MAIN_NAMING_3"), 3},
+		{loc("CO_CHAT_MAIN_NAMING_4"), 4},
 	}
 	
 	local EMOTE_PATTERNS = {
@@ -146,6 +160,20 @@ local function createConfigPage(useWIM)
 				inherit = "TRP3_ConfigCheck",
 				title = loc("CO_CHAT_MAIN_COLOR"),
 				configKey = CONFIG_NAME_COLOR,
+			},
+			{
+				inherit = "TRP3_ConfigCheck",
+				title = loc("CO_CHAT_MAIN_ICON"),
+				configKey = CONFIG_NAME_ICON,
+			},
+			{
+				inherit = "TRP3_ConfigSlider",
+				title = loc("CO_CHAT_MAIN_ICON_SIZE"),
+				configKey = CONFIG_NAME_ICON_SIZE,
+				min = 8,
+				max = 32,
+				step = 2,
+				integer = true,
 			},
 			{
 				inherit = "TRP3_ConfigH1",
@@ -358,13 +386,22 @@ function handleCharacterMessage(chatFrame, event, ...)
 	characterName = character;
 
 	local nameMethod = configNameMethod();
-	if nameMethod == 2 or nameMethod == 3 then -- TRP3 names
+	if nameMethod == 2 or nameMethod == 3 or nameMethod == 4 then -- TRP3 names
 		if info.characteristics and info.characteristics.FN then
 			characterName = info.characteristics.FN;
 		end
 		if nameMethod == 3 and info.characteristics and info.characteristics.LN then -- With last name
 			characterName = characterName .. " " .. info.characteristics.LN;
 		end
+		if nameMethod == 4 then -- With title + first name + last name
+			characterName = getCompleteName(info.characteristics);
+		end
+	end
+
+	-- add characters icon if enabled
+	if configShowNameIcons() and info.characteristics and info.characteristics.IC then
+		local characterIcon = Utils.str.icon(info.characteristics.IC, configNameIconSize());
+		characterName = characterIcon .. " " .. characterName;
 	end
 
 	-- Custom character name color first
@@ -411,7 +448,14 @@ function handleCharacterMessage(chatFrame, event, ...)
 			body = body:gsub("^([^%s]+)", playerLink .. characterName .. "|h");
 		end
 	else
-		body = format(_G["CHAT_"..type.."_GET"], playerLink .. "[" .. characterName .. "]" .. "|h")  .. languageHeader .. message;
+		-- Extract icon from characterName if present, to place it outside brackets
+		local characterIcon = "";
+		local nameWithoutIcon = characterName;
+		if configShowNameIcons() and characterName:find("|T.*|t") then
+			characterIcon = characterName:match("(|T.-|t)") .. " ";
+			nameWithoutIcon = characterName:gsub("|T.-|t ", "");
+		end
+		body = characterIcon .. format(_G["CHAT_"..type.."_GET"], playerLink .. "[" .. nameWithoutIcon .. "]" .. "|h")  .. languageHeader .. message;
 	end
 
 	--Add Timestamps

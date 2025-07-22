@@ -211,7 +211,7 @@ local function showTemplate2(dataTab)
 				-- header shadow background
 				frame.headerShadow = frame:CreateTexture(frameName .. "_HeaderShadow", "ARTWORK");
 				frame.headerShadow:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\headershadow");
-				frame.headerShadow:SetSize(500, 68);
+				frame.headerShadow:SetSize(500, 64);
 				frame.headerShadow:SetPoint("CENTER", frame, "CENTER", 0, 0);
 				frame.headerShadow:SetAlpha(0.4);
 				
@@ -745,16 +745,46 @@ local function refreshConsultDisplay(context)
 	if context.isPlayer then
 		TRP3_RegisterAbout_AboutPanel_DislikeButton:ClearAllPoints();
 		if TRP3_RegisterAbout_AboutPanel_LikeButton then
-			TRP3_RegisterAbout_AboutPanel_LikeButton:Show();
+			TRP3_RegisterAbout_AboutPanel_LikeButton:Hide();
 			TRP3_RegisterAbout_AboutPanel_LikeButton:Disable();
+			TRP3_RegisterAbout_AboutPanel_LikeButton:ClearAllPoints();
+			TRP3_RegisterAbout_AboutPanel_LikeButton:SetPoint("RIGHT", TRP3_RegisterAbout_AboutPanel_EditButton, "LEFT", -8, 0);
 		end
 		if TRP3_RegisterAbout_AboutPanel_DislikeButton then
-			TRP3_RegisterAbout_AboutPanel_DislikeButton:Show();
+			TRP3_RegisterAbout_AboutPanel_DislikeButton:Hide();
 			TRP3_RegisterAbout_AboutPanel_DislikeButton:Disable();
 			TRP3_RegisterAbout_AboutPanel_DislikeButton:SetPoint("RIGHT", TRP3_RegisterAbout_AboutPanel_LikeButton, "LEFT", -10, 0);
 		end
+
+		TRP3_RegisterAbout_AboutPanel:EnableMouse(true);
+		TRP3_RegisterAbout_AboutPanel:SetScript("OnEnter", function()
+			if TRP3_RegisterAbout_AboutPanel.isMine then
+				if TRP3_RegisterAbout_AboutPanel_LikeButton then
+					TRP3_RegisterAbout_AboutPanel_LikeButton:Show();
+				end
+				if TRP3_RegisterAbout_AboutPanel_DislikeButton then
+					TRP3_RegisterAbout_AboutPanel_DislikeButton:Show();
+				end
+			end
+		end);
+		
+		TRP3_RegisterAbout_AboutPanel:SetScript("OnLeave", function()
+			if TRP3_RegisterAbout_AboutPanel.isMine then
+				if TRP3_RegisterAbout_AboutPanel_LikeButton then
+					TRP3_RegisterAbout_AboutPanel_LikeButton:Hide();
+				end
+				if TRP3_RegisterAbout_AboutPanel_DislikeButton then
+					TRP3_RegisterAbout_AboutPanel_DislikeButton:Hide();
+				end
+			end
+		end);
+		
 		refreshPlayerVoteDisplay();
 	else
+		TRP3_RegisterAbout_AboutPanel:SetScript("OnEnter", nil);
+		TRP3_RegisterAbout_AboutPanel:SetScript("OnLeave", nil);
+		TRP3_RegisterAbout_AboutPanel:EnableMouse(false);
+		
 		if dataTab ~= Globals.empty then
 			dataTab.read = true;
 		end
@@ -763,11 +793,19 @@ local function refreshConsultDisplay(context)
 			TRP3_RegisterAbout_AboutPanel_LikeButton:Show();
 			TRP3_RegisterAbout_AboutPanel_LikeButton:Enable();
 			TRP3_RegisterAbout_AboutPanel_LikeButton:SetText("");
+			TRP3_RegisterAbout_AboutPanel_LikeButton:ClearAllPoints();
+			if dataTab.MU then
+				TRP3_RegisterAbout_AboutPanel_LikeButton:SetPoint("RIGHT", TRP3_RegisterAbout_AboutPanel_MusicButton, "LEFT", -8, 0);
+			else
+				TRP3_RegisterAbout_AboutPanel_LikeButton:SetPoint("TOPRIGHT", 19, 37);
+			end
 		end
 		if TRP3_RegisterAbout_AboutPanel_DislikeButton then
 			TRP3_RegisterAbout_AboutPanel_DislikeButton:Show();
 			TRP3_RegisterAbout_AboutPanel_DislikeButton:Enable();
 			TRP3_RegisterAbout_AboutPanel_DislikeButton:SetText("");
+			TRP3_RegisterAbout_AboutPanel_DislikeButton:ClearAllPoints();
+			TRP3_RegisterAbout_AboutPanel_DislikeButton:SetPoint("RIGHT", TRP3_RegisterAbout_AboutPanel_LikeButton, "LEFT", -4, 0);
 		end
 		refreshVoteDisplay(dataTab);
 	end
