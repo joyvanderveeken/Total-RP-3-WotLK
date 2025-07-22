@@ -216,6 +216,8 @@ Estados posibles:
 		CO_TOOLTIP_COMMON = "Ajustes comunes",
 		CO_TOOLTIP_CURRENT = "Mostrar información actual",
 		CO_TOOLTIP_CURRENT_SIZE = "Longitud información actual",
+		CO_TOOLTIP_OOC_NAME = "Mostrar prefijo [OOC] en el nombre",
+		CO_TOOLTIP_OOC_NAME_TT = "Muestra [OOC] antes del nombre del personaje en las descripciones emergentes cuando tienen un estado OOC.",
 		CO_TOOLTIP_FT = "Mostrar título completo",
 		CO_TOOLTIP_GUILD = "Mostrar hermandad",
 		CO_TOOLTIP_HIDE_ORIGINAL = "Ocultar marco original",

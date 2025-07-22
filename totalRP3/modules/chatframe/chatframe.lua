@@ -65,7 +65,8 @@ local function configShowNameCustomColors()
 end
 
 local function configShowNameIcons()
-	return getConfigValue(CONFIG_NAME_ICON);
+	local value = getConfigValue(CONFIG_NAME_ICON);
+	return value;
 end
 
 local function configNameIconSize()
@@ -108,7 +109,7 @@ local function createConfigPage(useWIM)
 	-- Config default value
 	registerConfigKey(CONFIG_NAME_METHOD, 3);
 	registerConfigKey(CONFIG_NAME_COLOR, true);
-	registerConfigKey(CONFIG_NAME_ICON, true);
+	registerConfigKey(CONFIG_NAME_ICON, false); -- Changed default to false to avoid persistence issues
 	registerConfigKey(CONFIG_NAME_ICON_SIZE, 16);
 	registerConfigKey(CONFIG_NPC_TALK, true);
 	registerConfigKey(CONFIG_NPC_TALK_PREFIX, "|| ");
@@ -358,6 +359,10 @@ function handleCharacterMessage(chatFrame, event, ...)
 	-- end
 	local info = getCharacterInfoTab(characterID);
 	
+	if not character or character == "" then
+		character = characterID or "Unknown";
+	end
+	
 	-- Get chat type and configuration
 	local type = strsub(event, 10);
 	local chatInfo = ChatTypeInfo[type];
@@ -397,6 +402,9 @@ function handleCharacterMessage(chatFrame, event, ...)
 			characterName = getCompleteName(info.characteristics);
 		end
 	end
+
+	-- Ensure characterName is never nil
+	characterName = characterName or character or "Unknown";
 
 	-- add characters icon if enabled
 	if configShowNameIcons() and info.characteristics and info.characteristics.IC then
@@ -448,13 +456,13 @@ function handleCharacterMessage(chatFrame, event, ...)
 			body = body:gsub("^([^%s]+)", playerLink .. characterName .. "|h");
 		end
 	else
-		-- Extract icon from characterName if present, to place it outside brackets
 		local characterIcon = "";
 		local nameWithoutIcon = characterName;
-		if configShowNameIcons() and characterName:find("|T.*|t") then
+		if configShowNameIcons() and characterName and characterName:find("|T.*|t") then
 			characterIcon = characterName:match("(|T.-|t)") .. " ";
-			nameWithoutIcon = characterName:gsub("|T.-|t ", "");
+			nameWithoutIcon = characterName:gsub("|T.-|t ", "") or characterName;
 		end
+		nameWithoutIcon = nameWithoutIcon or characterName or "Unknown";
 		body = characterIcon .. format(_G["CHAT_"..type.."_GET"], playerLink .. "[" .. nameWithoutIcon .. "]" .. "|h")  .. languageHeader .. message;
 	end
 

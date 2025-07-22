@@ -81,6 +81,7 @@ local CONFIG_CHARACT_TITLE = "tooltip_char_title";
 local CONFIG_CHARACT_NOTIF = "tooltip_char_notif";
 local CONFIG_CHARACT_CURRENT = "tooltip_char_current";
 local CONFIG_CHARACT_OOC = "tooltip_char_ooc";
+local CONFIG_CHARACT_OOC_NAME = "tooltip_char_ooc_name";
 local CONFIG_CHARACT_CURRENT_SIZE = "tooltip_char_current_size";
 local CONFIG_CHARACT_RELATION = "tooltip_char_relation";
 local CONFIG_CHARACT_SPACING = "tooltip_char_spacing";
@@ -299,6 +300,10 @@ end
 
 local function showMoreInformation()
 	return getConfigValue(CONFIG_CHARACT_OOC);
+end
+
+local function showOOCName()
+	return getConfigValue(CONFIG_CHARACT_OOC_NAME);
 end
 
 local function getCurrentMaxSize()
@@ -560,6 +565,10 @@ local function writeTooltipForCharacter(targetID, originalTexts, targetType)
 		characterColorCode = "|cff" .. info.characteristics.CH;
 	end
 	local completeName = characterColorCode .. getCompleteName(info.characteristics or {}, targetName, not showTitle());
+	
+	if showOOCName() and info.character and info.character.RP ~= 1 then
+		completeName = "|cffff9999[OOC]|r " .. completeName;
+	end
 
 	if showIcons() then
 		-- Player icon
@@ -897,6 +906,7 @@ local function onModuleInit()
 	registerConfigKey(CONFIG_CHARACT_NOTIF, false);
 	registerConfigKey(CONFIG_CHARACT_CURRENT, true);
 	registerConfigKey(CONFIG_CHARACT_OOC, true);
+	registerConfigKey(CONFIG_CHARACT_OOC_NAME, false);
 	registerConfigKey(CONFIG_CHARACT_CURRENT_SIZE, 140);
 	registerConfigKey(CONFIG_CHARACT_RELATION, true);
 	registerConfigKey(CONFIG_CHARACT_SPACING, true);
@@ -1087,6 +1097,12 @@ local function onModuleInit()
 				inherit = "TRP3_ConfigCheck",
 				title = loc("DB_STATUS_CURRENTLY_OOC"),
 				configKey = CONFIG_CHARACT_OOC,
+			},
+			{
+				inherit = "TRP3_ConfigCheck",
+				title = loc("CO_TOOLTIP_OOC_NAME"),
+				help = loc("CO_TOOLTIP_OOC_NAME_TT"),
+				configKey = CONFIG_CHARACT_OOC_NAME,
 			},
 			{
 				inherit = "TRP3_ConfigCheck",

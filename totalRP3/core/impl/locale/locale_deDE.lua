@@ -220,6 +220,8 @@ Möglicher Status:
 		CO_TOOLTIP_COMMON = "Standardeinstellungen", -- Needs review
 		CO_TOOLTIP_CURRENT = "Zeige \"aktuelle\" Informationen",
 		CO_TOOLTIP_CURRENT_SIZE = "Maximale Länge von \"aktuellen\" Informationen", -- Needs review
+		CO_TOOLTIP_OOC_NAME = "Zeige [OOC] Präfix im Namen",
+		CO_TOOLTIP_OOC_NAME_TT = "Zeigt [OOC] vor dem Charakternamen im Tooltip an, wenn dieser einen OOC-Status hat.",
 		CO_TOOLTIP_FT = "Zeige vollen Titel",
 		CO_TOOLTIP_GUILD = "Zeige Gildeninformationen", -- Needs review
 		CO_TOOLTIP_HIDE_ORIGINAL = "Verstecke Originaltooltip", -- Needs review

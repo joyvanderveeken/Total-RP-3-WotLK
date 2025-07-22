@@ -471,6 +471,8 @@ These tools also allow you to insert |cffffff00images, icons or link to external
 		CO_TOOLTIP_RELATION_TT = "Set the character tooltip border to a color representing the relation.",
 		CO_TOOLTIP_CURRENT = "Show \"current\" information",
 		CO_TOOLTIP_CURRENT_SIZE = "Max \"current\" information length",
+		CO_TOOLTIP_OOC_NAME = "Show [OOC] prefix in name",
+		CO_TOOLTIP_OOC_NAME_TT = "Displays [OOC] before the character name in tooltips when they have an OOC status.",
 		CO_TOOLTIP_PROFILE_ONLY = "Use only if target has a profile",
 		CO_REGISTER = "Register settings",
 		CO_REGISTER_ABOUT_VOTE = "Use voting system",

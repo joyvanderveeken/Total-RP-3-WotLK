@@ -66,10 +66,13 @@ TRP3_API.events.listenToEvent(TRP3_API.events.WORKFLOW_ON_LOADED, function()
 	});
 
 	TRP3_API.configuration.registerHandler(CONFIG_MINIMAP_SHOW, function()
-		if getConfigValue(CONFIG_MINIMAP_SHOW) then
-			showMinimapButton();
-		else
-			hideMinimapButton();
+		local shouldShow = getConfigValue(CONFIG_MINIMAP_SHOW);
+		local positionDB = getConfigValue(CONFIG_MINIMAP_POSITION);
+		
+		positionDB.hide = not shouldShow;
+		
+		if icon then
+			icon:Refresh("Total RP 3");
 		end
 	end);
 
@@ -97,9 +100,11 @@ TRP3_API.events.listenToEvent(TRP3_API.events.WORKFLOW_ON_LOADED, function()
 	})
 
 	icon = LibStub("LibDBIcon-1.0");
-	local configKey = getConfigValue(CONFIG_MINIMAP_POSITION);
-	configKey.hide = not getConfigValue(CONFIG_MINIMAP_SHOW);
-	icon:Register("Total RP 3", LDBObject, getConfigValue(CONFIG_MINIMAP_POSITION));
+	local iconConfig = getConfigValue(CONFIG_MINIMAP_POSITION);
+	if iconConfig.hide == nil then
+		iconConfig.hide = not getConfigValue(CONFIG_MINIMAP_SHOW);
+	end
+	icon:Register("Total RP 3", LDBObject, iconConfig);
 
 	-- Slash command to switch frames
 	TRP3_API.slash.registerCommand({

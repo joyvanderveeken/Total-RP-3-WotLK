@@ -220,6 +220,8 @@ Statuts possibles:
 		CO_TOOLTIP_COMMON = "Paramètres généraux",
 		CO_TOOLTIP_CURRENT = "Afficher l'information \"actuellement\"",
 		CO_TOOLTIP_CURRENT_SIZE = "Longueur maximale de l'information \"actuellement\"",
+		CO_TOOLTIP_OOC_NAME = "Afficher le préfixe [HRP] dans le nom",
+		CO_TOOLTIP_OOC_NAME_TT = "Affiche [HRP] devant le nom du personnage dans l'infobulle quand il a un statut HRP (Hors Rôle-Play).",
 		CO_TOOLTIP_FT = "Afficher le titre complet",
 		CO_TOOLTIP_GUILD = "Afficher l'information de la guilde",
 		CO_TOOLTIP_HIDE_ORIGINAL = "Masquer l'infobulle originale",
