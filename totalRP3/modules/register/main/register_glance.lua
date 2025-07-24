@@ -169,10 +169,13 @@ local function openGlanceEditor(slot, slotData, callback, external, arg1, arg2)
 	TRP3_AtFirstGlanceEditorTextScrollText:SetText(slotData.TX or "");
 	TRP3_AtFirstGlanceEditorName:SetText(slotData.TI or "");
 	TRP3_AtFirstGlanceEditorApply:SetScript("OnClick", function()
+		local rawValue = TRP3_AtFirstGlanceEditorActive:GetChecked();
+		-- 3.3.5 compatibility
+		local activeValue = rawValue == 1 or rawValue == true;
 		callback(
 			slot,
 			TRP3_AtFirstGlanceEditorIcon.icon,
-			TRP3_AtFirstGlanceEditorActive:GetChecked(),
+			activeValue,
 			stEtN(TRP3_AtFirstGlanceEditorName:GetText()),
 			stEtN(TRP3_AtFirstGlanceEditorTextScrollText:GetText()),
 			nil, -- No swap

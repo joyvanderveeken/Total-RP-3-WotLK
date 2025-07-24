@@ -1,12 +1,6 @@
 # Total RP 3 - Wrath of the Lich King (3.3.5)
 
-Download on [CurseForge].
-
-Are you having an issue with Total RP 3? Check the [F.A.Q] and our [troubleshooting page]!
-
-> “I recently switched over to Total RP 3 and it is so much better! […] Total RP 3 is probably the best [roleplay add-on] that I found.”
-> — Anne Stickney [@Shadesogrey](https://bsky.app/profile/shadesogrey.bsky.social), in [Blizzard Watch — Episode 95](http://bit.ly/2gtTgYf)
-> Senior Editor and Lore Columnist for the [Blizzard Watch website](http://blizzardwatch.com)
+Download the latest release [here](https://github.com/joyvanderveeken/Total-RP-3-WotLK/releases/latest).
 
 </div>
 

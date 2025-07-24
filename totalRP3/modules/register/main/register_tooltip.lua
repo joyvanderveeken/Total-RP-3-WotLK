@@ -65,6 +65,7 @@ local PEEK_ICON_SIZE = 30;
 -- Config keys
 local CONFIG_PROFILE_ONLY = "tooltip_profile_only";
 local CONFIG_CHARACT_COMBAT = "tooltip_char_combat";
+local CONFIG_CHARACT_INSTANCE = "tooltip_char_instance";
 local CONFIG_CHARACT_ANCHORED_FRAME = "tooltip_char_AnchoredFrame";
 local CONFIG_CHARACT_ANCHOR = "tooltip_char_Anchor";
 local CONFIG_CHARACT_HIDE_ORIGINAL = "tooltip_char_HideOriginal";
@@ -566,6 +567,7 @@ local function writeTooltipForCharacter(targetID, originalTexts, targetType)
 	end
 	local completeName = characterColorCode .. getCompleteName(info.characteristics or {}, targetName, not showTitle());
 	
+	-- Add [OOC] prefix if the option is enabled and character is OOC
 	if showOOCName() and info.character and info.character.RP ~= 1 then
 		completeName = "|cffff9999[OOC]|r " .. completeName;
 	end
@@ -754,6 +756,16 @@ local function show(targetType, targetID, targetMode)
 
 	-- If using TRP TT
 	if not UnitAffectingCombat("player") or not getConfigValue(CONFIG_CHARACT_COMBAT) then
+		local inInstance = false;
+		if IsInInstance then
+			inInstance = IsInInstance();
+		end
+		
+		if inInstance and getConfigValue(CONFIG_CHARACT_INSTANCE) then
+			-- default tooltip if IsInInstance resolves as true (1)
+			return;
+		end
+		
 		-- If we have a target
 		if targetID then
 			ui_CharacterTT.target = targetID;
@@ -890,6 +902,7 @@ local function onModuleInit()
 	local E = _G.ElvUI and _G.ElvUI[1]
 	registerConfigKey(CONFIG_PROFILE_ONLY, false);
 	registerConfigKey(CONFIG_CHARACT_COMBAT, false);
+	registerConfigKey(CONFIG_CHARACT_INSTANCE, false);
 	registerConfigKey(CONFIG_CHARACT_ANCHORED_FRAME, "GameTooltip");
 	registerConfigKey(CONFIG_CHARACT_ANCHOR, "ANCHOR_CURSOR");
 	registerConfigKey(CONFIG_CHARACT_HIDE_ORIGINAL, true);
@@ -995,6 +1008,12 @@ local function onModuleInit()
 				inherit = "TRP3_ConfigCheck",
 				title = loc("CO_TOOLTIP_COMBAT"),
 				configKey = CONFIG_CHARACT_COMBAT,
+			},
+			{
+				inherit = "TRP3_ConfigCheck",
+				title = "Hide in instances",
+				help = "Hide TotalRP3 tooltips when in dungeons, raids, battlegrounds, or arenas",
+				configKey = CONFIG_CHARACT_INSTANCE,
 			},
 			{
 				inherit = "TRP3_ConfigEditBox",

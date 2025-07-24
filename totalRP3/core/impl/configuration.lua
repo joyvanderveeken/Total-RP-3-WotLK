@@ -203,7 +203,10 @@ local function buildConfigurationPage(structure)
 			local box = _G[widget:GetName().."Check"];
 			if element.configKey then
 				box:SetScript("OnClick", function(self)
-					setValue(element.configKey, self:GetChecked());
+					local rawValue = self:GetChecked();
+					-- 3.3.5 compatibility
+					local newValue = rawValue == 1 or rawValue == true;
+					setValue(element.configKey, newValue);
 				end);
 				box:SetChecked(getValue(element.configKey));
 			end
@@ -219,13 +222,13 @@ local function buildConfigurationPage(structure)
 			slider:SetMinMaxValues(min, max);
 			_G[widget:GetName().."SliderLow"]:SetText(min);
 			_G[widget:GetName().."SliderHigh"]:SetText(max);
-			-- 3.3.5 compatibility: SetValueStep requires a valid number, ensure we always pass a number
+			-- 3.3.5 compatibility
 			local stepValue = 1;
 			if element.step and type(element.step) == "number" and element.step > 0 then
 				stepValue = element.step;
 			end
 			slider:SetValueStep(stepValue);
-			-- 3.3.5 compatibility: SetObeyStepOnDrag doesn't exist
+			-- 3.3.5 compatibility
 			if slider.SetObeyStepOnDrag then
 				slider:SetObeyStepOnDrag(element.integer);
 			end

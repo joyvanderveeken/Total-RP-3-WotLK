@@ -1,0 +1,167 @@
+name: Auto Release
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'totalRP3/**'
+      - 'totalRP3_Data/**'
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Determine version bump type
+      id: bump_type
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          BUMP_TYPE="${{ inputs.version_bump }}"
+        else
+          # For automatic releases from push, default to patch
+          BUMP_TYPE="patch"
+        fi
+        echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+        echo "Version bump type: $BUMP_TYPE"
+
+    - name: Get and increment version
+      id: get_version
+      run: |
+        # Read current version
+        CURRENT_VERSION=$(cat VERSION)
+        echo "Current version: $CURRENT_VERSION"
+        
+        # Parse version components
+        IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+        
+        # Increment based on bump type
+        case "${{ steps.bump_type.outputs.bump_type }}" in
+          "major")
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+            ;;
+          "minor")
+            MINOR=$((MINOR + 1))
+            PATCH=0
+            ;;
+          "patch")
+            PATCH=$((PATCH + 1))
+            ;;
+        esac
+        
+        NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+        echo "New version: $NEW_VERSION"
+        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        
+        # Update VERSION file
+        echo "$NEW_VERSION" > VERSION
+
+    - name: Commit version bump
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add VERSION
+        git commit -m "Bump version to v${{ steps.get_version.outputs.version }}" || exit 0
+        git push
+
+    - name: Check if release exists
+      id: check_release
+      run: |
+        echo "Checking if release v${{ steps.get_version.outputs.version }} exists..."
+        
+        # Use GitHub API directly instead of gh CLI to avoid retry issues
+        HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/releases/tags/v${{ steps.get_version.outputs.version }}")
+        
+        if [ "$HTTP_STATUS" = "200" ]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "Release v${{ steps.get_version.outputs.version }} already exists"
+        elif [ "$HTTP_STATUS" = "404" ]; then
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Release v${{ steps.get_version.outputs.version }} does not exist"
+        else
+          echo "Unexpected HTTP status: $HTTP_STATUS"
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Proceeding with release creation despite API uncertainty"
+        fi
+
+    - name: Create ZIP archive
+      if: steps.check_release.outputs.exists == 'false'
+      run: |
+        # Create the ZIP file with only the addon folders
+        zip -r totalRP3-WotLK-v${{ steps.get_version.outputs.version }}.zip totalRP3/ totalRP3_Data/
+
+    - name: Generate release notes
+      if: steps.check_release.outputs.exists == 'false'
+      id: release_notes
+      run: |
+        # Get the latest commit messages since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ -z "$LAST_TAG" ]; then
+          # If no previous tags, get last 10 commits
+          COMMITS=$(git log --oneline -10 --pretty=format:"- %s")
+        else
+          # Get commits since last tag
+          COMMITS=$(git log ${LAST_TAG}..HEAD --oneline --pretty=format:"- %s")
+        fi
+        
+        # Create release notes
+        cat > release_notes.md << EOF
+        ## Total RP 3 - Wrath of the Lich King v${{ steps.get_version.outputs.version }}
+        
+        ### Changes in this release:
+        $COMMITS
+        
+        ### Installation:
+        1. Download the ZIP file below
+        2. Extract it to your World of Warcraft AddOns folder
+        3. Restart World of Warcraft
+        
+        ### Compatibility:
+        - World of Warcraft 3.3.5 (Wrath of the Lich King)
+        EOF
+
+    - name: Create Release
+      if: steps.check_release.outputs.exists == 'false'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.get_version.outputs.version }}
+        name: Total RP 3 WotLK v${{ steps.get_version.outputs.version }}
+        body_path: release_notes.md
+        files: |
+          totalRP3-WotLK-v${{ steps.get_version.outputs.version }}.zip
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Output result
+      run: |
+        if [ "${{ steps.check_release.outputs.exists }}" == "true" ]; then
+          echo "✅ Release v${{ steps.get_version.outputs.version }} already exists - skipped creation"
+        else
+          echo "🎉 Successfully created release v${{ steps.get_version.outputs.version }}"
+        fi
