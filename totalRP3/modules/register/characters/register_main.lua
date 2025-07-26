@@ -48,7 +48,7 @@ local assert, tostring, time, wipe, strconcat, pairs, tinsert = assert, tostring
 local registerMenu, selectMenu = TRP3_API.navigation.menu.registerMenu, TRP3_API.navigation.menu.selectMenu;
 local registerPage, setPage = TRP3_API.navigation.page.registerPage, TRP3_API.navigation.page.setPage;
 local getCurrentContext, getCurrentPageID = TRP3_API.navigation.page.getCurrentContext, TRP3_API.navigation.page.getCurrentPageID;
-local showCharacteristicsTab, showAboutTab, showMiscTab;
+local showCharacteristicsTab, showAboutTab, showMiscTab, showNotesTab;
 local get = TRP3_API.profile.getData;
 local UnitIsPVP = UnitIsPVP;
 
@@ -66,6 +66,7 @@ TRP3_API.register.registerInfoTypes = {
 	ABOUT = "about",
 	MISC = "misc",
 	CHARACTER = "character",
+	NOTES = "notes",
 }
 
 local registerInfoTypes = TRP3_API.register.registerInfoTypes;
@@ -322,6 +323,8 @@ local function onInformationUpdated(profileID, infoType)
 				showCharacteristicsTab();
 			elseif infoType == registerInfoTypes.MISC and tabGroup.current == 3 then
 				showMiscTab();
+			elseif infoType == registerInfoTypes.NOTES and tabGroup.current == 4 then
+				showNotesTab();
 			end
 		end
 	end
@@ -338,21 +341,25 @@ local function createTabBar()
 	frame:SetFrameLevel(1);
 	tabGroup = TRP3_API.ui.frame.createTabPanel(frame,
 		{
-			{ loc("REG_PLAYER_CARACT"), 1, 150 },
+			{ loc("REG_PLAYER_CARACT"), 1, 70 },
 			{ loc("REG_PLAYER_ABOUT"), 2, 110 },
-			{ loc("REG_PLAYER_PEEK"), 3, 130 }
+			{ loc("REG_PLAYER_PEEK"), 3, 130 },
+			{ loc("REG_PLAYER_NOTES"), 4, 110 }
 		},
 		function(tabWidget, value)
 		-- Clear all
 			TRP3_RegisterCharact:Hide();
 			TRP3_RegisterAbout:Hide();
 			TRP3_RegisterMisc:Hide();
+			TRP3_RegisterNotes:Hide()
 			if value == 1 then
 				showCharacteristicsTab();
 			elseif value == 2 then
 				showAboutTab();
 			elseif value == 3 then
 				showMiscTab();
+			elseif value == 4 then
+				showNotesTab();
 			end
 		end,
 		-- Confirmation callback
@@ -372,6 +379,10 @@ end
 local function showTabs(context)
 	local context = getCurrentContext();
 	assert(context, "No context for page player_main !");
+	
+	-- Notes tab is now always visible - allows private notes about any character
+	tabGroup:SetTabVisible(4, true);
+	
 	tabGroup:SelectTab(1);
 end
 
@@ -382,7 +393,8 @@ end
 function TRP3_API.register.ui.isTabSelected(infoType)
 	return (infoType == registerInfoTypes.CHARACTERISTICS and tabGroup.current == 1)
 			or (infoType == registerInfoTypes.ABOUT and tabGroup.current == 2)
-			or (infoType == registerInfoTypes.MISC and tabGroup.current == 3);
+			or (infoType == registerInfoTypes.MISC and tabGroup.current == 3)
+			or (infoType == registerInfoTypes.NOTES and tabGroup.current == 4);
 end
 
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -405,6 +417,7 @@ function TRP3_API.register.init()
 	showCharacteristicsTab = TRP3_API.register.ui.showCharacteristicsTab;
 	showAboutTab = TRP3_API.register.ui.showAboutTab;
 	showMiscTab = TRP3_API.register.ui.showMiscTab;
+	showNotesTab = TRP3_API.register.ui.showNotesTab;
 
 	if not TRP3_Register then
 		TRP3_Register = {};
@@ -553,6 +566,9 @@ function TRP3_API.register.init()
 	TRP3_API.register.inits.glanceInit();
 	TRP3_API.register.inits.miscInit();
 	TRP3_API.register.inits.dataExchangeInit();
+	if TRP3_API.register.inits.notesInit then
+		TRP3_API.register.inits.notesInit();
+	end
 	wipe(TRP3_API.register.inits);
 	TRP3_API.register.inits = nil; -- Prevent init function to be called again, and free them from memory
 

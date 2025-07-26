@@ -1,0 +1,83 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.blizzard.com/wow/ui/">
+
+	<!--
+	Total RP 3
+	Copyright 2014 Sylvain Cossement (telkostrasz@telkostrasz.be)
+
+	Licensed under the Apache License, Version 2.0 (the "License");
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+
+		http://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
+-->
+
+	<!-- Notes main frame -->
+	<Frame name="TRP3_RegisterNotesTemplate" virtual="true">
+        <Backdrop edgeFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-edge"
+			tile="true" clipChildren="true">
+			<EdgeSize>
+				<AbsValue val="8" />
+			</EdgeSize>
+			<TileSize>
+				<AbsValue val="380" />
+			</TileSize>
+			<BackgroundInsets>
+				<AbsInset left="3" right="3" top="3" bottom="3" />
+			</BackgroundInsets>
+		</Backdrop>
+        <Layers>
+			<Layer level="BACKGROUND">
+				<Texture file="Interface\AddOns\totalRP3\Resources\UI\ui-frame-parchment-background">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="3" y="-3" />
+						<Anchor point="BOTTOMRIGHT" x="-3" y="3" />
+					</Anchors>
+					<TexCoords top="0.015" right="0.77" bottom="0.77109375" />
+				</Texture>
+			</Layer>
+		</Layers>
+
+		<Frames>
+            <Frame name="TRP3_RegisterNotes_Panel">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="15" y="-15"/>
+					<Anchor point="TOPRIGHT" x="-15" y="-15"/>
+					<Anchor point="BOTTOM" x="0" y="15"/>
+				</Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <!-- Notes header text -->
+                        <FontString name="TRP3_RegisterNotes_Header" font="fonts\skurri.TTF" wordwrap="true">
+                            <Size x="0" y="50" />
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="5" y="-10"/>
+                                <Anchor point="TOPRIGHT" x="-5" y="-10"/>
+                            </Anchors>
+                            <FontHeight>
+                                <AbsValue val="24"/>
+                            </FontHeight>
+                            <Color r="0.95" g="0.95" b="0.95"/>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <!-- Notes text area -->
+                    <Frame name="TRP3_RegisterNotes_PanelText" inherits="TRP3_NotesScript">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-10" relativeTo="TRP3_RegisterNotes_Header" relativePoint="BOTTOMLEFT"/>
+                            <Anchor point="BOTTOMRIGHT" x="0" y="0"/>
+                        </Anchors>
+                    </Frame>
+                </Frames>
+            </Frame>
+		</Frames>
+	</Frame>
+</Ui>

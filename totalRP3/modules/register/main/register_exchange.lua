@@ -241,6 +241,9 @@ local function incomingInformationTypeSent(structure, senderID)
 
 	if informationType == registerInfoTypes.CHARACTERISTICS or informationType == registerInfoTypes.ABOUT
 	or informationType == registerInfoTypes.MISC or informationType == registerInfoTypes.CHARACTER then
+		if informationType == registerInfoTypes.CHARACTER and decodedData and decodedData.NT then
+			decodedData.NT = nil;
+		end
 		saveInformation(senderID, informationType, decodedData);
 	end
 end

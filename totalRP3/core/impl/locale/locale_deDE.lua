@@ -623,6 +623,8 @@ Hierfür gibt es mehrere Möglichkeiten:|c0000ff00
 		REG_PLAYER_NAMESTITLES = "Namen und Titel",
 		REG_PLAYER_NO_CHAR = "Keine Charakterstik",
 		REG_PLAYER_PEEK = "Verschiedenes",
+		REG_PLAYER_NOTES = "Notes", -- Needs review
+		REG_PLAYER_NOTES_EMPTY = "Keine Notizen", -- Needs review
 		REG_PLAYER_PHYSICAL = "Aussehen",
 		REG_PLAYER_PSYCHO = "Persönliche Merkmale", -- Needs review
 		REG_PLAYER_PSYCHO_Acete = "Asketisch",

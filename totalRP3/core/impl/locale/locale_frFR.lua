@@ -641,6 +641,8 @@ Il y a plusieurs manières de l'indiquer:|c0000ff00
 		REG_PLAYER_NAMESTITLES = "Noms et titres",
 		REG_PLAYER_NO_CHAR = "Pas de caractéristiques",
 		REG_PLAYER_PEEK = "Divers",
+		REG_PLAYER_NOTES = "Notes",
+		REG_PLAYER_NOTES_EMPTY = "Aucune note",
 		REG_PLAYER_PHYSICAL = "Physique",
 		REG_PLAYER_PSYCHO = "Personnalité",
 		REG_PLAYER_PSYCHO_Acete = "Ascète",

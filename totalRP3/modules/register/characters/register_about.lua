@@ -748,12 +748,12 @@ local function refreshConsultDisplay(context)
 			TRP3_RegisterAbout_AboutPanel_LikeButton:Hide();
 			TRP3_RegisterAbout_AboutPanel_LikeButton:Disable();
 			TRP3_RegisterAbout_AboutPanel_LikeButton:ClearAllPoints();
-			TRP3_RegisterAbout_AboutPanel_LikeButton:SetPoint("RIGHT", TRP3_RegisterAbout_AboutPanel_EditButton, "LEFT", -8, 0);
+			TRP3_RegisterAbout_AboutPanel_LikeButton:SetPoint("TOPLEFT", 10, 0);
 		end
 		if TRP3_RegisterAbout_AboutPanel_DislikeButton then
 			TRP3_RegisterAbout_AboutPanel_DislikeButton:Hide();
 			TRP3_RegisterAbout_AboutPanel_DislikeButton:Disable();
-			TRP3_RegisterAbout_AboutPanel_DislikeButton:SetPoint("RIGHT", TRP3_RegisterAbout_AboutPanel_LikeButton, "LEFT", -10, 0);
+			TRP3_RegisterAbout_AboutPanel_DislikeButton:SetPoint("LEFT", TRP3_RegisterAbout_AboutPanel_LikeButton, "RIGHT", 15, 0);
 		end
 
 		TRP3_RegisterAbout_AboutPanel:EnableMouse(true);
@@ -1133,7 +1133,7 @@ function TRP3_API.register.inits.aboutInit()
 
 		if not TRP3_RegisterAbout_AboutPanel_LikeButton:GetFontString() then
 			local fontString = TRP3_RegisterAbout_AboutPanel_LikeButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall");
-			fontString:SetPoint("LEFT", TRP3_RegisterAbout_AboutPanel_LikeButton, "LEFT", -7, 1);
+			fontString:SetPoint("LEFT", TRP3_RegisterAbout_AboutPanel_LikeButton, "LEFT", -12, 1);
 			TRP3_RegisterAbout_AboutPanel_LikeButton:SetFontString(fontString);
 		end
 		
@@ -1152,7 +1152,7 @@ function TRP3_API.register.inits.aboutInit()
 
 		if not TRP3_RegisterAbout_AboutPanel_DislikeButton:GetFontString() then
 			local fontString = TRP3_RegisterAbout_AboutPanel_DislikeButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall");
-			fontString:SetPoint("LEFT", TRP3_RegisterAbout_AboutPanel_DislikeButton, "LEFT", -7, 1);
+			fontString:SetPoint("LEFT", TRP3_RegisterAbout_AboutPanel_DislikeButton, "LEFT", -12, 1);
 			TRP3_RegisterAbout_AboutPanel_DislikeButton:SetFontString(fontString);
 		end
 		

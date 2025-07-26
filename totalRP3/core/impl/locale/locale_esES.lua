@@ -614,6 +614,8 @@ Hay varias maneras de hacer esto:|c0000ff00
 		REG_PLAYER_NAMESTITLES = "Nombre y títulos",
 		REG_PLAYER_NO_CHAR = "Sin características",
 		REG_PLAYER_PEEK = "Varios",
+		REG_PLAYER_NOTES = "Notes",
+		REG_PLAYER_NOTES_EMPTY = "Sin notas",
 		REG_PLAYER_PHYSICAL = "Descripción física",
 		REG_PLAYER_PSYCHO = "Rasgos de personalidad",
 		REG_PLAYER_PSYCHO_Acete = "Asceta",
