@@ -306,6 +306,9 @@ TRP3_API.navigation.init = function()
 	TRP3_MainFrame:SetScript("OnShow", function() checkPageSelection() end);
 	TRP3_MainFrameClose:SetScript("OnClick", function() switchMainFrame() end);
 	
+	-- enables escape closing
+	tinsert(UISpecialFrames, "TRP3_MainFrame");
+	
 	closeAllButton:SetText(loc("UI_CLOSE_ALL"));
 	closeAllButton:SetScript("OnClick", function(self)
 		closeAll(self.parentMenu);

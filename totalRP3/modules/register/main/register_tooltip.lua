@@ -671,7 +671,7 @@ local function writeTooltipForCharacter(targetID, originalTexts, targetType)
 		if text:len() > getCurrentMaxSize() then
 			text = text:sub(1, getCurrentMaxSize()) .. "…";
 		end
-		tooltipBuilder:AddLine("\"" .. text .. "\"", 1, 0.75, 0, getSmallLineFontSize(), true);
+		tooltipBuilder:AddLine(text , 1, 0.75, 0, getSmallLineFontSize(), true);
 	end
 
 	tooltipBuilder:AddSpace();
@@ -687,7 +687,7 @@ local function writeTooltipForCharacter(targetID, originalTexts, targetType)
 		if text:len() > getCurrentMaxSize() then
 			text = text:sub(1, getCurrentMaxSize()) .. "…";
 		end
-		tooltipBuilder:AddLine("\"" .. text .. "\"", 1, 0.75, 0, getSmallLineFontSize(), true);
+		tooltipBuilder:AddLine(text, 1, 0.75, 0, getSmallLineFontSize(), true);
 	end
 
 	tooltipBuilder:AddSpace();
@@ -1033,12 +1033,6 @@ local function onModuleInit()
 				inherit = "TRP3_ConfigCheck",
 				title = loc("CO_TOOLTIP_HIDE_ORIGINAL"),
 				configKey = CONFIG_CHARACT_HIDE_ORIGINAL,
-			},
-			{
-				inherit = "TRP3_ConfigCheck",
-				title = "Enable ElvUI tooltips",
-				help = "Apply ElvUI's style to TotalRP3 tooltips. Requires ElvUI to be installed and loaded.",
-				configKey = CONFIG_CHARACT_ELVUI_STYLE,
 			},
 			{
 				inherit = "TRP3_ConfigSlider",

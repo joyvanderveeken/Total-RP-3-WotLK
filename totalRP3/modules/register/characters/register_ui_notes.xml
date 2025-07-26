@@ -55,8 +55,8 @@
                 <Layers>
                     <Layer level="ARTWORK">
                         <!-- Notes header text -->
-                        <FontString name="TRP3_RegisterNotes_Header" font="fonts\skurri.TTF" wordwrap="true">
-                            <Size x="0" y="50" />
+                        <FontString name="TRP3_RegisterNotes_Header" inherits="GameFontNormal" wordwrap="true">
+                            <Size x="0" y="40" />
                             <Anchors>
                                 <Anchor point="TOPLEFT" x="5" y="-10"/>
                                 <Anchor point="TOPRIGHT" x="-5" y="-10"/>
@@ -66,13 +66,25 @@
                             </FontHeight>
                             <Color r="0.95" g="0.95" b="0.95"/>
                         </FontString>
+						<!-- Notes title text -->
+						<FontString name="TRP3_RegisterNotes_FullTitle" inherits="GameFontNormal" wordwrap="true">
+                            <Size x="0" y="10" />
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" relativeTo="TRP3_RegisterNotes_Header" relativePoint="BOTTOMLEFT"/>
+                                <Anchor point="TOPRIGHT" x="0" y="0" relativeTo="TRP3_RegisterNotes_Header" relativePoint="BOTTOMRIGHT"/>
+                            </Anchors>
+                            <FontHeight>
+                                <AbsValue val="14"/>
+                            </FontHeight>
+                            <Color r="0.95" g="0.95" b="0.95"/>
+                        </FontString>
                     </Layer>
                 </Layers>
                 <Frames>
                     <!-- Notes text area -->
-                    <Frame name="TRP3_RegisterNotes_PanelText" inherits="TRP3_NotesScript">
+                    <Frame name="TRP3_RegisterNotes_PanelText" inherits="TRP3_Notes">
                         <Anchors>
-                            <Anchor point="TOPLEFT" x="0" y="-10" relativeTo="TRP3_RegisterNotes_Header" relativePoint="BOTTOMLEFT"/>
+                            <Anchor point="TOPLEFT" x="0" y="-15" relativeTo="TRP3_RegisterNotes_Header" relativePoint="BOTTOMLEFT"/>
                             <Anchor point="BOTTOMRIGHT" x="0" y="0"/>
                         </Anchors>
                     </Frame>

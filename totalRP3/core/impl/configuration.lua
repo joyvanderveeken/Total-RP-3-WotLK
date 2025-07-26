@@ -407,6 +407,18 @@ TRP3_API.events.listenToEvent(TRP3_API.events.WORKFLOW_ON_LOAD, function()
 				configKey = "ui_animations",
 				help = loc("CO_GENERAL_UI_ANIMATIONS_TT"),
 			},
+			{
+				inherit = "TRP3_ConfigCheck",
+				title = loc("CO_GENERAL_ELVUI_TOOLTIPS"),
+				configKey = "tooltip_char_elvui_style",
+				help = loc("CO_GENERAL_ELVUI_TOOLTIPS_TT"),
+			},
+			{
+				inherit = "TRP3_ConfigCheck",
+				title = loc("CO_GENERAL_NOTES_STYLE"),
+				configKey = "CONFIG_NOTES_STYLE",
+				help = loc("CO_GENERAL_NOTES_STYLE_TT"),
+			},
 		}
 	}
 end);

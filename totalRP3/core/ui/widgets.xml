@@ -801,113 +801,8 @@
 		</Frames>
 	</Frame>
 
-	<Frame name="TRP3_NotesScript" virtual="true" enableMouse="true">
-		<!-- <Backdrop edgeFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-edge"
-			bgFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-fill" tile="true">
-			<EdgeSize>
-				<AbsValue val="8" />
-			</EdgeSize>
-			<TileSize>
-				<AbsValue val="380" />
-			</TileSize>
-			<BackgroundInsets>
-				<AbsInset left="3" right="3" top="3" bottom="3" />
-			</BackgroundInsets>
-		</Backdrop> -->
-		<Scripts>
-			<OnShow>
-				-- Set custom font and color for the notes text area
-				local editBox = _G[self:GetName() .. "ScrollText"];
-				if editBox then
-					editBox:SetFont("fonts\\skurri.TTF", 20, "");
-					editBox:SetTextColor(0.3, 0.2, 0.1, 1.0);
-					editBox:SetShadowColor(0, 0, 0, 0);
-					editBox:SetShadowOffset(0, 0);
-				end
-				
-				-- Set royal purple color for the header
-				local header = _G["TRP3_RegisterNotes_Header"];
-				if header then
-					header:SetTextColor(125/255, 9/255, 9/255, 0.9);
-				end
-			</OnShow>
-		</Scripts>
-		<Frames>
-			<ScrollFrame name="$parentScroll" inherits="UIPanelScrollFrameTemplate">
-				<Anchors>
-					<Anchor point="TOP" x="0" y="-8" />
-					<Anchor point="BOTTOM" x="0" y="8" />
-					<Anchor point="LEFT" x="8" y="0" />
-					<Anchor point="RIGHT" x="-30" y="0" />
-				</Anchors>
-				<ScrollChild>
-					<EditBox name="$parentText" letters="5000" multiLine="true" enableMouse="false"
-						autoFocus="false">
-						<!-- <TextInsets>
-							<AbsInset left="6" right="6" top="6" bottom="6"/>
-						</TextInsets> -->
-						<Scripts>
-							<OnShow>
-								self:SetWidth(self:GetParent():GetParent():GetWidth() - 40);
-							</OnShow>
-							<OnTextChanged>
-								-- Auto-scroll to bottom when typing at the end of text
-								if self:IsVisible() and self:GetCursorPosition() == string.len(self:GetText()) then
-									self:GetParent():SetVerticalScroll(self:GetParent():GetVerticalScrollRange());
-								end
-							</OnTextChanged>
-							<OnCursorChanged>
-								-- Auto-scroll when cursor moves to the end
-								if self:IsVisible() and self:GetCursorPosition() == string.len(self:GetText()) then
-									self:GetParent():SetVerticalScroll(self:GetParent():GetVerticalScrollRange());
-								end
-							</OnCursorChanged>
-							<OnEscapePressed>
-								self:ClearFocus();
-							</OnEscapePressed>
-							<OnEditFocusGained>
-								self:HighlightText();
-								_G[self:GetParent():GetParent():GetName() .. "FocusDummy"]:Hide();
-							</OnEditFocusGained>
-							<OnEditFocusLost>
-								self:HighlightText(0,0);
-								_G[self:GetParent():GetParent():GetName() .. "FocusDummy"]:Show();
-							</OnEditFocusLost>
-						</Scripts>
-						<FontString inherits="ChatFontNormal" />
-					</EditBox>
-				</ScrollChild>
-			</ScrollFrame>
-			<Button name="$parentFocusDummy">
-				<Anchors>
-					<Anchor point="TOP" x="0" y="5" />
-					<Anchor point="BOTTOM" x="0" y="-5" />
-					<Anchor point="LEFT" x="0" y="0" />
-					<Anchor point="RIGHT" x="-10" y="0" />
-				</Anchors>
-				<Scripts>
-					<OnClick>
-						_G[self:GetParent():GetName() .. "ScrollText"]:SetFocus();
-					</OnClick>
-				</Scripts>
-			</Button>
-		</Frames>
-	</Frame>
-
-
+	<!-- Notes text field -->
 	<Frame name="TRP3_Notes" virtual="true" enableMouse="true">
-		<Backdrop edgeFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-edge"
-			bgFile="Interface\AddOns\totalRP3\Resources\UI\ui-frame-backdrop-fill" tile="true">
-			<EdgeSize>
-				<AbsValue val="8" />
-			</EdgeSize>
-			<TileSize>
-				<AbsValue val="380" />
-			</TileSize>
-			<BackgroundInsets>
-				<AbsInset left="3" right="3" top="3" bottom="3" />
-			</BackgroundInsets>
-		</Backdrop>
 		<Frames>
 			<ScrollFrame name="$parentScroll" inherits="UIPanelScrollFrameTemplate">
 				<Anchors>
@@ -919,9 +814,6 @@
 				<ScrollChild>
 					<EditBox name="$parentText" letters="5000" multiLine="true" enableMouse="false"
 						autoFocus="false">
-						<!-- <TextInsets>
-							<AbsInset left="6" right="6" top="6" bottom="6"/>
-						</TextInsets> -->
 						<Scripts>
 							<OnShow>
 								self:SetWidth(self:GetParent():GetParent():GetWidth() - 40);
@@ -932,12 +824,6 @@
 									self:GetParent():SetVerticalScroll(self:GetParent():GetVerticalScrollRange());
 								end
 							</OnTextChanged>
-							<OnCursorChanged>
-								-- Auto-scroll when cursor moves to the end
-								if self:IsVisible() and self:GetCursorPosition() == string.len(self:GetText()) then
-									self:GetParent():SetVerticalScroll(self:GetParent():GetVerticalScrollRange());
-								end
-							</OnCursorChanged>
 							<OnEscapePressed>
 								self:ClearFocus();
 							</OnEscapePressed>
@@ -950,7 +836,7 @@
 								_G[self:GetParent():GetParent():GetName() .. "FocusDummy"]:Show();
 							</OnEditFocusLost>
 						</Scripts>
-						<FontString inherits="ChatFontNormal" />
+						<FontString inherits="GameFontNormal" />
 					</EditBox>
 				</ScrollChild>
 			</ScrollFrame>
