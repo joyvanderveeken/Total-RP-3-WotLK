@@ -743,6 +743,157 @@ local function writeTooltipForCharacter(targetID, originalTexts, targetType)
 	--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 	tooltipBuilder:Build();
+
+	--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+	-- Healthbar (with ElvUI enabled)
+	--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+	if UnitExists(targetType) and UnitHealth(targetType) then
+		local currentHP = UnitHealth(targetType);
+		local maxHP = UnitHealthMax(targetType);
+		
+		if currentHP and maxHP and maxHP > 0 then
+			if not ui_CharacterTT.healthBar then
+				-- foreground
+				ui_CharacterTT.healthBar = CreateFrame("StatusBar", nil, ui_CharacterTT);
+				ui_CharacterTT.healthBar:SetFrameLevel(ui_CharacterTT:GetFrameLevel() + 1);
+				ui_CharacterTT.healthBar:SetOrientation("HORIZONTAL");
+				
+				-- background
+				ui_CharacterTT.healthBar.bg = ui_CharacterTT.healthBar:CreateTexture(nil, "BACKGROUND");
+				ui_CharacterTT.healthBar.bg:SetAllPoints();
+				ui_CharacterTT.healthBar.bg:SetTexture("Interface\\TargetingFrame\\UI-StatusBar");
+				ui_CharacterTT.healthBar.bg:SetVertexColor(0.3, 0.3, 0.3, 0.8);
+				
+				-- borderframe
+				if cachedElvUIEnabled then 
+					ui_CharacterTT.healthBar.border = CreateFrame("Frame", nil, ui_CharacterTT.healthBar);
+					ui_CharacterTT.healthBar.border:SetAllPoints();
+					ui_CharacterTT.healthBar.border:SetFrameLevel(ui_CharacterTT.healthBar:GetFrameLevel() + 1);
+					local borderSize = 1;
+					
+					-- top
+					ui_CharacterTT.healthBar.border.top = ui_CharacterTT.healthBar.border:CreateTexture(nil, "OVERLAY");
+					ui_CharacterTT.healthBar.border.top:SetTexture(0, 0, 0, 1); 
+					ui_CharacterTT.healthBar.border.top:SetPoint("TOPLEFT", ui_CharacterTT.healthBar.border, "TOPLEFT", 0, 0);
+					ui_CharacterTT.healthBar.border.top:SetPoint("TOPRIGHT", ui_CharacterTT.healthBar.border, "TOPRIGHT", 0, 0);
+					ui_CharacterTT.healthBar.border.top:SetHeight(borderSize);
+					
+					-- bottom
+					ui_CharacterTT.healthBar.border.bottom = ui_CharacterTT.healthBar.border:CreateTexture(nil, "OVERLAY");
+					ui_CharacterTT.healthBar.border.bottom:SetTexture(0, 0, 0, 1); 
+					ui_CharacterTT.healthBar.border.bottom:SetPoint("BOTTOMLEFT", ui_CharacterTT.healthBar.border, "BOTTOMLEFT", 0, 0);
+					ui_CharacterTT.healthBar.border.bottom:SetPoint("BOTTOMRIGHT", ui_CharacterTT.healthBar.border, "BOTTOMRIGHT", 0, 0);
+					ui_CharacterTT.healthBar.border.bottom:SetHeight(borderSize);
+					
+					-- left
+					ui_CharacterTT.healthBar.border.left = ui_CharacterTT.healthBar.border:CreateTexture(nil, "OVERLAY");
+					ui_CharacterTT.healthBar.border.left:SetTexture(0, 0, 0, 1); 
+					ui_CharacterTT.healthBar.border.left:SetPoint("TOPLEFT", ui_CharacterTT.healthBar.border, "TOPLEFT", 0, 0);
+					ui_CharacterTT.healthBar.border.left:SetPoint("BOTTOMLEFT", ui_CharacterTT.healthBar.border, "BOTTOMLEFT", 0, 0);
+					ui_CharacterTT.healthBar.border.left:SetWidth(borderSize);
+					
+					-- right
+					ui_CharacterTT.healthBar.border.right = ui_CharacterTT.healthBar.border:CreateTexture(nil, "OVERLAY");
+					ui_CharacterTT.healthBar.border.right:SetTexture(0, 0, 0, 1); 
+					ui_CharacterTT.healthBar.border.right:SetPoint("TOPRIGHT", ui_CharacterTT.healthBar.border, "TOPRIGHT", 0, 0);
+					ui_CharacterTT.healthBar.border.right:SetPoint("BOTTOMRIGHT", ui_CharacterTT.healthBar.border, "BOTTOMRIGHT", 0, 0);
+					ui_CharacterTT.healthBar.border.right:SetWidth(borderSize);
+				end
+			end
+			
+			-- fetch elvui config
+			local E = _G.ElvUI and _G.ElvUI[1];
+			local healthBarHeight = 8;
+			local statusBarTexture = "Interface\\TargetingFrame\\UI-StatusBar";
+			
+			if E then 
+				if E.media and E.media.normTex then
+					statusBarTexture = E.media.normTex;
+				end
+				if E.db and E.db.tooltip and E.db.tooltip.healthBar and E.db.tooltip.healthBar.height then
+					healthBarHeight = E.db.tooltip.healthBar.height + 2;
+				end
+			end
+			
+			local hpPercent = currentHP / maxHP;
+			local r, g, b = 1, 1, 1; 
+			
+			if E and cachedElvUIEnabled then
+				-- class colours
+				if UnitIsPlayer(targetType) then
+					local _, englishClass = UnitClass(targetType);
+					if englishClass and RAID_CLASS_COLORS[englishClass] then
+						local classColor = RAID_CLASS_COLORS[englishClass];
+						r, g, b = classColor.r, classColor.g, classColor.b;
+					end
+				else
+					-- npc reaction colours
+					local reaction = UnitReaction(targetType, "player");
+					if reaction then
+						if reaction >= 5 then 
+							r, g, b = 0, 1, 0;
+						elseif reaction == 4 then 
+							r, g, b = 1, 1, 0;
+						else 
+							r, g, b = 1, 0, 0; 
+						end
+					end
+				end
+				
+				-- elvui custom colours
+				if E.db and E.db.tooltip and E.db.tooltip.healthBar then
+					if E.db.tooltip.healthBar.statusBarColor then
+						local color = E.db.tooltip.healthBar.statusBarColor;
+						if color.r and color.g and color.b then
+							r, g, b = color.r, color.g, color.b;
+						end
+					end
+				end
+			else
+				-- fallback
+				if hpPercent > 0.5 then
+					r = (1 - hpPercent) * 2;
+					g = 1;
+					b = 0;
+				else
+					r = 1;
+					g = hpPercent * 2;
+					b = 0;
+				end
+			end
+			
+			ui_CharacterTT.healthBar:ClearAllPoints();
+			if cachedElvUIEnabled then
+				ui_CharacterTT.healthBar:SetPoint("BOTTOMLEFT", ui_CharacterTT, "TOPLEFT", 0, -1);
+				ui_CharacterTT.healthBar:SetPoint("BOTTOMRIGHT", ui_CharacterTT, "TOPRIGHT", 0, -1);
+			else
+				ui_CharacterTT.healthBar:SetPoint("BOTTOMLEFT", ui_CharacterTT, "BOTTOMLEFT", 5, -10);
+				ui_CharacterTT.healthBar:SetPoint("BOTTOMRIGHT", ui_CharacterTT, "BOTTOMRIGHT", -5, -10);
+			end
+			ui_CharacterTT.healthBar:SetHeight(healthBarHeight);
+			ui_CharacterTT.healthBar:Show();
+			
+			-- frame width
+			local barWidth = ui_CharacterTT.healthBar:GetWidth();
+			if barWidth == 0 then
+				local tooltipWidth = ui_CharacterTT:GetWidth();
+				if tooltipWidth > 20 then
+					ui_CharacterTT.healthBar:ClearAllPoints();
+					ui_CharacterTT.healthBar:SetPoint("BOTTOM", ui_CharacterTT, "TOP", 0, -1);
+					ui_CharacterTT.healthBar:SetWidth(tooltipWidth);
+				end
+			end
+			
+			-- update healthbar
+			ui_CharacterTT.healthBar:SetStatusBarTexture(statusBarTexture);
+			ui_CharacterTT.healthBar:SetMinMaxValues(0, maxHP);
+			ui_CharacterTT.healthBar:SetValue(currentHP);
+			ui_CharacterTT.healthBar:SetStatusBarColor(r, g, b, 1);
+		end
+	elseif ui_CharacterTT.healthBar then
+		ui_CharacterTT.healthBar:Hide();
+	end
 end
 
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -905,6 +1056,10 @@ local function onModuleInit()
 	ui_CharacterTT:SetScript("OnHide", function()
 		if shouldHideGameTooltip() and GameTooltip:GetAlpha() == 0 then
 			GameTooltip:SetAlpha(1);
+		end
+		-- Hide health bar when tooltip hides
+		if ui_CharacterTT.healthBar then
+			ui_CharacterTT.healthBar:Hide();
 		end
 	end);
 

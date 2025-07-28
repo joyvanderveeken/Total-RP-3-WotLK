@@ -87,7 +87,10 @@ local draftData = nil;
 
 local function setBkg(frame, bkg)
 	local backdrop = frame:GetBackdrop();
+	backdrop = CopyTable(backdrop);
 	backdrop.bgFile = getTiledBackground(bkg or 1);
+	backdrop.tile = false;
+	backdrop.tileSize = 280;
 	frame:SetBackdrop(backdrop);
 end
 
