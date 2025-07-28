@@ -754,6 +754,19 @@ local GameTooltip_SetDefaultAnchor, UIParent = GameTooltip_SetDefaultAnchor, UIP
 local function show(targetType, targetID, targetMode)
 	ui_CharacterTT:Hide();
 
+	-- checks if gametooltip needs to be hidden, raven compatibility
+	if targetType == "mouseover" and targetID then
+		local mouseOverFrame = GetMouseFocus()
+		if mouseOverFrame then
+			local frameName = mouseOverFrame:GetName() or ""
+			if frameName:find("Raven") or frameName:find("ElvUI") or frameName:find("WeakAuras") or
+			   (mouseOverFrame.GetParent and mouseOverFrame:GetParent() and 
+			    (mouseOverFrame:GetParent():GetName() or ""):find("Raven")) then
+				return
+			end
+		end
+	end
+
 	-- If using TRP TT
 	if not UnitAffectingCombat("player") or not getConfigValue(CONFIG_CHARACT_COMBAT) then
 		local inInstance = false;
