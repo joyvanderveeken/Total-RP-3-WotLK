@@ -40,12 +40,15 @@ local POSSIBLE_CHANNELS
 
 local CONFIG_NAME_METHOD = "chat_name";
 local CONFIG_NAME_COLOR = "chat_color";
+local CONFIG_NAME_EMOTE_COLOR = "chat_emote_color";
 local CONFIG_NAME_ICON = "chat_name_icon";
 local CONFIG_NAME_ICON_SIZE = "chat_name_icon_size";
 local CONFIG_NPC_TALK = "chat_npc_talk";
 local CONFIG_NPC_TALK_PREFIX = "chat_npc_talk_p";
 local CONFIG_EMOTE = "chat_emote";
 local CONFIG_EMOTE_PATTERN = "chat_emote_pattern";
+local CONFIG_CHAT = "chat_chat";
+local CONFIG_CHAT_PATTERN = "chat_chat_pattern";
 local CONFIG_USAGE = "chat_use_";
 local CONFIG_OOC = "chat_ooc";
 local CONFIG_OOC_PATTERN = "chat_ooc_pattern";
@@ -62,6 +65,10 @@ end
 
 local function configShowNameCustomColors()
 	return getConfigValue(CONFIG_NAME_COLOR);
+end
+
+local function configShowNameEmoteColors()
+	return getConfigValue(CONFIG_NAME_EMOTE_COLOR);
 end
 
 local function configShowNameIcons()
@@ -93,6 +100,14 @@ local function configEmoteDetectionPattern()
 	return getConfigValue(CONFIG_EMOTE_PATTERN);
 end
 
+local function configChatDetectionPattern()
+	return getConfigValue(CONFIG_CHAT_PATTERN);
+end
+
+local function configDoChatDetection()
+	return getConfigValue(CONFIG_CHAT);
+end
+
 local function configDoOOCDetection()
 	return getConfigValue(CONFIG_OOC);
 end
@@ -109,12 +124,15 @@ local function createConfigPage(useWIM)
 	-- Config default value
 	registerConfigKey(CONFIG_NAME_METHOD, 3);
 	registerConfigKey(CONFIG_NAME_COLOR, true);
+	registerConfigKey(CONFIG_NAME_EMOTE_COLOR, true);
 	registerConfigKey(CONFIG_NAME_ICON, false); -- Changed default to false to avoid persistence issues
 	registerConfigKey(CONFIG_NAME_ICON_SIZE, 16);
 	registerConfigKey(CONFIG_NPC_TALK, true);
 	registerConfigKey(CONFIG_NPC_TALK_PREFIX, "|| ");
 	registerConfigKey(CONFIG_EMOTE, true);
 	registerConfigKey(CONFIG_EMOTE_PATTERN, "(%*.-%*)");
+	registerConfigKey(CONFIG_CHAT, true);
+	registerConfigKey(CONFIG_CHAT_PATTERN, "(%\".-%\")");
 	registerConfigKey(CONFIG_OOC, true);
 	registerConfigKey(CONFIG_OOC_PATTERN, "(%(.-%))");
 	registerConfigKey(CONFIG_OOC_COLOR, "aaaaaa");
@@ -161,6 +179,11 @@ local function createConfigPage(useWIM)
 				inherit = "TRP3_ConfigCheck",
 				title = loc("CO_CHAT_MAIN_COLOR"),
 				configKey = CONFIG_NAME_COLOR,
+			},
+			{
+				inherit = "TRP3_ConfigCheck",
+				title = loc("CO_CHAT_MAIN_EMOTE_COLOR"),
+				configKey = CONFIG_NAME_EMOTE_COLOR,
 			},
 			{
 				inherit = "TRP3_ConfigCheck",
@@ -213,6 +236,11 @@ local function createConfigPage(useWIM)
 				listContent = EMOTE_PATTERNS,
 				configKey = CONFIG_EMOTE_PATTERN,
 				listCancel = true,
+			},
+			{
+				inherit = "TRP3_ConfigCheck",
+				title = loc("CO_CHAT_MAIN_CHAT_USE"),
+				configKey = CONFIG_CHAT,
 			},
 			{
 				inherit = "TRP3_ConfigH1",
@@ -269,7 +297,17 @@ end
 
 local function getCharacterClassColor(chatInfo, event, text, characterID, language, arg4, arg5, arg6, arg7, arg8, arg9, arg10, messageID, GUID)
 	local color;
-	if ( chatInfo and chatInfo.colorNameByClass and GUID ) then
+	local shouldUseClassColor = false;
+	
+	if event == "CHAT_MSG_EMOTE" or event == "CHAT_MSG_TEXT_EMOTE" then
+		shouldUseClassColor = configShowNameEmoteColors();
+	elseif configDoEmoteDetection() and text and text:find(configEmoteDetectionPattern()) then
+		shouldUseClassColor = configShowNameEmoteColors();
+	else
+		shouldUseClassColor = chatInfo and chatInfo.colorNameByClass;
+	end
+	
+	if ( shouldUseClassColor and GUID ) then
 		local localizedClass, englishClass = GetPlayerInfoByGUID(GUID);
 		-- 3.3.5 compatibility: GetPlayerInfoByGUID might not work, fallback to other methods
 		if not englishClass and characterID then
@@ -296,6 +334,102 @@ local function getCharacterInfoTab(unitID)
 end
 
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+-- Name replacement in emotes and chat
+--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+local function replaceNameInEmote(message, characterID, type)
+	local characters = TRP3_API.register.getCharacterList();
+	local replacedNames = {};
+	
+	local skipSpeakerName = nil;
+	if type == "TEXT_EMOTE" and characterID and characterID ~= Globals.player_id then
+		local speakerName = unitIDToInfo(characterID);
+		if speakerName and message:sub(1, speakerName:len()) == speakerName then
+			skipSpeakerName = speakerName;
+			replacedNames[speakerName] = true;
+		end
+	end
+	
+	-- replace player target
+	if UnitExists("target") then
+		local targetName = UnitName("target");
+		if targetName and not replacedNames[targetName] then
+			local targetRPName;
+			
+			-- if targeting self
+			if UnitIsUnit("target", "player") then
+				targetRPName = TRP3_API.register.getPlayerCompleteName(true);
+
+				local playerData = TRP3_API.profile.getData("player/characteristics");
+				if configShowNameEmoteColors() and playerData and playerData.CH then
+					targetRPName = "|cff" .. playerData.CH .. targetRPName .. "|r";
+				end
+			else
+				-- target
+				local targetID = Utils.str.getUnitID("target");
+				if targetID and TRP3_API.register.profileExists(targetID) then
+					local profile = TRP3_API.register.getUnitIDProfile(targetID);
+					if profile.characteristics then
+						targetRPName = TRP3_API.register.getCompleteName(profile.characteristics, targetName, true);
+						if configShowNameEmoteColors() and profile.characteristics.CH then
+							targetRPName = "|cff" .. profile.characteristics.CH .. targetRPName .. "|r";
+						end
+					end
+				end
+			end
+			
+			if targetRPName and targetRPName ~= targetName then
+				local escapedName = targetName:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1");
+				local pattern = "%f[%w]" .. escapedName .. "%f[%W]";
+				message = message:gsub(pattern, targetRPName, 1);
+				replacedNames[targetName] = true;
+			end
+		end
+	end
+	
+	-- other characters
+	for unitID, character in pairs(characters) do
+		if unitID ~= Globals.player_id and TRP3_API.register.profileExists(unitID) then
+			local characterName = unitID;
+			
+			if characterName and not replacedNames[characterName] and message:find(characterName, 1, true) then
+				local profile = TRP3_API.register.getUnitIDProfile(unitID);
+				if profile.characteristics then
+					local rpName = TRP3_API.register.getCompleteName(profile.characteristics, characterName, true);
+					if rpName and rpName ~= characterName then
+						if configShowNameEmoteColors() and profile.characteristics.CH then
+							rpName = "|cff" .. profile.characteristics.CH .. rpName .. "|r";
+						end
+						local escapedName = characterName:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1");
+						local pattern = "%f[%w]" .. escapedName .. "%f[%W]";
+						message = message:gsub(pattern, rpName, 1);
+						replacedNames[characterName] = true;
+					end
+				end
+			end
+		end
+	end
+	
+	-- player
+	local playerName = Globals.player;
+	if playerName and not replacedNames[playerName] and message:find(playerName, 1, true) then
+		local playerRPName = TRP3_API.register.getPlayerCompleteName(true);
+		if playerRPName and playerRPName ~= playerName then
+			local playerData = TRP3_API.profile.getData("player/characteristics");
+			if configShowNameEmoteColors() and playerData and playerData.CH then
+				playerRPName = "|cff" .. playerData.CH .. playerRPName .. "|r";
+			end
+			local escapedName = playerName:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1");
+			local pattern = "%f[%w]" .. escapedName .. "%f[%W]";
+			message = message:gsub(pattern, playerRPName, 1);
+		end
+	end
+	
+	return message;
+end
+
+
+--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 -- Emote and OOC detection
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
@@ -305,6 +439,11 @@ local function detectEmoteAndOOC(type, message)
 		local color = ("|cff%.2x%.2x%.2x"):format(chatInfo.r*255, chatInfo.g*255, chatInfo.b*255);
 		message = message:gsub(configEmoteDetectionPattern(), function(content)
 			return color .. content .. "|r";
+		end);
+	end
+	if configDoChatDetection() and message:find(configChatDetectionPattern()) then
+		message = message:gsub(configChatDetectionPattern(), function(content)
+			return "|cffffffff" .. content .. "|r";  -- White color
 		end);
 	end
 	if configDoOOCDetection() and message:find(configOOCDetectionPattern()) then
@@ -412,13 +551,11 @@ function handleCharacterMessage(chatFrame, event, ...)
 		characterName = characterIcon .. " " .. characterName;
 	end
 
-	-- Custom character name color first
+	-- class colour (custom through trp3)
 	if configShowNameCustomColors() and info.characteristics and info.characteristics.CH then
 		characterColor = "|cff" .. info.characteristics.CH;
-	end
-	-- Then class color
-	if not characterColor then
-		characterColor = getCharacterClassColor(chatInfo, event, ...);
+	else
+		characterColor = getCharacterClassColor(chatInfo, event, message, characterID, language, arg4, arg5, arg6, arg7, arg8, arg9, arg10, messageID, arg12);
 	end
 	if characterColor then
 		characterName = characterColor .. characterName .. "|r";
@@ -440,6 +577,9 @@ function handleCharacterMessage(chatFrame, event, ...)
 	
 	-- Colorize emote and OOC
 	message = detectEmoteAndOOC(type, message);
+	
+	-- replace character name with trp3 names
+	message = replaceNameInEmote(message, characterID, type);
 	
 	-- Is there still something to show ?
 	if strtrim(message):len() == 0 then

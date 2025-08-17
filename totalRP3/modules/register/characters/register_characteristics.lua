@@ -67,6 +67,13 @@ getDefaultProfile().player.characteristics = {
 	CL = Globals.player_class_loc,
 	FN = Globals.player,
 	IC = TRP3_API.ui.misc.getUnitTexture(Globals.player_character.race, UnitSex("player")),
+	CH = (function()
+		local classColorTable = RAID_CLASS_COLORS[Globals.player_character.class];
+		if classColorTable then
+			return ("%02x%02x%02x"):format(classColorTable.r*255, classColorTable.g*255, classColorTable.b*255);
+		end
+		return "ffffff"; -- fallback to white
+	end)(),
 	MI = {},
 	PS = {}
 };
