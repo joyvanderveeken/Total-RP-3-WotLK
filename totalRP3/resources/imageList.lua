@@ -80,10 +80,6 @@ local IMAGES = {
 		width = 256,
 		height = 256
 	}, {
-		url = "Interface\\LFGFRAME\\LFGICON-BLADESEDGEARENA",
-		width = 256,
-		height = 256
-	}, {
 		url = "Interface\\LFGFRAME\\LFGICON-CAVERNSOFTIME",
 		width = 256,
 		height = 256
@@ -91,11 +87,7 @@ local IMAGES = {
 		url = "Interface\\LFGFRAME\\LFGICON-COILFANG",
 		width = 256,
 		height = 256
-	}, {
-		url = "Interface\\LFGFRAME\\LFGICON-DALARANSEWERS",
-		width = 256,
-		height = 256
-	}, {
+	},{
 		url = "Interface\\LFGFRAME\\LFGICON-DEADMINES",
 		width = 256,
 		height = 256
@@ -160,10 +152,6 @@ local IMAGES = {
 		width = 256,
 		height = 256
 	}, {
-		url = "Interface\\LFGFRAME\\LFGICON-NAGRANDARENA",
-		width = 256,
-		height = 256
-	}, {
 		url = "Interface\\LFGFRAME\\LFGICON-NAXXRAMAS",
 		width = 256,
 		height = 256
@@ -192,14 +180,6 @@ local IMAGES = {
 		width = 256,
 		height = 256
 	}, {
-		url = "Interface\\LFGFRAME\\LFGICON-RINGOFVALOR",
-		width = 256,
-		height = 256
-	}, {
-		url = "Interface\\LFGFRAME\\LFGICON-RUINSOFLORDAERON",
-		width = 256,
-		height = 256
-	}, {
 		url = "Interface\\LFGFRAME\\LFGICON-SCARLETMONASTERY",
 		width = 256,
 		height = 256
@@ -217,10 +197,6 @@ local IMAGES = {
 		height = 256
 	}, {
 		url = "Interface\\LFGFRAME\\LFGICON-STORMWINDSTOCKADES",
-		width = 256,
-		height = 256
-	}, {
-		url = "Interface\\LFGFRAME\\LFGICON-STRANDOFTHEANCIENTS",
 		width = 256,
 		height = 256
 	}, {
@@ -480,11 +456,6 @@ local IMAGES = {
 	},
 	{
 		url = "Interface\\Pictures\\Linken_sepia_256px",
-		width = 256,
-		height = 256
-	},
-	{
-		url = "Interface\\Pictures\\Winterspring_Memento_256",
 		width = 256,
 		height = 256
 	},

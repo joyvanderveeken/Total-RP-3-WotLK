@@ -956,25 +956,24 @@ if not SetClampedTextureRotation then
 			elseif rotation == 270 then
 				texture:SetTexCoord(1, 0, 0, 0, 1, 1, 0, 1)
 			else
-				-- Default (0 degrees)
 				texture:SetTexCoord(0, 0, 0, 1, 1, 0, 1, 1)
 			end
 		end
 	end
 end
 
--- Enhance frame methods for 3.3.5 compatibility
+-- enhance frame methods for 3.3.5 compatibility
 local function enhanceFrameMethods()
 	local frameMetatable = getmetatable(CreateFrame("Frame")).__index
 	
-	-- GetSize method
+	-- getSize
 	if not frameMetatable.GetSize then
 		frameMetatable.GetSize = function(self)
 			return self:GetWidth(), self:GetHeight()
 		end
 	end
 	
-	-- SetSize method  
+	-- setSize
 	if not frameMetatable.SetSize then
 		frameMetatable.SetSize = function(self, width, height)
 			self:SetWidth(width)

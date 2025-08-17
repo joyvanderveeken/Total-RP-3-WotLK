@@ -134,7 +134,7 @@ end
 TRP3_API.register.hasProfile = hasProfile;
 
 local function profileExists(unitID)
-	return hasProfile(unitID) and profiles[characters[unitID].profileID];
+	return isUnitIDKnown(unitID) and hasProfile(unitID) and profiles[characters[unitID].profileID];
 end
 
 TRP3_API.register.profileExists = profileExists;

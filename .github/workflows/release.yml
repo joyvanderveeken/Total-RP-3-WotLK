@@ -138,10 +138,12 @@ jobs:
         ### Installation:
         1. Download the ZIP file below
         2. Extract it to your World of Warcraft AddOns folder
-        3. Restart World of Warcraft
-        
+        3. You should have both `totalRP3` and `totalRP3_Data` folders in `AddOns`
+        4. Restart World of Warcraft
+
         ### Compatibility:
         - World of Warcraft 3.3.5 (Wrath of the Lich King)
+        - Backported specifically for Project Epoch, other versions may or may not work
         EOF
 
     - name: Create Release
