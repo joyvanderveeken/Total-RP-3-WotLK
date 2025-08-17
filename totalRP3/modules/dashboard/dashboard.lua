@@ -165,15 +165,16 @@ TRP3_API.dashboard.init = function()
 
 	local aboutText = [[{h1:c}Total RP 3.3.5{/h1}
 {p:c}{col:6eff51}Version %s (build %s){/col}{/p}
-{h2}{icon:INV_Eng_gizmo1:20} Ported by{/h2}
-- Kaemi (Joy)
+{h3}Ported by{/h3}
+- Kaemi Starshroud
 
-{h2}{icon:INV_Eng_gizmo1:20} Created by{/h2}
+
+{h3}Created by{/h3}
 - Renaud "Ellypse" Parize
 - Sylvain "Telkostrasz" Cossement
 
 
-{h2}{icon:THUMBUP:20} Acknowledgements{/h2}
+{h3}Acknowledgements{/h3}
 {col:ffffff}Our pre-alpha QA team:{/col}
 - Saelora
 - Erzan

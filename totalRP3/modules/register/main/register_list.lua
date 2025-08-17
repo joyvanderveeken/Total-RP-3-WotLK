@@ -513,7 +513,7 @@ local function createTabBar()
 	local frame = CreateFrame("Frame", "TRP3_RegisterMainTabBar", TRP3_RegisterList);
 	frame:SetSize(400, 30);
 	frame:SetPoint("TOPLEFT", 17, -5);
-	frame:SetFrameLevel(1);
+	frame:SetFrameLevel(0);
 	tabGroup = TRP3_API.ui.frame.createTabPanel(frame,
 	{
 		{loc("REG_LIST_CHAR_TITLE"), 1, 150},
