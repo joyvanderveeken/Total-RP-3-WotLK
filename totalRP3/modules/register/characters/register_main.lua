@@ -490,12 +490,20 @@ function TRP3_API.register.init()
 	local CONFIG_ENABLE_MAP_LOCATION = "register_map_location";
 	local CONFIG_DISABLE_MAP_LOCATION_ON_OOC = "register_map_location_ooc";
 	local CONFIG_DISABLE_MAP_LOCATION_ON_PVP = "register_map_location_pvp";
+	local CONFIG_DISABLE_MAP_LOCATION_ON_CROSSFACTION = "register_map_location_crossfaction";
 	local CONFIG_ENABLE_WARBORN_MODE = "register_warborn_mode";
+	local CONFIG_MAP_MARKERS_HIGH_STRATA = "register_map_markers_high_strata";
+	local CONFIG_MAP_AUTO_SCAN = "register_map_auto_scan";
+	local CONFIG_MAP_MARKER_ICON_TYPE = "register_map_marker_icon_type";
 
 	registerConfigKey(CONFIG_ENABLE_MAP_LOCATION, true);
 	registerConfigKey(CONFIG_DISABLE_MAP_LOCATION_ON_OOC, false);
 	registerConfigKey(CONFIG_DISABLE_MAP_LOCATION_ON_PVP, false);
+	registerConfigKey(CONFIG_DISABLE_MAP_LOCATION_ON_CROSSFACTION, false);
 	registerConfigKey(CONFIG_ENABLE_WARBORN_MODE, false);
+	registerConfigKey(CONFIG_MAP_MARKERS_HIGH_STRATA, false);
+	registerConfigKey(CONFIG_MAP_AUTO_SCAN, true);
+	registerConfigKey(CONFIG_MAP_MARKER_ICON_TYPE, 1); -- 1=race, 2=faction, 3=default
 
 	-- Build configuration page
 	TRP3_API.register.CONFIG_STRUCTURE = {
@@ -539,9 +547,39 @@ function TRP3_API.register.init()
 			},
 			{
 				inherit = "TRP3_ConfigCheck",
+				title = loc("CO_LOCATION_DISABLE_CROSSFACTION"),
+				help = loc("CO_LOCATION_DISABLE_CROSSFACTION_TT"),
+				configKey = CONFIG_DISABLE_MAP_LOCATION_ON_CROSSFACTION,
+			},
+			{
+				inherit = "TRP3_ConfigCheck",
 				title = loc("CO_LOCATION_WARBORN"),
 				help = loc("CO_LOCATION_WARBORN_TT"),
 				configKey = CONFIG_ENABLE_WARBORN_MODE,
+			},
+			{
+				inherit = "TRP3_ConfigCheck",
+				title = loc("CO_LOCATION_HIGH_STRATA"),
+				help = loc("CO_LOCATION_HIGH_STRATA_TT"),
+				configKey = CONFIG_MAP_MARKERS_HIGH_STRATA,
+			},
+			{
+				inherit = "TRP3_ConfigCheck",
+				title = loc("CO_LOCATION_AUTO_SCAN"),
+				help = loc("CO_LOCATION_AUTO_SCAN_TT"),
+				configKey = CONFIG_MAP_AUTO_SCAN,
+			},
+			{
+				inherit = "TRP3_ConfigDropDown",
+				widgetName = "TRP3_ConfigurationTooltip_MapMarkerIconType",
+				title = loc("CO_LOCATION_MARKER_ICON_TYPE"),
+				help = loc("CO_LOCATION_MARKER_ICON_TYPE_TT"),
+				listContent = {
+					{ loc("CO_LOCATION_MARKER_ICON_RACE"), 1 },
+					{ loc("CO_LOCATION_MARKER_ICON_FACTION"), 2 },
+					{ loc("CO_LOCATION_MARKER_ICON_DEFAULT"), 3 }
+				},
+				configKey = CONFIG_MAP_MARKER_ICON_TYPE,
 			}
 		}
 	};
@@ -611,20 +649,69 @@ function TRP3_API.register.init()
 				if newMapID == tonumber(zoneID) then
 					local x, y = GetPlayerMapPosition("player");
 					if x and y and x ~= 0 and y ~= 0 then
-						local isPVP = UnitIsPVP("player");
-						local faction = UnitFactionGroup("player");
-						
-						isPVP = isPVP and true or false;
-						
-						local factionToSend;
-						if getConfigValue(CONFIG_ENABLE_WARBORN_MODE) then
-							factionToSend = faction;
-						else
-							factionToSend = (not isPVP) and faction or nil;
+					local isPVP = UnitIsPVP("player");
+					local faction = UnitFactionGroup("player");
+					local _, race = UnitRace("player");
+					local gender = UnitSex("player");
+					
+					isPVP = isPVP and true or false;
+					
+					-- check cross-faction in trp3 directory
+					if getConfigValue(CONFIG_DISABLE_MAP_LOCATION_ON_CROSSFACTION) then
+						local senderFaction = nil;
+						if isUnitIDKnown(sender) then
+							local senderCharacter = getUnitIDCharacter(sender);
+							senderFaction = senderCharacter.faction;
 						end
+						if senderFaction and senderFaction ~= faction then
+							return;
+						end
+					end
+					
+					local factionToSend, raceToSend, genderToSend;
+					
+					-- determine scanner's faction
+					local scannerFaction = nil;
+					if isUnitIDKnown(sender) then
+						local senderCharacter = getUnitIDCharacter(sender);
+						scannerFaction = senderCharacter.faction;
+					else
+						if getConfigValue(CONFIG_DISABLE_MAP_LOCATION_ON_CROSSFACTION) then
+							scannerFaction = faction; -- Same as our faction
+						end
+					end
+					
+					local shouldSendData = false;
+					
+					if getConfigValue(CONFIG_ENABLE_WARBORN_MODE) then
+						-- warborn, send everything
+						factionToSend = faction;
+						raceToSend = race;
+						genderToSend = gender;
+						shouldSendData = true;
+					elseif not isPVP then
+						-- pvp disabled, send everything
+						factionToSend = faction;
+						raceToSend = race;
+						genderToSend = gender;
+						shouldSendData = true;
+					elseif scannerFaction and scannerFaction == faction then
+						-- pvp flagged && same faction, send data 
+						factionToSend = faction;
+						raceToSend = race;
+						genderToSend = gender;
+						shouldSendData = true;
+					else
+						-- pvp flagged && different/unknown faction: don't send data at all
+						shouldSendData = false;
+					end
+					
+					if shouldSendData then
+						-- combine flags to dodge arg limit
+						local characterData = (raceToSend or "") .. "|" .. (genderToSend or "") .. "|" .. (factionToSend or "");
 						
-						-- we only send the faction icon if we are not pvp enabled (unless Warborn mode is on)
-						broadcast.sendP2PMessage(sender, CHARACTER_SCAN_COMMAND, x, y, zoneID, Globals.addon_name_short, isPVP, factionToSend);
+						broadcast.sendP2PMessage(sender, CHARACTER_SCAN_COMMAND, x, y, zoneID, Globals.addon_name_short, isPVP, characterData);
+					end
 					end
 				end
 				-- restores the original map, issue popped up on Teldrassil (triggering a scan moved it to Darkshore, resulting in no characters found)
@@ -637,12 +724,33 @@ function TRP3_API.register.init()
 		canScan = function()
 			return locationEnabled();
 		end,
-		scanAssembler = function(saveStructure, sender, x, y, mapId, addon, isPVP, faction)
+		scanAssembler = function(saveStructure, sender, x, y, mapId, addon, isPVP, characterData)
 			if playersCanSeeEachOthers(sender) then
 				if isPVP ~= nil then
 					isPVP = (isPVP == "true");
 				else
 					isPVP = false;
+				end
+
+				-- parse characterdata (707)
+				local race, gender, faction = nil, nil, nil;
+				if characterData then
+					local parts = {};
+					local current = "";
+					for i = 1, #characterData do
+						local char = characterData:sub(i, i);
+						if char == "|" then
+							table.insert(parts, current);
+							current = "";
+						else
+							current = current .. char;
+						end
+					end
+					table.insert(parts, current);
+					
+					race = (parts[1] and parts[1] ~= "") and parts[1] or nil;
+					gender = (parts[2] and parts[2] ~= "") and tonumber(parts[2]) or nil;
+					faction = (parts[3] and parts[3] ~= "") and parts[3] or nil;
 				end
 
 				saveStructure[sender] = { 
@@ -651,6 +759,8 @@ function TRP3_API.register.init()
 					mapId = mapId, 
 					addon = addon,
 					isPVP = isPVP,
+					race = race,
+					gender = gender,
 					faction = faction
 				};
 			end
@@ -659,13 +769,25 @@ function TRP3_API.register.init()
 		end,
 		scanMarkerDecorator = function(characterID, entry, marker)
 			local line = characterID;
-			if isUnitIDKnown(characterID) and getUnitIDCurrentProfile(characterID) then
+			
+			-- player char
+			if characterID == Globals.player_id then
+				local playerData = get("player/characteristics");
+				if playerData then
+					line = TRP3_API.register.getCompleteName(playerData, characterID, true);
+					if playerData.CH then
+						line = "|cff" .. playerData.CH .. line;
+					end
+				end
+			-- other known chars
+			elseif isUnitIDKnown(characterID) and getUnitIDCurrentProfile(characterID) then
 				local profile = getUnitIDCurrentProfile(characterID);
 				line = TRP3_API.register.getCompleteName(profile.characteristics, characterID, true);
 				if profile.characteristics and profile.characteristics.CH then
 					line = "|cff" .. profile.characteristics.CH .. line;
 				end
 			end
+			
 			marker.scanLine = line;
 		end,
 		scanDuration = 2.5;

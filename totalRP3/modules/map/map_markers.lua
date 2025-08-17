@@ -33,6 +33,9 @@ local tsize = Utils.table.size;
 local getConfigValue = TRP3_API.configuration.getValue;
 
 local CONFIG_UI_ANIMATIONS = "ui_animations";
+local CONFIG_MAP_MARKERS_HIGH_STRATA = "register_map_markers_high_strata";
+local CONFIG_MAP_AUTO_SCAN = "register_map_auto_scan";
+local CONFIG_MAP_MARKER_ICON_TYPE = "register_map_marker_icon_type";
 
 local TRP3_ScanLoaderFramePercent, TRP3_ScanLoaderFrame = TRP3_ScanLoaderFramePercent, TRP3_ScanLoaderFrame;
 
@@ -88,6 +91,12 @@ local function displayMarkers(structure)
 		local marker = _G[MARKER_NAME_PREFIX .. i];
 		if not marker then
 			marker = CreateFrame("Frame", MARKER_NAME_PREFIX .. i, WorldMapButton, "TRP3_WorldMapUnit");
+			
+			-- map icon strata
+			if getConfigValue(CONFIG_MAP_MARKERS_HIGH_STRATA) then
+				marker:SetFrameStrata("HIGH");
+			end
+			
 			marker:SetScript("OnEnter", function(self)
 				WorldMapPOIFrame.allowBlobTooltip = false;
 				WorldMapTooltip:Hide();
@@ -106,6 +115,7 @@ local function displayMarkers(structure)
 				end
 				WorldMapTooltip:Show();
 			end);
+
 			marker:SetScript("OnLeave", function()
 				WorldMapPOIFrame.allowBlobTooltip = true;
 				WorldMapTooltip:Hide();
@@ -114,28 +124,39 @@ local function displayMarkers(structure)
 
 		local x = (entry.x or 0) * WorldMapDetailFrame:GetWidth();
 		local y = - (entry.y or 0) * WorldMapDetailFrame:GetHeight();
+		
 		marker:ClearAllPoints();
 		marker:SetPoint("CENTER", "WorldMapDetailFrame", "TOPLEFT", x, y);
 
 		local iconWidget = _G[marker:GetName() .. "Icon"];
+		local iconType = getConfigValue(CONFIG_MAP_MARKER_ICON_TYPE) or 1;
+		local targetRace = entry.race;
+		local targetGender = entry.gender;
 		local targetFaction = entry.faction;
 		
-		-- show faction if target broadcasts it (pvp disabled OR warborn mode)
-		if targetFaction then
-			if targetFaction == "Alliance" then
-				iconWidget:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\UI-PVP-Alliance");
-				iconWidget:SetTexCoord(0.09375, 0.5625, 0.046875, 0.578125);
-			elseif targetFaction == "Horde" then
-				iconWidget:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\UI-PVP-Horde");
-				iconWidget:SetTexCoord(0.09375, 0.53125, 0.046875, 0.5625);
-			else
-				iconWidget:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\OBJECTICONS");
-				iconWidget:SetTexCoord(0.52734375, 0.6015625, 0.09375, 0.390625);
-			end
-		else
-			-- no faction data sent = default marker
+		-- default icon
+		local function setDefaultIcon()
 			iconWidget:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\OBJECTICONS");
 			iconWidget:SetTexCoord(0.52734375, 0.6015625, 0.09375, 0.390625);
+		end
+		
+		if iconType == 1 and targetRace and targetGender then
+			local raceTexture = TRP3_API.ui.misc.getUnitTexture(targetRace, targetGender);
+
+			if raceTexture then
+				iconWidget:SetTexture("Interface\\Icons\\" .. raceTexture);
+				iconWidget:SetTexCoord(0, 1, 0, 1);
+			else
+				setDefaultIcon();
+			end
+		elseif iconType == 2 and targetFaction == "Alliance" then
+			iconWidget:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\UI-PVP-Alliance");
+			iconWidget:SetTexCoord(0.09375, 0.5625, 0.046875, 0.578125);
+		elseif iconType == 2 and targetFaction == "Horde" then
+			iconWidget:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\UI-PVP-Horde");
+			iconWidget:SetTexCoord(0.09375, 0.53125, 0.046875, 0.5625);
+		else
+			setDefaultIcon();
 		end
 
 		if structure.scanMarkerDecorator then
@@ -143,7 +164,6 @@ local function displayMarkers(structure)
 		end
 
 		if getConfigValue(CONFIG_UI_ANIMATIONS) then
-
 			local distanceX = 0.5 - entry.x;
 			local distanceY = 0.5 - entry.y;
 			local distance = math.sqrt(distanceX * distanceX + distanceY * distanceY);
@@ -153,6 +173,7 @@ local function displayMarkers(structure)
 				marker:Show();
 				marker:SetAlpha(0);
 				playAnimation(_G[marker:GetName() .. "Bounce"]);
+
 				-- Ensure the marker becomes fully visible after animation
 				after(1, function()
 					marker:SetAlpha(1);
@@ -217,22 +238,18 @@ end
 TRP3_API.map.launchScan = launchScan;
 
 local function onButtonClicked(self)
-	local structure = {};
-	for scanID, scanStructure in pairs(SCAN_STRUCTURES) do
-		if not scanStructure.canScan or scanStructure.canScan() == true then
-			tinsert(structure, { Utils.str.icon(scanStructure.buttonIcon or "Inv_misc_enggizmos_20", 25) .. " " .. (scanStructure.buttonText or scanID), scanID});
-		end
+	-- Directly launch the character scan instead of showing dropdown
+	local playerScanStructure = SCAN_STRUCTURES["playerScan"];
+	if playerScanStructure and (not playerScanStructure.canScan or playerScanStructure.canScan() == true) then
+		launchScan("playerScan");
 	end
-	if #structure == 0 then
-		tinsert(structure, {loc("MAP_BUTTON_NO_SCAN"), nil});
-	end
-	displayDropDown(self, structure, launchScan, 0, true);
 end
 
 local currentMapID;
 
 local function onWorldMapUpdate()
 	local mapID = GetCurrentMapAreaID();
+	
 	if currentMapID ~= mapID and not TRP3_WorldMapButton.doNotHide then
 		currentMapID = mapID;
 		hideAllMarkers();
@@ -245,8 +262,9 @@ TRP3_API.events.listenToEvent(TRP3_API.events.WORKFLOW_ON_LOAD, function()
 	TRP3_WorldMapButton.subtitle = "|cffff9900" .. loc("MAP_BUTTON_SUBTITLE");
 	TRP3_WorldMapButton:SetScript("OnClick", onButtonClicked);
 	-- 3.3.5 compatibility: Set font before SetText to avoid "Font not set" error
-	TRP3_ScanLoaderFrameScanning:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE");
+	TRP3_ScanLoaderFrameScanning:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE");
 	TRP3_ScanLoaderFrameScanning:SetText(loc("MAP_BUTTON_SCANNING"));
+	TRP3_ScanLoaderFrameScanning:SetTextColor(1, 0.82, 0); -- Gold color
 
 	TRP3_ScanLoaderFrame:SetScript("OnShow", function(self)
 		self.refreshTimer = 0;
@@ -258,4 +276,19 @@ TRP3_API.events.listenToEvent(TRP3_API.events.WORKFLOW_ON_LOAD, function()
 	end);
 
 	Utils.event.registerHandler("WORLD_MAP_UPDATE", onWorldMapUpdate);
+	
+	-- auto-scan functionality
+	local originalWorldMapFrameShow = WorldMapFrame.Show;
+	WorldMapFrame.Show = function(self)
+		originalWorldMapFrameShow(self);
+		
+		if getConfigValue(CONFIG_MAP_AUTO_SCAN) then
+			local playerScanStructure = SCAN_STRUCTURES["playerScan"];
+			if playerScanStructure and (not playerScanStructure.canScan or playerScanStructure.canScan() == true) then
+				after(0.5, function()
+					launchScan("playerScan");
+				end);
+			end
+		end
+	end;
 end);
