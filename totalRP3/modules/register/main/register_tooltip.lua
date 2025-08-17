@@ -83,6 +83,7 @@ local CONFIG_CHARACT_NOTIF = "tooltip_char_notif";
 local CONFIG_CHARACT_CURRENT = "tooltip_char_current";
 local CONFIG_CHARACT_OOC = "tooltip_char_ooc";
 local CONFIG_CHARACT_OOC_NAME = "tooltip_char_ooc_name";
+local CONFIG_CHARACT_HEALTHBAR = "tooltip_char_healthbar";
 local CONFIG_CHARACT_CURRENT_SIZE = "tooltip_char_current_size";
 local CONFIG_CHARACT_RELATION = "tooltip_char_relation";
 local CONFIG_CHARACT_SPACING = "tooltip_char_spacing";
@@ -91,12 +92,12 @@ local ANCHOR_TAB;
 
 -- default tooltip style
 local TOOLTIP_BACKDROP = {
-	bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
 	edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
 	tile = true,
-	tileSize = 16,
+	tileSize = 32,
 	edgeSize = 16,
-	insets = {left = 1, right = 1, top = 1, bottom = 1}
+	insets = {left = 4, right = 4, top = 4, bottom = 4}
 };
 
 local cachedElvUIEnabled = false;
@@ -159,8 +160,9 @@ local function applyTooltipStyling()
 					end
 				else
 					tooltip:SetBackdrop(TOOLTIP_BACKDROP);
-					tooltip:SetBackdropColor(0, 0, 0, 1); 
-					tooltip:SetBackdropBorderColor(1, 1, 1, 1);
+					-- default tooltip
+					tooltip:SetBackdropColor(0.1, 0.1, 0.2, 1.0);
+					tooltip:SetBackdropBorderColor(0.5, 0.5, 0.5, 1.0);
 				end
 			end
 		end
@@ -188,8 +190,9 @@ local function applyTooltipStyling()
 		for _, tooltip in ipairs(trp3Tooltips) do
 			if tooltip then
 				tooltip:SetBackdrop(TOOLTIP_BACKDROP);
-				tooltip:SetBackdropColor(0, 0, 0, 1); 
-				tooltip:SetBackdropBorderColor(1, 1, 1, 1);
+				-- default tooltip
+				tooltip:SetBackdropColor(0.1, 0.1, 0.2, 1.0);
+				tooltip:SetBackdropBorderColor(0.5, 0.5, 0.5, 1.0);
 			end
 		end
 	end
@@ -313,6 +316,10 @@ end
 
 local function showSpacing()
 	return getConfigValue(CONFIG_CHARACT_SPACING);
+end
+
+local function showHealthBar()
+	return getConfigValue(CONFIG_CHARACT_HEALTHBAR);
 end
 
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -587,9 +594,9 @@ local function writeTooltipForCharacter(targetID, originalTexts, targetType)
 		elseif UnitIsDND(targetType) then
 			rightIcons = strconcat(rightIcons, DND_ICON);
 		end
-		-- PVP icon
-		if UnitIsPVP(targetType) then -- Icone PVP
-			rightIcons = strconcat(rightIcons, PVP_ICON);
+		-- PVP icon (faction)
+		if UnitIsPVP(targetType) then
+			rightIcons = strconcat(rightIcons, getFactionIcon(targetType));
 		end
 		-- Beginner icon / volunteer icon
 		if info.character and info.character.XP == 1 then
@@ -635,7 +642,7 @@ local function writeTooltipForCharacter(targetID, originalTexts, targetType)
 			class = info.characteristics.CL;
 		end
 		lineLeft = strconcat("|cffffffff", race, " ", characterColorCode, class);
-		lineRight = strconcat("|cffffffff", loc("REG_TT_LEVEL"):format(getLevelIconOrText(targetType), getFactionIcon(targetType)));
+		lineRight = strconcat("|cffffffff", "Level ", getLevelIconOrText(targetType));
 
 		tooltipBuilder:AddDoubleLine(lineLeft, lineRight, 1, 1, 1, 1, 1, 1, getSubLineFontSize());
 	end
@@ -745,10 +752,10 @@ local function writeTooltipForCharacter(targetID, originalTexts, targetType)
 	tooltipBuilder:Build();
 
 	--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-	-- Healthbar (with ElvUI enabled)
+	-- Healthbar
 	--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-	if UnitExists(targetType) and UnitHealth(targetType) then
+	if showHealthBar() and UnitExists(targetType) and UnitHealth(targetType) then
 		local currentHP = UnitHealth(targetType);
 		local maxHP = UnitHealthMax(targetType);
 		
@@ -762,8 +769,8 @@ local function writeTooltipForCharacter(targetID, originalTexts, targetType)
 				-- background
 				ui_CharacterTT.healthBar.bg = ui_CharacterTT.healthBar:CreateTexture(nil, "BACKGROUND");
 				ui_CharacterTT.healthBar.bg:SetAllPoints();
-				ui_CharacterTT.healthBar.bg:SetTexture("Interface\\TargetingFrame\\UI-StatusBar");
-				ui_CharacterTT.healthBar.bg:SetVertexColor(0.3, 0.3, 0.3, 0.8);
+				ui_CharacterTT.healthBar.bg:SetTexture("Interface\\TargetingFrame\\UI-StatusBar"); -- Default WoW background
+				ui_CharacterTT.healthBar.bg:SetVertexColor(0.1, 0.1, 0.1, 0.8);
 				
 				-- borderframe
 				if cachedElvUIEnabled then 
@@ -805,21 +812,44 @@ local function writeTooltipForCharacter(targetID, originalTexts, targetType)
 			-- fetch elvui config
 			local E = _G.ElvUI and _G.ElvUI[1];
 			local healthBarHeight = 8;
-			local statusBarTexture = "Interface\\TargetingFrame\\UI-StatusBar";
+			local statusBarTexture = nil; -- No default texture initially
 			
-			if E then 
+			-- set elvui styling, otherwise default
+			if E and cachedElvUIEnabled then 
 				if E.media and E.media.normTex then
 					statusBarTexture = E.media.normTex;
 				end
 				if E.db and E.db.tooltip and E.db.tooltip.healthBar and E.db.tooltip.healthBar.height then
 					healthBarHeight = E.db.tooltip.healthBar.height + 2;
 				end
+			else
+				statusBarTexture = "Interface\\TargetingFrame\\UI-StatusBar";
 			end
 			
 			local hpPercent = currentHP / maxHP;
 			local r, g, b = 1, 1, 1; 
 			
-			if E and cachedElvUIEnabled then
+			-- trp3 class colour
+			local usedTRP3Color = false;
+			if targetID then
+				local characterInfo = getCharacterInfoTab(targetID);
+				if characterInfo.characteristics and characterInfo.characteristics.CH then
+					local hexColor = characterInfo.characteristics.CH;
+					-- hex to rgb
+					if hexColor and hexColor:len() == 6 then
+						local rHex = hexColor:sub(1, 2);
+						local gHex = hexColor:sub(3, 4);
+						local bHex = hexColor:sub(5, 6);
+						r = tonumber(rHex, 16) / 255;
+						g = tonumber(gHex, 16) / 255;
+						b = tonumber(bHex, 16) / 255;
+						usedTRP3Color = true;
+					end
+				end
+			end
+			
+			-- elvui colours as fallback
+			if not usedTRP3Color and E and cachedElvUIEnabled then
 				-- class colours
 				if UnitIsPlayer(targetType) then
 					local _, englishClass = UnitClass(targetType);
@@ -850,7 +880,7 @@ local function writeTooltipForCharacter(targetID, originalTexts, targetType)
 						end
 					end
 				end
-			else
+			elseif not usedTRP3Color then
 				-- fallback
 				if hpPercent > 0.5 then
 					r = (1 - hpPercent) * 2;
@@ -886,12 +916,14 @@ local function writeTooltipForCharacter(targetID, originalTexts, targetType)
 			end
 			
 			-- update healthbar
-			ui_CharacterTT.healthBar:SetStatusBarTexture(statusBarTexture);
+			if statusBarTexture then
+				ui_CharacterTT.healthBar:SetStatusBarTexture(statusBarTexture);
+			end
 			ui_CharacterTT.healthBar:SetMinMaxValues(0, maxHP);
 			ui_CharacterTT.healthBar:SetValue(currentHP);
 			ui_CharacterTT.healthBar:SetStatusBarColor(r, g, b, 1);
 		end
-	elseif ui_CharacterTT.healthBar then
+	elseif ui_CharacterTT.healthBar and (not showHealthBar() or not UnitExists(targetType) or not UnitHealth(targetType)) then
 		ui_CharacterTT.healthBar:Hide();
 	end
 end
@@ -1088,6 +1120,7 @@ local function onModuleInit()
 	registerConfigKey(CONFIG_CHARACT_CURRENT, true);
 	registerConfigKey(CONFIG_CHARACT_OOC, true);
 	registerConfigKey(CONFIG_CHARACT_OOC_NAME, false);
+	registerConfigKey(CONFIG_CHARACT_HEALTHBAR, true);
 	registerConfigKey(CONFIG_CHARACT_CURRENT_SIZE, 140);
 	registerConfigKey(CONFIG_CHARACT_RELATION, true);
 	registerConfigKey(CONFIG_CHARACT_SPACING, true);
@@ -1305,6 +1338,12 @@ local function onModuleInit()
 				max = 200,
 				step = 10,
 				integer = true,
+			},
+			{
+				inherit = "TRP3_ConfigCheck",
+				title = "Show Healthbar",
+				help = "Show a health bar in character tooltips",
+				configKey = CONFIG_CHARACT_HEALTHBAR,
 			},
 		}
 	}
