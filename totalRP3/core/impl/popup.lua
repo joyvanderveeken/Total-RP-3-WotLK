@@ -407,6 +407,29 @@ local function initColorBrowser()
 	TRP3_ColorBrowserEditBoxText:SetText("Code");
 	setTooltipForSameFrame(TRP3_ColorBrowserEditBoxHelp, "RIGHT", 0, 5, loc("BW_COLOR_CODE"), loc("BW_COLOR_CODE_TT"));
 	
+	-- class color button
+	if not TRP3_ColorBrowser.classColorButton then
+		local button = CreateFrame("Button", "TRP3_ColorBrowserClassColor", TRP3_ColorBrowser, "TRP3_CommonButton");
+		button:SetSize(120, 25);
+		button:SetPoint("RIGHT", TRP3_ColorBrowserSelect, "LEFT", -15, 0);
+		button:SetText("Class Color");
+		
+		local _, englishClass = UnitClass("player");
+		if englishClass and RAID_CLASS_COLORS[englishClass] then
+			local classColor = RAID_CLASS_COLORS[englishClass];
+			button:SetScript("OnClick", function()
+				local r, g, b = classColor.r, classColor.g, classColor.b;
+				TRP3_ColorBrowserColor:SetColorRGB(r, g, b);
+				TRP3_ColorBrowserColor:GetScript("OnColorSelect")(TRP3_ColorBrowserColor, r, g, b);
+			end);
+			setTooltipForSameFrame(button, "RIGHT", 0, 5, "Class Color", "Click to select your class color");
+		else
+			button:Disable();
+		end
+		
+		TRP3_ColorBrowser.classColorButton = button;
+	end
+	
 	TRP3_ColorBrowserEditBox:SetScript("OnEnterPressed", function(self)
 		if self:GetText():match("^%x%x%x%x%x%x$") then -- Checks that it is a 6 figures hexadecimal number
 			local r, g, b = hexaToNumber(self:GetText());
