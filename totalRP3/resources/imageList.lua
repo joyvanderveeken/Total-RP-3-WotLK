@@ -493,32 +493,6 @@ local IMAGES = {
 		width = 256,
 		height = 256
 	},
-	{
-		url = "Interface\\QuestionFrame\\answer-alliance",
-		width = 512,
-		height = 256
-	},
-	{
-		url = "Interface\\QuestionFrame\\answer-horde",
-		width = 512,
-		height = 256
-	},
-	{
-		url = "Interface\\QuestionFrame\\answer-kirintor",
-		width = 512,
-		height = 256
-	},
-	{
-		url = "Interface\\QuestionFrame\\answer-sunreaver",
-		width = 512,
-		height = 256
-	},
-	{
-		url = "Interface\\QuestionFrame\\answer-troll",
-		width = 512,
-		height = 256
-	},
-
 };
 
 local pairs, tinsert = pairs, tinsert;
