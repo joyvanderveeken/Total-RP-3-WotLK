@@ -644,8 +644,7 @@ function TRP3_API.register.init()
 			if locationEnabled() and playersCanSeeEachOthers(sender) then
 				local currentMapID = GetCurrentMapAreaID();
 				TRP3_WorldMapButton.doNotHide = true;
-				SetMapToCurrentZone();
-				local newMapID = GetCurrentMapAreaID();
+				local newMapID = currentMapID;
 				if newMapID == tonumber(zoneID) then
 					local x, y = GetPlayerMapPosition("player");
 					if x and y and x ~= 0 and y ~= 0 then
@@ -714,9 +713,12 @@ function TRP3_API.register.init()
 					end
 					end
 				end
+
 				-- restores the original map, issue popped up on Teldrassil (triggering a scan moved it to Darkshore, resulting in no characters found)
-				if currentMapID ~= newMapID then
-					SetMapByID(currentMapID);
+				if not getConfigValue(CONFIG_MAP_AUTO_SCAN) then
+					if currentMapID ~= newMapID then
+						SetMapByID(currentMapID);
+					end
 				end
 				TRP3_WorldMapButton.doNotHide = false;
 			end;

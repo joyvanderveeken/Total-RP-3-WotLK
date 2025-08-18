@@ -39,6 +39,8 @@ local CONFIG_MAP_MARKER_ICON_TYPE = "register_map_marker_icon_type";
 
 local TRP3_ScanLoaderFramePercent, TRP3_ScanLoaderFrame = TRP3_ScanLoaderFramePercent, TRP3_ScanLoaderFrame;
 
+local SetMapToCurrentZone = SetMapToCurrentZone;
+
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 -- Logic
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -211,7 +213,6 @@ local function launchScan(scanID)
 			playAnimation(TRP3_ScanLoaderGlow);
 			playAnimation(TRP3_ScanLoaderBackAnimation1);
 			playAnimation(TRP3_ScanLoaderBackAnimation2);
-			TRP3_API.ui.misc.playSoundKit(40216);
 			after(structure.scanDuration, function()
 				TRP3_WorldMapButton:Enable();
 				setupIconButton(TRP3_WorldMapButton, "INV_MISC_ENGGIZMOS_20");
@@ -222,7 +223,6 @@ local function launchScan(scanID)
 				playAnimation(TRP3_ScanLoaderBackAnimationGrow1);
 				playAnimation(TRP3_ScanLoaderBackAnimationGrow2);
 				playAnimation(TRP3_ScanFadeOut);
-				TRP3_API.ui.misc.playSoundKit(43493);
 				if getConfigValue(CONFIG_UI_ANIMATIONS) then
 					after(1, function()
 						TRP3_ScanLoaderFrame:Hide();
@@ -238,9 +238,9 @@ end
 TRP3_API.map.launchScan = launchScan;
 
 local function onButtonClicked(self)
-	-- Directly launch the character scan instead of showing dropdown
 	local playerScanStructure = SCAN_STRUCTURES["playerScan"];
 	if playerScanStructure and (not playerScanStructure.canScan or playerScanStructure.canScan() == true) then
+		SetMapToCurrentZone();
 		launchScan("playerScan");
 	end
 end
@@ -278,17 +278,35 @@ TRP3_API.events.listenToEvent(TRP3_API.events.WORKFLOW_ON_LOAD, function()
 	Utils.event.registerHandler("WORLD_MAP_UPDATE", onWorldMapUpdate);
 	
 	-- auto-scan functionality
+	local activeScanTimer = nil;
 	local originalWorldMapFrameShow = WorldMapFrame.Show;
+	local originalWorldMapFrameHide = WorldMapFrame.Hide;
+	
 	WorldMapFrame.Show = function(self)
 		originalWorldMapFrameShow(self);
 		
 		if getConfigValue(CONFIG_MAP_AUTO_SCAN) then
 			local playerScanStructure = SCAN_STRUCTURES["playerScan"];
 			if playerScanStructure and (not playerScanStructure.canScan or playerScanStructure.canScan() == true) then
-				after(0.5, function()
+				activeScanTimer = after(0.5, function()
+					activeScanTimer = nil;
 					launchScan("playerScan");
 				end);
 			end
+		end
+	end;
+	
+	-- cancel scan on world map close
+	WorldMapFrame.Hide = function(self)
+		originalWorldMapFrameHide(self);
+		
+		if activeScanTimer then
+			activeScanTimer:Cancel();
+			activeScanTimer = nil;
+		end
+		
+		if TRP3_ScanLoaderFrame and TRP3_ScanLoaderFrame:IsVisible() then
+			TRP3_ScanLoaderFrame:Hide();
 		end
 	end;
 end);
