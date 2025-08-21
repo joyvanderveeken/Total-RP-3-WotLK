@@ -503,7 +503,7 @@ function TRP3_API.register.init()
 	registerConfigKey(CONFIG_ENABLE_WARBORN_MODE, false);
 	registerConfigKey(CONFIG_MAP_MARKERS_HIGH_STRATA, false);
 	registerConfigKey(CONFIG_MAP_AUTO_SCAN, true);
-	registerConfigKey(CONFIG_MAP_MARKER_ICON_TYPE, 1); -- 1=race, 2=faction, 3=default
+	registerConfigKey(CONFIG_MAP_MARKER_ICON_TYPE, 1); -- 1=default, 2=faction, 3=race, 4=profile (default to default icons)
 
 	-- Build configuration page
 	TRP3_API.register.CONFIG_STRUCTURE = {
@@ -575,9 +575,10 @@ function TRP3_API.register.init()
 				title = loc("CO_LOCATION_MARKER_ICON_TYPE"),
 				help = loc("CO_LOCATION_MARKER_ICON_TYPE_TT"),
 				listContent = {
-					{ loc("CO_LOCATION_MARKER_ICON_RACE"), 1 },
+					{ loc("CO_LOCATION_MARKER_ICON_DEFAULT"), 1 },
 					{ loc("CO_LOCATION_MARKER_ICON_FACTION"), 2 },
-					{ loc("CO_LOCATION_MARKER_ICON_DEFAULT"), 3 }
+					{ loc("CO_LOCATION_MARKER_ICON_RACE"), 3 },
+					{ loc("CO_LOCATION_MARKER_ICON_PROFILE"), 4 }
 				},
 				configKey = CONFIG_MAP_MARKER_ICON_TYPE,
 			}
@@ -635,6 +636,7 @@ function TRP3_API.register.init()
 		id = "playerScan",
 		buttonText = "Scan for characters",
 		scan = function()
+			SetMapToCurrentZone();
 			local zoneID = GetCurrentMapAreaID();
 			broadcast.broadcast(CHARACTER_SCAN_COMMAND, zoneID);
 		end,
@@ -676,38 +678,35 @@ function TRP3_API.register.init()
 						scannerFaction = senderCharacter.faction;
 					else
 						if getConfigValue(CONFIG_DISABLE_MAP_LOCATION_ON_CROSSFACTION) then
-							scannerFaction = faction; -- Same as our faction
+							scannerFaction = faction; -- same faction
 						end
 					end
 					
 					local shouldSendData = false;
 					
-					if getConfigValue(CONFIG_ENABLE_WARBORN_MODE) then
-						-- warborn, send everything
-						factionToSend = faction;
-						raceToSend = race;
-						genderToSend = gender;
-						shouldSendData = true;
-					elseif not isPVP then
-						-- pvp disabled, send everything
-						factionToSend = faction;
-						raceToSend = race;
-						genderToSend = gender;
-						shouldSendData = true;
-					elseif scannerFaction and scannerFaction == faction then
-						-- pvp flagged && same faction, send data 
-						factionToSend = faction;
-						raceToSend = race;
-						genderToSend = gender;
+					if getConfigValue(CONFIG_ENABLE_WARBORN_MODE) or not isPVP or (scannerFaction and scannerFaction == faction) then
+						-- warborn, send everything to everyone (including opposing faction)
 						shouldSendData = true;
 					else
-						-- pvp flagged && different/unknown faction: don't send data at all
+						-- pvp flagged && different/unknown faction && warborn disabled: don't send data
 						shouldSendData = false;
 					end
 					
 					if shouldSendData then
+							-- character data
+							factionToSend = faction;
+							raceToSend = race;
+							genderToSend = gender;
+							
+							-- profile icon
+						local profileIcon = "";
+						local playerData = get("player/characteristics");
+						if playerData and playerData.IC then
+							profileIcon = playerData.IC;
+						end
+						
 						-- combine flags to dodge arg limit
-						local characterData = (raceToSend or "") .. "|" .. (genderToSend or "") .. "|" .. (factionToSend or "");
+						local characterData = (raceToSend or "") .. "|" .. (genderToSend or "") .. "|" .. (factionToSend or "") .. "|" .. profileIcon;
 						
 						broadcast.sendP2PMessage(sender, CHARACTER_SCAN_COMMAND, x, y, zoneID, Globals.addon_name_short, isPVP, characterData);
 					end
@@ -735,7 +734,7 @@ function TRP3_API.register.init()
 				end
 
 				-- parse characterdata (707)
-				local race, gender, faction = nil, nil, nil;
+				local race, gender, faction, profileIcon = nil, nil, nil, nil;
 				if characterData then
 					local parts = {};
 					local current = "";
@@ -753,6 +752,7 @@ function TRP3_API.register.init()
 					race = (parts[1] and parts[1] ~= "") and parts[1] or nil;
 					gender = (parts[2] and parts[2] ~= "") and tonumber(parts[2]) or nil;
 					faction = (parts[3] and parts[3] ~= "") and parts[3] or nil;
+					profileIcon = (parts[4] and parts[4] ~= "") and parts[4] or nil;
 				end
 
 				saveStructure[sender] = { 
@@ -763,7 +763,8 @@ function TRP3_API.register.init()
 					isPVP = isPVP,
 					race = race,
 					gender = gender,
-					faction = faction
+					faction = faction,
+					profileIcon = profileIcon
 				};
 			end
 		end,

@@ -19,34 +19,27 @@
 		limitations under the License.
 	-->
 
-<Button name="TRP3_WorldMapButton" parent="WorldMapButton" inherits="TRP3_IconButton" frameStrata="HIGH" toplevel="true" hidden="true">
+	<Button name="TRP3_WorldMapButton" parent="WorldMapButton" inherits="TRP3_SimpleIconButton" frameStrata="HIGH">
 		<Size x="40" y="40"/>
 		<Anchors>
 			<Anchor point="BOTTOMLEFT" x="10" y="10"/>
 		</Anchors>
-		<Backdrop/>  <!-- Remove default backdrop -->
-		<NormalTexture file="Interface\Buttons\UI-Quickslot2">
-			<Size x="40" y="40"/>
-			<Anchors>
-				<Anchor point="CENTER" x="0" y="0"/>
-			</Anchors>
-		</NormalTexture>
-		<PushedTexture file="Interface\Buttons\UI-Quickslot-Depress">
-			<Size x="40" y="40"/>
-			<Anchors>
-				<Anchor point="CENTER" x="0" y="0"/>
-			</Anchors>
-		</PushedTexture>
-		<HighlightTexture alphaMode="ADD" file="Interface\Buttons\ButtonHilight-Square">
-			<Size x="40" y="40"/>
-			<Anchors>
-				<Anchor point="CENTER" x="0" y="0"/>
-			</Anchors>
-		</HighlightTexture>
 		<Scripts>
 			<OnLoad>
+				self.delayTimer = 0;
 				self:RegisterEvent("WORLD_MAP_UPDATE");
 			</OnLoad>
+			<!-- <OnUpdate>
+				if not self.eventRegistered and self.delayTimer then
+					self.delayTimer = self.delayTimer + 1;
+					if self.delayTimer > 30 then Wait ~0.5 seconds (30 frames)
+						self:RegisterEvent("WORLD_MAP_UPDATE");
+						self.eventRegistered = true;
+						self.delayTimer = nil;
+						self:SetScript("OnUpdate", nil);
+					end
+				end
+			</OnUpdate> -->
 			<OnEvent>
 				if event == "WORLD_MAP_UPDATE" then
 					if WorldMapFrame:IsShown() then
@@ -71,13 +64,13 @@
 	</Button>
 
 	<Frame name="TRP3_WorldMapUnit" inherits="WorldMapRaidUnitTemplate" virtual="true">
-		<Animations>
+		<!-- <Animations>
 			<AnimationGroup name="$parentBounce" setToFinalAlpha="true">
 				<Alpha change="1" duration="0.2"/>
 				<Scale scaleX="1.5" scaleY="1.5" duration="0.2"/>
 				<Scale scaleX="0.5" scaleY="0.5" duration="0.2" startDelay="0.2"/>
 			</AnimationGroup>
-		</Animations>
+		</Animations> -->
 	</Frame>
 
 	<Frame name="TRP3_ScanLoaderFrame" parent="WorldMapButton" hidden="true">

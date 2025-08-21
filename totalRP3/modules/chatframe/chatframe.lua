@@ -578,8 +578,10 @@ function handleCharacterMessage(chatFrame, event, ...)
 	-- Colorize emote and OOC
 	message = detectEmoteAndOOC(type, message);
 	
-	-- replace character name with trp3 names
-	message = replaceNameInEmote(message, characterID, type);
+	-- replace character name with trp3 names (only for emotes and messages containing emote patterns)
+	if type == "EMOTE" or type == "TEXT_EMOTE" or (configDoEmoteDetection() and message:find(configEmoteDetectionPattern())) then
+		message = replaceNameInEmote(message, characterID, type);
+	end
 	
 	-- Is there still something to show ?
 	if strtrim(message):len() == 0 then

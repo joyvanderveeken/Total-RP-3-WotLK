@@ -98,6 +98,16 @@ local function displayMarkers(structure)
 			if getConfigValue(CONFIG_MAP_MARKERS_HIGH_STRATA) then
 				marker:SetFrameStrata("HIGH");
 			end
+
+			marker.borderBackdrop = {
+				edgeFile = "Interface\\AddOns\\totalRP3\\Resources\\UI\\ui-frame-backdrop-edge",
+				tile = true,
+				edgeSize = 5,
+				tileSize = 380,
+				insets = { left = 2, right = 2, top = 2, bottom = 2 }
+			};
+			
+			marker:SetSize(22, 22);
 			
 			marker:SetScript("OnEnter", function(self)
 				WorldMapPOIFrame.allowBlobTooltip = false;
@@ -131,10 +141,18 @@ local function displayMarkers(structure)
 		marker:SetPoint("CENTER", "WorldMapDetailFrame", "TOPLEFT", x, y);
 
 		local iconWidget = _G[marker:GetName() .. "Icon"];
+		
+		if iconWidget then
+			iconWidget:ClearAllPoints();
+			iconWidget:SetPoint("CENTER", marker, "CENTER", 0, 0);
+			iconWidget:SetSize(17, 17);
+		end
 		local iconType = getConfigValue(CONFIG_MAP_MARKER_ICON_TYPE) or 1;
 		local targetRace = entry.race;
 		local targetGender = entry.gender;
 		local targetFaction = entry.faction;
+
+		marker:SetBackdrop(nil);
 		
 		-- default icon
 		local function setDefaultIcon()
@@ -142,21 +160,25 @@ local function displayMarkers(structure)
 			iconWidget:SetTexCoord(0.52734375, 0.6015625, 0.09375, 0.390625);
 		end
 		
-		if iconType == 1 and targetRace and targetGender then
-			local raceTexture = TRP3_API.ui.misc.getUnitTexture(targetRace, targetGender);
-
-			if raceTexture then
-				iconWidget:SetTexture("Interface\\Icons\\" .. raceTexture);
-				iconWidget:SetTexCoord(0, 1, 0, 1);
-			else
-				setDefaultIcon();
-			end
-		elseif iconType == 2 and targetFaction == "Alliance" then
+		if iconType == 2 and targetFaction == "Alliance" then
 			iconWidget:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\UI-PVP-Alliance");
 			iconWidget:SetTexCoord(0.09375, 0.5625, 0.046875, 0.578125);
 		elseif iconType == 2 and targetFaction == "Horde" then
 			iconWidget:SetTexture("Interface\\AddOns\\totalRP3\\Resources\\UI\\UI-PVP-Horde");
 			iconWidget:SetTexCoord(0.09375, 0.53125, 0.046875, 0.5625);
+		elseif iconType == 3 and targetRace and targetGender then
+			local raceTexture = TRP3_API.ui.misc.getUnitTexture(targetRace, targetGender);
+			if raceTexture then
+				iconWidget:SetTexture("Interface\\Icons\\" .. raceTexture);
+				iconWidget:SetTexCoord(0.1, 0.9, 0.1, 0.9); 
+				marker:SetBackdrop(marker.borderBackdrop);
+			else
+				setDefaultIcon();
+			end
+		elseif iconType == 4 and entry.profileIcon and entry.profileIcon ~= "" then
+			iconWidget:SetTexture("Interface\\Icons\\" .. entry.profileIcon);
+			iconWidget:SetTexCoord(0.1, 0.9, 0.1, 0.9);
+			marker:SetBackdrop(marker.borderBackdrop);
 		else
 			setDefaultIcon();
 		end
@@ -238,6 +260,10 @@ end
 TRP3_API.map.launchScan = launchScan;
 
 local function onButtonClicked(self)
+	if UnitAffectingCombat("player") then
+		return;
+	end
+	
 	local playerScanStructure = SCAN_STRUCTURES["playerScan"];
 	if playerScanStructure and (not playerScanStructure.canScan or playerScanStructure.canScan() == true) then
 		SetMapToCurrentZone();
@@ -261,6 +287,7 @@ TRP3_API.events.listenToEvent(TRP3_API.events.WORKFLOW_ON_LOAD, function()
 	TRP3_WorldMapButton.title = loc("MAP_BUTTON_TITLE");
 	TRP3_WorldMapButton.subtitle = "|cffff9900" .. loc("MAP_BUTTON_SUBTITLE");
 	TRP3_WorldMapButton:SetScript("OnClick", onButtonClicked);
+	
 	-- 3.3.5 compatibility: Set font before SetText to avoid "Font not set" error
 	TRP3_ScanLoaderFrameScanning:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE");
 	TRP3_ScanLoaderFrameScanning:SetText(loc("MAP_BUTTON_SCANNING"));
@@ -277,36 +304,59 @@ TRP3_API.events.listenToEvent(TRP3_API.events.WORKFLOW_ON_LOAD, function()
 
 	Utils.event.registerHandler("WORLD_MAP_UPDATE", onWorldMapUpdate);
 	
-	-- auto-scan functionality
-	local activeScanTimer = nil;
-	local originalWorldMapFrameShow = WorldMapFrame.Show;
-	local originalWorldMapFrameHide = WorldMapFrame.Hide;
-	
-	WorldMapFrame.Show = function(self)
-		originalWorldMapFrameShow(self);
-		
-		if getConfigValue(CONFIG_MAP_AUTO_SCAN) then
-			local playerScanStructure = SCAN_STRUCTURES["playerScan"];
-			if playerScanStructure and (not playerScanStructure.canScan or playerScanStructure.canScan() == true) then
-				activeScanTimer = after(0.5, function()
-					activeScanTimer = nil;
-					launchScan("playerScan");
-				end);
-			end
-		end
-	end;
-	
-	-- cancel scan on world map close
-	WorldMapFrame.Hide = function(self)
-		originalWorldMapFrameHide(self);
-		
+	-- disable scan in combat
+	local function onCombatStart()
 		if activeScanTimer then
-			activeScanTimer:Cancel();
 			activeScanTimer = nil;
 		end
 		
 		if TRP3_ScanLoaderFrame and TRP3_ScanLoaderFrame:IsVisible() then
 			TRP3_ScanLoaderFrame:Hide();
+			TRP3_WorldMapButton:Enable();
+			setupIconButton(TRP3_WorldMapButton, "INV_MISC_ENGGIZMOS_20");
 		end
-	end;
+	end
+	
+	Utils.event.registerHandler("PLAYER_REGEN_DISABLED", onCombatStart);
+	
+	-- auto-scan functionality using event-based approach instead of function override
+	local activeScanTimer = nil;
+	local autoScanTriggered = false; -- prevent repeated auto-scans
+	
+	-- use WORLD_MAP_UPDATE event instead of overriding WorldMapFrame.Show
+	local function onMapOpenForAutoScan()
+		if not WorldMapFrame:IsVisible() then
+			if autoScanTriggered then
+				autoScanTriggered = false;
+			end
+			return;
+		end
+		
+		if autoScanTriggered then
+			return;
+		end
+		
+		-- attempt to auto-scan when not in combat
+		local inCombat = UnitAffectingCombat("player");
+		local autoScanEnabled = getConfigValue(CONFIG_MAP_AUTO_SCAN);
+		
+		if autoScanEnabled and not inCombat then
+			local playerScanStructure = SCAN_STRUCTURES["playerScan"];
+			if playerScanStructure and (not playerScanStructure.canScan or playerScanStructure.canScan() == true) then
+				autoScanTriggered = true;
+				
+				activeScanTimer = after(0.5, function()
+					activeScanTimer = nil;
+					local stillInCombat = UnitAffectingCombat("player");
+					if not stillInCombat and WorldMapFrame:IsVisible() then
+						launchScan("playerScan");
+					else
+						autoScanTriggered = false;
+					end
+				end);
+			end
+		end
+	end
+	
+	Utils.event.registerHandler("WORLD_MAP_UPDATE", onMapOpenForAutoScan);
 end);

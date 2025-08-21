@@ -609,10 +609,11 @@ Possible status:
 		CO_LOCATION_AUTO_SCAN = "Auto-scan on map open",
 		CO_LOCATION_AUTO_SCAN_TT = "Automatically scan for characters when opening the world map or changing zones. This saves you from having to manually click the scan button each time.",
 		CO_LOCATION_MARKER_ICON_TYPE = "Map marker icon type",
-		CO_LOCATION_MARKER_ICON_TYPE_TT = "Choose what type of icon to display for other players on the map: race icons show each player's specific race, faction icons show Alliance/Horde symbols, or default icons show a generic marker.",
+		CO_LOCATION_MARKER_ICON_TYPE_TT = "Choose what type of icon to display for other players on the map: race icons show each player's specific race, faction icons show Alliance/Horde symbols, profile icons show each player's custom character icon, or default icons show a generic marker.",
 		CO_LOCATION_MARKER_ICON_RACE = "Race icons",
 		CO_LOCATION_MARKER_ICON_FACTION = "Faction icons", 
 		CO_LOCATION_MARKER_ICON_DEFAULT = "Default icons",
+		CO_LOCATION_MARKER_ICON_PROFILE = "Profile icons",
 
 		--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 		-- TOOLBAR AND UI BUTTONS
