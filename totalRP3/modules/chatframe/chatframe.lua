@@ -54,6 +54,16 @@ local CONFIG_OOC = "chat_ooc";
 local CONFIG_OOC_PATTERN = "chat_ooc_pattern";
 local CONFIG_OOC_COLOR = "chat_ooc_color";
 local CONFIG_YELL_NO_EMOTE = "chat_yell_no_emote";
+local CONFIG_CHANNEL_PARTY = "chat_channel_party";
+local CONFIG_CHANNEL_PARTY_LEADER = "chat_channel_party_leader";
+local CONFIG_CHANNEL_RAID = "chat_channel_raid";
+local CONFIG_CHANNEL_RAID_LEADER = "chat_channel_raid_leader";
+local CONFIG_CHANNEL_GUILD = "chat_channel_guild";
+local CONFIG_CHANNEL_OFFICER = "chat_channel_officer";
+local CONFIG_CHANNEL_WHISPER_IN = "chat_channel_whisper_in";
+local CONFIG_CHANNEL_WHISPER_OUT = "chat_channel_whisper_out";
+local CONFIG_NAME_BRACKETS = "chat_name_brackets";
+local CONFIG_CHANNEL_REPLACEMENT = "chat_channel_replacement";
 
 local function configNoYelledEmote()
 	return getConfigValue(CONFIG_YELL_NO_EMOTE);
@@ -120,6 +130,60 @@ local function configOOCDetectionColor()
 	return getConfigValue(CONFIG_OOC_COLOR);
 end
 
+local function configChannelReplacement()
+	return getConfigValue(CONFIG_CHANNEL_REPLACEMENT);
+end
+
+local function configPartyChannelName()
+	return getConfigValue(CONFIG_CHANNEL_PARTY);
+end
+
+local function configPartyLeaderChannelName()
+	return getConfigValue(CONFIG_CHANNEL_PARTY_LEADER);
+end
+
+local function configRaidChannelName()
+	return getConfigValue(CONFIG_CHANNEL_RAID);
+end
+
+local function configRaidLeaderChannelName()
+	return getConfigValue(CONFIG_CHANNEL_RAID_LEADER);
+end
+
+local function configGuildChannelName()
+	return getConfigValue(CONFIG_CHANNEL_GUILD);
+end
+
+local function configOfficerChannelName()
+	return getConfigValue(CONFIG_CHANNEL_OFFICER);
+end
+
+local function configWhisperInChannelName()
+	return getConfigValue(CONFIG_CHANNEL_WHISPER_IN);
+end
+
+local function configWhisperOutChannelName()
+	return getConfigValue(CONFIG_CHANNEL_WHISPER_OUT);
+end
+
+local function configNameBrackets()
+	return getConfigValue(CONFIG_NAME_BRACKETS);
+end
+
+local function getNameBrackets()
+	local bracketStyle = configNameBrackets();
+	if bracketStyle == 1 then
+		return "[", "]"; 
+	elseif bracketStyle == 2 then
+		return "(", ")";
+	elseif bracketStyle == 3 then
+		return "<", ">";
+	else
+		return "", ""; 
+	end
+end
+
+
 local function createConfigPage(useWIM)
 	-- Config default value
 	registerConfigKey(CONFIG_NAME_METHOD, 3);
@@ -137,6 +201,16 @@ local function createConfigPage(useWIM)
 	registerConfigKey(CONFIG_OOC_PATTERN, "(%(.-%))");
 	registerConfigKey(CONFIG_OOC_COLOR, "aaaaaa");
 	registerConfigKey(CONFIG_YELL_NO_EMOTE, false);
+	registerConfigKey(CONFIG_CHANNEL_REPLACEMENT, false);
+	registerConfigKey(CONFIG_NAME_BRACKETS, 1);
+	registerConfigKey(CONFIG_CHANNEL_PARTY, "[Party]");
+	registerConfigKey(CONFIG_CHANNEL_PARTY_LEADER, "[Party Leader]");
+	registerConfigKey(CONFIG_CHANNEL_RAID, "[Raid]");
+	registerConfigKey(CONFIG_CHANNEL_RAID_LEADER, "[Raid Leader]");
+	registerConfigKey(CONFIG_CHANNEL_GUILD, "[Guild]");
+	registerConfigKey(CONFIG_CHANNEL_OFFICER, "[Officer]");
+	registerConfigKey(CONFIG_CHANNEL_WHISPER_IN, "whispers");
+	registerConfigKey(CONFIG_CHANNEL_WHISPER_OUT, "To");
 
 	local NAMING_METHOD_TAB = {
 		{loc("CO_CHAT_MAIN_NAMING_1"), 1},
@@ -155,6 +229,13 @@ local function createConfigPage(useWIM)
 	local OOC_PATTERNS = {
 		{"( OOC )", "(%(.-%))"},
 		{"(( OOC ))", "(%(%(.-%)%))"},
+	}
+	
+	local NAME_BRACKET_PATTERNS = {
+		{"[Name]", 1},
+		{"(Name)", 2},
+		{"<Name>", 3},
+		{"Name", 4},
 	}
 
 	-- Build configuration page
@@ -264,6 +345,66 @@ local function createConfigPage(useWIM)
 				title = loc("CO_CHAT_MAIN_OOC_COLOR"),
 				configKey = CONFIG_OOC_COLOR,
 			},
+			-- we don't reuse POSSIBLE_CHANNELS because of unnecessary complexity
+			{
+				inherit = "TRP3_ConfigH1",
+				title = "Channel Names",
+			},
+			{
+				inherit = "TRP3_ConfigCheck",
+				title = "Enable Channel Name Replacement",
+				help = "Enable custom channel names for party, guild, raid, whispers, etc.",
+				configKey = CONFIG_CHANNEL_REPLACEMENT,
+			},
+			{
+				inherit = "TRP3_ConfigDropDown",
+				widgetName = "TRP3_ConfigurationTooltip_Chat_NameBrackets",
+				title = "Name Bracket Style",
+				help = "Choose the style of brackets around player names",
+				listContent = NAME_BRACKET_PATTERNS,
+				configKey = CONFIG_NAME_BRACKETS,
+				listCancel = true,
+			},
+			{
+				inherit = "TRP3_ConfigEditBox",
+				title = "Party Channel Name",
+				configKey = CONFIG_CHANNEL_PARTY,
+			},
+			{
+				inherit = "TRP3_ConfigEditBox",
+				title = "Party Leader Channel Name",
+				configKey = CONFIG_CHANNEL_PARTY_LEADER,
+			},
+			{
+				inherit = "TRP3_ConfigEditBox",
+				title = "Raid Channel Name",
+				configKey = CONFIG_CHANNEL_RAID,
+			},
+			{
+				inherit = "TRP3_ConfigEditBox",
+				title = "Raid Leader Channel Name",
+				configKey = CONFIG_CHANNEL_RAID_LEADER,
+			},
+			{
+				inherit = "TRP3_ConfigEditBox",
+				title = "Guild Channel Name",
+				configKey = CONFIG_CHANNEL_GUILD,
+			},
+			{
+				inherit = "TRP3_ConfigEditBox",
+				title = "Officer Channel Name",
+				configKey = CONFIG_CHANNEL_OFFICER,
+			},
+			{
+				inherit = "TRP3_ConfigEditBox",
+				title = "Incoming Whisper Name",
+				configKey = CONFIG_CHANNEL_WHISPER_IN,
+			},
+			{
+				inherit = "TRP3_ConfigEditBox",
+				title = "Outgoing Whisper Name",
+				configKey = CONFIG_CHANNEL_WHISPER_OUT,
+			},
 			{
 				inherit = "TRP3_ConfigH1",
 				title = loc("CO_CHAT_USE"),
@@ -341,6 +482,17 @@ local function replaceNameInEmote(message, characterID, type)
 	local characters = TRP3_API.register.getCharacterList();
 	local replacedNames = {};
 	
+	-- no name replacement when in ""
+	local function isInsideQuotes(text, position)
+		local quoteCount = 0;
+		for i = 1, position - 1 do
+			if text:sub(i, i) == '"' then
+				quoteCount = quoteCount + 1;
+			end
+		end
+		return (quoteCount % 2) == 1;
+	end
+	
 	local skipSpeakerName = nil;
 	if type == "TEXT_EMOTE" and characterID and characterID ~= Globals.player_id then
 		local speakerName = unitIDToInfo(characterID);
@@ -381,7 +533,20 @@ local function replaceNameInEmote(message, characterID, type)
 			if targetRPName and targetRPName ~= targetName then
 				local escapedName = targetName:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1");
 				local pattern = "%f[%w]" .. escapedName .. "%f[%W]";
-				message = message:gsub(pattern, targetRPName, 1);
+				
+				local startPos = 1;
+				while true do
+					local matchStart, matchEnd = message:find(pattern, startPos);
+					if not matchStart then break; end
+					
+					if not isInsideQuotes(message, matchStart) then
+						message = message:sub(1, matchStart - 1) .. targetRPName .. message:sub(matchEnd + 1);
+						startPos = matchStart + targetRPName:len();
+						break;
+					else
+						startPos = matchEnd + 1;
+					end
+				end
 				replacedNames[targetName] = true;
 			end
 		end
@@ -402,7 +567,20 @@ local function replaceNameInEmote(message, characterID, type)
 						end
 						local escapedName = characterName:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1");
 						local pattern = "%f[%w]" .. escapedName .. "%f[%W]";
-						message = message:gsub(pattern, rpName, 1);
+						
+						local startPos = 1;
+						while true do
+							local matchStart, matchEnd = message:find(pattern, startPos);
+							if not matchStart then break; end
+							
+							if not isInsideQuotes(message, matchStart) then
+								message = message:sub(1, matchStart - 1) .. rpName .. message:sub(matchEnd + 1);
+								startPos = matchStart + rpName:len();
+								break; 
+							else
+								startPos = matchEnd + 1;
+							end
+						end
 						replacedNames[characterName] = true;
 					end
 				end
@@ -421,7 +599,20 @@ local function replaceNameInEmote(message, characterID, type)
 			end
 			local escapedName = playerName:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1");
 			local pattern = "%f[%w]" .. escapedName .. "%f[%W]";
-			message = message:gsub(pattern, playerRPName, 1);
+			
+			-- replace matches
+			local startPos = 1;
+			while true do
+				local matchStart, matchEnd = message:find(pattern, startPos);
+				if not matchStart then break; end
+				
+				if not isInsideQuotes(message, matchStart) then
+					message = message:sub(1, matchStart - 1) .. playerRPName .. message:sub(matchEnd + 1);
+					break;
+				else
+					startPos = matchEnd + 1;
+				end
+			end
 		end
 	end
 	
@@ -434,21 +625,28 @@ end
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 local function detectEmoteAndOOC(type, message)
+	local function stripColorCodes(text)
+		return text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "");
+	end
+	
 	if configDoEmoteDetection() and message:find(configEmoteDetectionPattern()) then
 		local chatInfo = ChatTypeInfo["EMOTE"];
 		local color = ("|cff%.2x%.2x%.2x"):format(chatInfo.r*255, chatInfo.g*255, chatInfo.b*255);
 		message = message:gsub(configEmoteDetectionPattern(), function(content)
-			return color .. content .. "|r";
+			local cleanContent = stripColorCodes(content);
+			return color .. cleanContent .. "|r";
 		end);
 	end
 	if configDoChatDetection() and message:find(configChatDetectionPattern()) then
 		message = message:gsub(configChatDetectionPattern(), function(content)
-			return "|cffffffff" .. content .. "|r";  -- White color
+			local cleanContent = stripColorCodes(content);
+			return "|cffffffff" .. cleanContent .. "|r";  -- White color
 		end);
 	end
 	if configDoOOCDetection() and message:find(configOOCDetectionPattern()) then
 		message = message:gsub(configOOCDetectionPattern(), function(content)
-			return "|cff" .. configOOCDetectionColor() .. content .. "|r";
+			local cleanContent = stripColorCodes(content);
+			return "|cff" .. configOOCDetectionColor() .. cleanContent .. "|r";
 		end);
 	end
 	return message;
@@ -581,6 +779,7 @@ function handleCharacterMessage(chatFrame, event, ...)
 	-- replace character name with trp3 names (only for emotes and messages containing emote patterns)
 	if type == "EMOTE" or type == "TEXT_EMOTE" or (configDoEmoteDetection() and message:find(configEmoteDetectionPattern())) then
 		message = replaceNameInEmote(message, characterID, type);
+		message = detectEmoteAndOOC(type, message);
 	end
 	
 	-- Is there still something to show ?
@@ -605,7 +804,38 @@ function handleCharacterMessage(chatFrame, event, ...)
 			nameWithoutIcon = characterName:gsub("|T.-|t ", "") or characterName;
 		end
 		nameWithoutIcon = nameWithoutIcon or characterName or "Unknown";
-		body = characterIcon .. format(_G["CHAT_"..type.."_GET"], playerLink .. "[" .. nameWithoutIcon .. "]" .. "|h")  .. languageHeader .. message;
+		
+		local leftBracket, rightBracket;
+		if configChannelReplacement() then
+			leftBracket, rightBracket = getNameBrackets();
+		else
+			leftBracket, rightBracket = "[", "]";
+		end
+		
+		-- custom channel names (only if channel replacement is enabled)
+		if configChannelReplacement() then
+			if type == "PARTY" then
+				body = characterIcon .. configPartyChannelName() .. " " .. playerLink .. leftBracket .. nameWithoutIcon .. rightBracket .. "|h: " .. languageHeader .. message;
+			elseif type == "PARTY_LEADER" then
+				body = characterIcon .. configPartyLeaderChannelName() .. " " .. playerLink .. leftBracket .. nameWithoutIcon .. rightBracket .. "|h: " .. languageHeader .. message;
+			elseif type == "RAID" then
+				body = characterIcon .. configRaidChannelName() .. " " .. playerLink .. leftBracket .. nameWithoutIcon .. rightBracket .. "|h: " .. languageHeader .. message;
+			elseif type == "RAID_LEADER" then
+				body = characterIcon .. configRaidLeaderChannelName() .. " " .. playerLink .. leftBracket .. nameWithoutIcon .. rightBracket .. "|h: " .. languageHeader .. message;
+			elseif type == "GUILD" then
+				body = characterIcon .. configGuildChannelName() .. " " .. playerLink .. leftBracket .. nameWithoutIcon .. rightBracket .. "|h: " .. languageHeader .. message;
+			elseif type == "OFFICER" then
+				body = characterIcon .. configOfficerChannelName() .. " " .. playerLink .. leftBracket .. nameWithoutIcon .. rightBracket .. "|h: " .. languageHeader .. message;
+			elseif type == "WHISPER" then
+				body = characterIcon .. playerLink .. leftBracket .. nameWithoutIcon .. rightBracket .. "|h " .. configWhisperInChannelName() .. ": " .. languageHeader .. message;
+			elseif type == "WHISPER_INFORM" then
+				body = characterIcon .. configWhisperOutChannelName() .. " " .. playerLink .. leftBracket .. nameWithoutIcon .. rightBracket .. "|h: " .. languageHeader .. message;
+			else
+				body = characterIcon .. format(_G["CHAT_"..type.."_GET"], playerLink .. leftBracket .. nameWithoutIcon .. rightBracket .. "|h") .. languageHeader .. message;
+			end
+		else
+			body = characterIcon .. format(_G["CHAT_"..type.."_GET"], playerLink .. leftBracket .. nameWithoutIcon .. rightBracket .. "|h") .. languageHeader .. message;
+		end
 	end
 
 	--Add Timestamps

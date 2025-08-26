@@ -503,7 +503,7 @@ function TRP3_API.register.init()
 	registerConfigKey(CONFIG_ENABLE_WARBORN_MODE, false);
 	registerConfigKey(CONFIG_MAP_MARKERS_HIGH_STRATA, false);
 	registerConfigKey(CONFIG_MAP_AUTO_SCAN, true);
-	registerConfigKey(CONFIG_MAP_MARKER_ICON_TYPE, 1); -- 1=default, 2=faction, 3=race, 4=profile (default to default icons)
+	registerConfigKey(CONFIG_MAP_MARKER_ICON_TYPE, 1); -- 1=race, 2=faction, 3=default, 4=profile
 
 	-- Build configuration page
 	TRP3_API.register.CONFIG_STRUCTURE = {
@@ -575,9 +575,9 @@ function TRP3_API.register.init()
 				title = loc("CO_LOCATION_MARKER_ICON_TYPE"),
 				help = loc("CO_LOCATION_MARKER_ICON_TYPE_TT"),
 				listContent = {
-					{ loc("CO_LOCATION_MARKER_ICON_DEFAULT"), 1 },
+					{ loc("CO_LOCATION_MARKER_ICON_RACE"), 1 },
 					{ loc("CO_LOCATION_MARKER_ICON_FACTION"), 2 },
-					{ loc("CO_LOCATION_MARKER_ICON_RACE"), 3 },
+					{ loc("CO_LOCATION_MARKER_ICON_DEFAULT"), 3 },
 					{ loc("CO_LOCATION_MARKER_ICON_PROFILE"), 4 }
 				},
 				configKey = CONFIG_MAP_MARKER_ICON_TYPE,
@@ -678,14 +678,23 @@ function TRP3_API.register.init()
 						scannerFaction = senderCharacter.faction;
 					else
 						if getConfigValue(CONFIG_DISABLE_MAP_LOCATION_ON_CROSSFACTION) then
-							scannerFaction = faction; -- same faction
+							scannerFaction = faction; -- Same as our faction
 						end
 					end
 					
 					local shouldSendData = false;
 					
-					if getConfigValue(CONFIG_ENABLE_WARBORN_MODE) or not isPVP or (scannerFaction and scannerFaction == faction) then
+					if getConfigValue(CONFIG_ENABLE_WARBORN_MODE) then
 						-- warborn, send everything to everyone (including opposing faction)
+						factionToSend = faction;
+						raceToSend = race;
+						genderToSend = gender;
+						shouldSendData = true;
+					elseif not isPVP or (scannerFaction and scannerFaction == faction) then
+						-- either not pvp flagged, or same faction as scanner - send everything
+						factionToSend = faction;
+						raceToSend = race;
+						genderToSend = gender;
 						shouldSendData = true;
 					else
 						-- pvp flagged && different/unknown faction && warborn disabled: don't send data
@@ -693,12 +702,7 @@ function TRP3_API.register.init()
 					end
 					
 					if shouldSendData then
-							-- character data
-							factionToSend = faction;
-							raceToSend = race;
-							genderToSend = gender;
-							
-							-- profile icon
+						-- profile icon
 						local profileIcon = "";
 						local playerData = get("player/characteristics");
 						if playerData and playerData.IC then
@@ -769,6 +773,33 @@ function TRP3_API.register.init()
 			end
 		end,
 		scanComplete = function(saveStructure)
+			-- always add player's own location to scan results (local display only)
+			local x, y = GetPlayerMapPosition("player");
+			if x and y and x ~= 0 and y ~= 0 then
+				local currentMapID = GetCurrentMapAreaID();
+				local isPVP = UnitIsPVP("player");
+				local faction = UnitFactionGroup("player");
+				local _, race = UnitRace("player");
+				local gender = UnitSex("player");
+				
+				local profileIcon = "";
+				local playerData = get("player/characteristics");
+				if playerData and playerData.IC then
+					profileIcon = playerData.IC;
+				end
+				
+				saveStructure[Globals.player_id] = {
+					x = x,
+					y = y,
+					mapId = currentMapID,
+					addon = Globals.version_display,
+					isPVP = isPVP and true or false,
+					race = race,
+					gender = gender,
+					faction = faction,
+					profileIcon = profileIcon
+				};
+			end
 		end,
 		scanMarkerDecorator = function(characterID, entry, marker)
 			local line = characterID;

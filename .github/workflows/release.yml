@@ -137,9 +137,9 @@ jobs:
         
         ### Installation:
         1. Download the ZIP file below
-        2. Extract it to your World of Warcraft AddOns folder
-        3. You should have both `totalRP3` and `totalRP3_Data` folders in `AddOns`
-        4. Restart World of Warcraft
+        2. Extract it
+        3. Move both totalRP3 and totalRP3_Data folders into your World of Warcraft AddOns folder
+        4. Reload or restart World of Warcraft
 
         ### Compatibility:
         - World of Warcraft 3.3.5 (Wrath of the Lich King)
