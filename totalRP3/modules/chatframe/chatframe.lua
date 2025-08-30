@@ -130,10 +130,6 @@ local function configOOCDetectionColor()
 	return getConfigValue(CONFIG_OOC_COLOR);
 end
 
-local function configChannelReplacement()
-	return getConfigValue(CONFIG_CHANNEL_REPLACEMENT);
-end
-
 local function configPartyChannelName()
 	return getConfigValue(CONFIG_CHANNEL_PARTY);
 end
@@ -183,6 +179,9 @@ local function getNameBrackets()
 	end
 end
 
+local function configChannelReplacement()
+	return getConfigValue(CONFIG_CHANNEL_REPLACEMENT);
+end
 
 local function createConfigPage(useWIM)
 	-- Config default value
@@ -201,8 +200,6 @@ local function createConfigPage(useWIM)
 	registerConfigKey(CONFIG_OOC_PATTERN, "(%(.-%))");
 	registerConfigKey(CONFIG_OOC_COLOR, "aaaaaa");
 	registerConfigKey(CONFIG_YELL_NO_EMOTE, false);
-	registerConfigKey(CONFIG_CHANNEL_REPLACEMENT, false);
-	registerConfigKey(CONFIG_NAME_BRACKETS, 1);
 	registerConfigKey(CONFIG_CHANNEL_PARTY, "[Party]");
 	registerConfigKey(CONFIG_CHANNEL_PARTY_LEADER, "[Party Leader]");
 	registerConfigKey(CONFIG_CHANNEL_RAID, "[Raid]");
@@ -211,6 +208,8 @@ local function createConfigPage(useWIM)
 	registerConfigKey(CONFIG_CHANNEL_OFFICER, "[Officer]");
 	registerConfigKey(CONFIG_CHANNEL_WHISPER_IN, "whispers");
 	registerConfigKey(CONFIG_CHANNEL_WHISPER_OUT, "To");
+	registerConfigKey(CONFIG_NAME_BRACKETS, 1);
+	registerConfigKey(CONFIG_CHANNEL_REPLACEMENT, false);
 
 	local NAMING_METHOD_TAB = {
 		{loc("CO_CHAT_MAIN_NAMING_1"), 1},

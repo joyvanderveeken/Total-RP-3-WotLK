@@ -147,8 +147,7 @@ end
 TRP3_API.register.getPlayerCompleteName = getPlayerCompleteName;
 
 local function refreshPsycho(psychoLine, value, traitID)
-	-- Convert value from 1-6 range to 0-20 range for StatusBar
-	local normalizedValue = math.max(0, math.min(20, (value or 10)));
+	local normalizedValue = math.max(0, math.min(10, (value or 5)));
 	
 	-- Get dynamic colors for this trait
 	local colors = nil;
@@ -168,7 +167,7 @@ local function refreshPsycho(psychoLine, value, traitID)
 		
 		-- Handle the background bar (always full, use right trait color or default red)
 		if backgroundBar then
-			backgroundBar:SetValue(20); -- Always full
+			backgroundBar:SetValue(10);
 			if colors then
 				backgroundBar:SetStatusBarColor(colors.rightColor[1], colors.rightColor[2], colors.rightColor[3], 0.8);
 			else
@@ -192,12 +191,6 @@ local function refreshPsycho(psychoLine, value, traitID)
 			-- Make sure everything is visible
 			statusBar:SetAlpha(1);
 			statusBar:Show();
-			
-			-- Debug: Print current value to see if it's working
-			-- print("StatusBar value set to:", normalizedValue, "for", psychoLine:GetName());
-		else
-			-- Debug: Print if StatusBar not found
-			-- print("StatusBar not found for", container:GetName());
 		end
 		
 		-- Position the thumb based on value (thumb is on the container)
@@ -206,7 +199,7 @@ local function refreshPsycho(psychoLine, value, traitID)
 			local containerWidth = container:GetWidth();
 			local inset = 10; -- Account for StatusBar insets (5 pixels on each side)
 			local barWidth = containerWidth - inset;
-			local fillPercent = normalizedValue / 20;
+			local fillPercent = normalizedValue / 10;
 			local thumbPos = (fillPercent - 0.5) * barWidth;
 			container.Thumb:ClearAllPoints();
 			container.Thumb:SetPoint("CENTER", container, "CENTER", thumbPos, 0);
@@ -217,7 +210,7 @@ local function refreshPsycho(psychoLine, value, traitID)
 		container:Show();
 	end
 	
-	psychoLine.VA = value;
+	psychoLine.VA = normalizedValue;
 end
 
 local function setBkg(backgroundIndex)
@@ -401,7 +394,7 @@ local function setConsultDisplay(context)
 				end
 			end
 			
-			refreshPsycho(frame, value or 10, originalID);
+			refreshPsycho(frame, value or 5, originalID);
 			frame:Show();
 			previous = frame;
 		end
@@ -493,7 +486,7 @@ local function onPsychoClick(frame, value, modif)
 	local currentValue = value or 10;
 	local newValue = currentValue + modif;
 
-	if newValue >= 0 and newValue <= 20 then
+	if newValue >= 0 and newValue <= 10 then
 		refreshPsycho(frame, newValue);
 	end
 end
@@ -591,10 +584,10 @@ local function psychoAdd(presetID)
 			LI = Globals.icons.default,
 			RT = loc("REG_PLAYER_RIGHTTRAIT"),
 			RI = Globals.icons.default,
-			VA = 10,
+			VA = 5,
 		});
 	else
-		tinsert(draftData.PS, { ID = presetID, VA = 10 });
+		tinsert(draftData.PS, { ID = presetID, VA = 5 });
 	end
 	setEditDisplay();
 end
@@ -792,14 +785,14 @@ function setEditDisplay()
 
 		local slider = _G[frame:GetName() .. "Slider"];
 		if slider then
-			slider:SetValue(psychoStructure.VA or 10);
+			slider:SetValue(psychoStructure.VA or 5);
 			slider:SetScript("OnValueChanged", function(self, value)
 				local parentFrame = self:GetParent();
 				refreshPsycho(parentFrame, value, psychoStructure.ID);
 			end);
 		end
 		
-		refreshPsycho(frame, psychoStructure.VA or 10, psychoStructure.ID);
+		refreshPsycho(frame, psychoStructure.VA or 5, psychoStructure.ID);
 		frame:Show();
 		previous = frame;
 	end
@@ -1101,27 +1094,6 @@ local function initStructures()
 end
 
 function TRP3_API.register.inits.characteristicsInit()
-	-- Migrate old personality trait values from 1-6 range to 0-20 range
-	local characteristicsData = get("player/characteristics");
-	if characteristicsData and characteristicsData.PS then
-		for _, psychoTrait in pairs(characteristicsData.PS) do
-			-- Check if value is in old range (1-6) and migrate to new range (0-20)
-			if psychoTrait.VA and psychoTrait.VA >= 1 and psychoTrait.VA <= 6 then
-				-- Convert from 1-6 range to 0-20 range
-				-- 1 -> 0, 2 -> 4, 3 -> 8, 4 -> 12, 5 -> 16, 6 -> 20
-				-- Actually, let's map it more intuitively: 1->2, 2->6, 3->10, 4->14, 5->18, 6->20
-				local oldValue = psychoTrait.VA;
-				if oldValue == 1 then psychoTrait.VA = 2;
-				elseif oldValue == 2 then psychoTrait.VA = 6;
-				elseif oldValue == 3 then psychoTrait.VA = 10;
-				elseif oldValue == 4 then psychoTrait.VA = 14;
-				elseif oldValue == 5 then psychoTrait.VA = 18;
-				elseif oldValue == 6 then psychoTrait.VA = 20;
-				end
-			end
-		end
-	end
-
 	initStructures();
 
 	-- UI

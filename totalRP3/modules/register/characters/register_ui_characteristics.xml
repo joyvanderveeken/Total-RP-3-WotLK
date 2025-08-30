@@ -105,7 +105,7 @@
 		</Backdrop>
 		<Frames>
 			<!-- background -->
-			<StatusBar name="$parentBackgroundBar" minValue="0" maxValue="20" defaultValue="20">
+			<StatusBar name="$parentBackgroundBar" minValue="0" maxValue="10" defaultValue="10">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="5" y="-5" />
 					<Anchor point="BOTTOMRIGHT" x="-5" y="5" />
@@ -115,7 +115,7 @@
 				</BarTexture>
 			</StatusBar>
 			<!-- foreground -->
-			<StatusBar name="$parentStatusBar" minValue="0" maxValue="20" defaultValue="10">
+			<StatusBar name="$parentStatusBar" minValue="0" maxValue="10" defaultValue="10">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="5" y="-5" />
 					<Anchor point="BOTTOMRIGHT" x="-5" y="5" />
@@ -241,7 +241,7 @@
 
 			<!-- customtrait edit bar -->
 			<Slider name="$parentSlider" orientation="HORIZONTAL" enableMouse="true" minValue="0"
-				maxValue="20" defaultValue="10" valueStep="1" obeyStepOnDrag="true">
+				maxValue="10" defaultValue="5" valueStep="1" obeyStepOnDrag="true">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentBar" x="-16" y="0" />
 					<Anchor point="BOTTOMRIGHT" relativeTo="$parentBar" x="16" y="0" />

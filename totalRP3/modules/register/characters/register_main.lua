@@ -702,7 +702,7 @@ function TRP3_API.register.init()
 					end
 					
 					if shouldSendData then
-						-- profile icon
+						-- get profile icon
 						local profileIcon = "";
 						local playerData = get("player/characteristics");
 						if playerData and playerData.IC then
@@ -781,7 +781,7 @@ function TRP3_API.register.init()
 				local faction = UnitFactionGroup("player");
 				local _, race = UnitRace("player");
 				local gender = UnitSex("player");
-				
+
 				local profileIcon = "";
 				local playerData = get("player/characteristics");
 				if playerData and playerData.IC then
