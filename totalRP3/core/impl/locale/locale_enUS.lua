@@ -27,7 +27,7 @@ local LOCALE_EN = {
 		--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 		
 		GEN_WELCOME_MESSAGE = "Thank you for using Total RP 3 (v %s)! Have fun !",
-		GEN_VERSION = "Version: %s (Build %s)",
+		GEN_VERSION = "Version: %s",
 		GEN_NEW_VERSION_AVAILABLE = "A new version for Total RP 3 is available.\n\n|cffff0000Your version: %s\n|c0000ff00New version: %s|r\n\n|cffff9900We strongly encourage you to stay up-to-date.|r\n\nThis message will only appear once per session and can be disabled in the settings.",
 		
 		--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

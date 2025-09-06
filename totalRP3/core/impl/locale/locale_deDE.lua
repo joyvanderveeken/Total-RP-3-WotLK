@@ -287,7 +287,7 @@ Alle Benachrichtigungen lassen sich unter |cffff9900Allgemeine Einstellungen|r e
 |cffff9900Wir empfehlen dir, immer die aktuelleste Version zu verwenden.|r
 
 Diese Meldung wird nur einmal pro Sitzung angezeigt und kann in den Einstellungen abgeschaltet werden.]=], -- Needs review
-		GEN_VERSION = "Version: %s (Build %s)",
+		GEN_VERSION = "Version: %s",
 		GEN_WELCOME_MESSAGE = "Danke, dass du Total RP 3 (v %s) verwendest! Viel Spaß!", -- Needs review
 		MM_SHOW_HIDE_MAIN = "Zeige/verstecke das Hauptfenster", -- Needs review
 		MM_SHOW_HIDE_MOVE = "Icon bewegen",

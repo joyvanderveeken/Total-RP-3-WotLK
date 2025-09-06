@@ -285,7 +285,7 @@ Todas las notificaciones se pueden configurar en la |cffff9900página de ajustes
 |cffff9900Se te recomienda para estar al día.|r
 
 Este mensaje solo se mostrará una vez por sesión y se puede desactivar en los ajustes.]=],
-		GEN_VERSION = "Versión: %s (Build %s)",
+		GEN_VERSION = "Versión: %s",
 		GEN_WELCOME_MESSAGE = "Gracias por usar Total RP 3 (v %s) ¡Diviértete!",
 		MM_SHOW_HIDE_MAIN = "Mostrar/ocultar marco principal",
 		MM_SHOW_HIDE_MOVE = "Mover botón",

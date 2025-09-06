@@ -368,16 +368,24 @@ local function setConsultDisplay(context)
 				leftText:SetTextColor(colors.leftColor[1], colors.leftColor[2], colors.leftColor[3]);
 				rightText:SetTextColor(colors.rightColor[1], colors.rightColor[2], colors.rightColor[3]);
 			elseif not originalID then
-				if psychoStructure.LC then
+				if psychoStructure.LC and psychoStructure.LC ~= "" then
 					local leftR, leftG, leftB = hexaToNumber(psychoStructure.LC);
-					leftText:SetTextColor(leftR/255, leftG/255, leftB/255);
+					if leftR and leftG and leftB then
+						leftText:SetTextColor(leftR/255, leftG/255, leftB/255);
+					else
+						leftText:SetTextColor(1.0, 0.9, 0.0); -- Default yellow if hex conversion fails
+					end
 				else
 					leftText:SetTextColor(1.0, 0.9, 0.0);
 				end
 				
-				if psychoStructure.RC then
+				if psychoStructure.RC and psychoStructure.RC ~= "" then
 					local rightR, rightG, rightB = hexaToNumber(psychoStructure.RC);
-					rightText:SetTextColor(rightR/255, rightG/255, rightB/255);
+					if rightR and rightG and rightB then
+						rightText:SetTextColor(rightR/255, rightG/255, rightB/255);
+					else
+						rightText:SetTextColor(0.6, 0.8, 1.0); -- Default blue if hex conversion fails
+					end
 				else
 					rightText:SetTextColor(0.6, 0.8, 1.0);
 				end
@@ -407,14 +415,18 @@ local function setConsultDisplay(context)
 				local leftColor = {0.2, 0.8, 0.2}; -- Default green
 				local rightColor = {0.8, 0.2, 0.2}; -- Default red
 				
-				if psychoStructure.LC then
+				if psychoStructure.LC and psychoStructure.LC ~= "" then
 					local r, g, b = hexaToNumber(psychoStructure.LC);
-					leftColor = {r/255, g/255, b/255};
+					if r and g and b then
+						leftColor = {r/255, g/255, b/255};
+					end
 				end
 				
-				if psychoStructure.RC then
+				if psychoStructure.RC and psychoStructure.RC ~= "" then
 					local r, g, b = hexaToNumber(psychoStructure.RC);
-					rightColor = {r/255, g/255, b/255};
+					if r and g and b then
+						rightColor = {r/255, g/255, b/255};
+					end
 				end
 				
 				customColors = {
@@ -801,14 +813,18 @@ function setEditDisplay()
 			local leftField = _G[frame:GetName() .. "LeftField"];
 			local rightField = _G[frame:GetName() .. "RightField"];
 			
-			if leftField and psychoStructure.LC then
+			if leftField and psychoStructure.LC and psychoStructure.LC ~= "" then
 				local leftR, leftG, leftB = hexaToNumber(psychoStructure.LC);
-				leftField:SetTextColor(leftR/255, leftG/255, leftB/255);
+				if leftR and leftG and leftB then
+					leftField:SetTextColor(leftR/255, leftG/255, leftB/255);
+				end
 			end
 			
-			if rightField and psychoStructure.RC then
+			if rightField and psychoStructure.RC and psychoStructure.RC ~= "" then
 				local rightR, rightG, rightB = hexaToNumber(psychoStructure.RC);
-				rightField:SetTextColor(rightR/255, rightG/255, rightB/255);
+				if rightR and rightG and rightB then
+					rightField:SetTextColor(rightR/255, rightG/255, rightB/255);
+				end
 			end
 
 			if frame.simpleLeftIcon then frame.simpleLeftIcon:Hide(); end
@@ -871,9 +887,9 @@ function setEditDisplay()
 					
 					local customColors = {
 						leftColor = {red/255, green/255, blue/255},
-						rightColor = psychoStructure.RC and (function() 
+						rightColor = psychoStructure.RC and psychoStructure.RC ~= "" and (function() 
 							local r, g, b = hexaToNumber(psychoStructure.RC); 
-							return {r/255, g/255, b/255}; 
+							return (r and g and b) and {r/255, g/255, b/255} or {0.8, 0.2, 0.2};
 						end)() or {0.8, 0.2, 0.2}
 					};
 					refreshPsycho(frame, psychoStructure.VA or 5, psychoStructure.ID, customColors);
@@ -893,9 +909,9 @@ function setEditDisplay()
 					end
 					
 					local customColors = {
-						leftColor = psychoStructure.LC and (function() 
+						leftColor = psychoStructure.LC and psychoStructure.LC ~= "" and (function() 
 							local r, g, b = hexaToNumber(psychoStructure.LC); 
-							return {r/255, g/255, b/255}; 
+							return (r and g and b) and {r/255, g/255, b/255} or {0.8, 0.2, 0.2};
 						end)() or {0.8, 0.2, 0.2},
 						rightColor = {red/255, green/255, blue/255}
 					};
@@ -912,19 +928,48 @@ function setEditDisplay()
 			local rightRed, rightGreen, rightBlue = 0.6, 0.8, 1.0; -- blue
 			
 			if psychoStructure.LC and psychoStructure.LC ~= "" then
-				leftRed, leftGreen, leftBlue = hexaToNumber(psychoStructure.LC);
+				local tempR, tempG, tempB = hexaToNumber(psychoStructure.LC);
+				if tempR and tempG and tempB then
+					leftRed, leftGreen, leftBlue = tempR/255, tempG/255, tempB/255;
+				else
+					psychoStructure.LC = ("%02x%02x%02x"):format(leftRed*255, leftGreen*255, leftBlue*255);
+				end
 			else
 				psychoStructure.LC = ("%02x%02x%02x"):format(leftRed*255, leftGreen*255, leftBlue*255);
 			end
 			
 			if psychoStructure.RC and psychoStructure.RC ~= "" then
-				rightRed, rightGreen, rightBlue = hexaToNumber(psychoStructure.RC);
+				local tempR, tempG, tempB = hexaToNumber(psychoStructure.RC);
+				if tempR and tempG and tempB then
+					rightRed, rightGreen, rightBlue = tempR/255, tempG/255, tempB/255;
+				else
+					psychoStructure.RC = ("%02x%02x%02x"):format(rightRed*255, rightGreen*255, rightBlue*255);
+				end
 			else
 				psychoStructure.RC = ("%02x%02x%02x"):format(rightRed*255, rightGreen*255, rightBlue*255);
 			end
 			
-			frame.leftColorButton.setColor(hexaToNumber(psychoStructure.LC));
-			frame.rightColorButton.setColor(hexaToNumber(psychoStructure.RC));
+			if psychoStructure.LC and psychoStructure.LC ~= "" then
+				local leftColorR, leftColorG, leftColorB = hexaToNumber(psychoStructure.LC);
+				if leftColorR and leftColorG and leftColorB then
+					frame.leftColorButton.setColor(leftColorR, leftColorG, leftColorB);
+				else
+					frame.leftColorButton.setColor(leftRed*255, leftGreen*255, leftBlue*255);
+				end
+			else
+				frame.leftColorButton.setColor(leftRed*255, leftGreen*255, leftBlue*255);
+			end
+			
+			if psychoStructure.RC and psychoStructure.RC ~= "" then
+				local rightColorR, rightColorG, rightColorB = hexaToNumber(psychoStructure.RC);
+				if rightColorR and rightColorG and rightColorB then
+					frame.rightColorButton.setColor(rightColorR, rightColorG, rightColorB);
+				else
+					frame.rightColorButton.setColor(rightRed*255, rightGreen*255, rightBlue*255);
+				end
+			else
+				frame.rightColorButton.setColor(rightRed*255, rightGreen*255, rightBlue*255);
+			end
 			
 			frame.leftColorButton:Show();
 			frame.rightColorButton:Show();
@@ -952,14 +997,18 @@ function setEditDisplay()
 					local leftColor = {0.2, 0.8, 0.2}; -- Default green
 					local rightColor = {0.8, 0.2, 0.2}; -- Default red
 					
-					if psychoStructure.LC then
+					if psychoStructure.LC and psychoStructure.LC ~= "" then
 						local r, g, b = hexaToNumber(psychoStructure.LC);
-						leftColor = {r/255, g/255, b/255};
+						if r and g and b then
+							leftColor = {r/255, g/255, b/255};
+						end
 					end
 					
-					if psychoStructure.RC then
+					if psychoStructure.RC and psychoStructure.RC ~= "" then
 						local r, g, b = hexaToNumber(psychoStructure.RC);
-						rightColor = {r/255, g/255, b/255};
+						if r and g and b then
+							rightColor = {r/255, g/255, b/255};
+						end
 					end
 					
 					customColors = {
@@ -976,14 +1025,18 @@ function setEditDisplay()
 			local leftColor = {0.2, 0.8, 0.2}; -- Default green
 			local rightColor = {0.8, 0.2, 0.2}; -- Default red
 			
-			if psychoStructure.LC then
+			if psychoStructure.LC and psychoStructure.LC ~= "" then
 				local r, g, b = hexaToNumber(psychoStructure.LC);
-				leftColor = {r/255, g/255, b/255};
+				if r and g and b then
+					leftColor = {r/255, g/255, b/255};
+				end
 			end
 			
-			if psychoStructure.RC then
+			if psychoStructure.RC and psychoStructure.RC ~= "" then
 				local r, g, b = hexaToNumber(psychoStructure.RC);
-				rightColor = {r/255, g/255, b/255};
+				if r and g and b then
+					rightColor = {r/255, g/255, b/255};
+				end
 			end
 			
 			customColors = {

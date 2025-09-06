@@ -164,7 +164,7 @@ TRP3_API.dashboard.init = function()
 	local whatsNewText = loc("WHATS_NEW");
 
 	local aboutText = [[{h1:c}Total RP 3.3.5{/h1}
-{p:c}{col:6eff51}Version %s (build %s){/col}{/p}
+{p:c}{col:6eff51}Version %s{/col}{/p}
 {h3}Ported by{/h3}
 - Kaemi Starshroud
 

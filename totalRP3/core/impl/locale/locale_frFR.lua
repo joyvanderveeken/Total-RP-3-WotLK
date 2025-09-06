@@ -290,7 +290,7 @@ aux autres que vous débutez dans le roleplay.]=],
 |cffff9900Nous vous recommandons fortement de garder l'addon à jour.|r
 
 Ce message ne s'affichera qu'une seule fois par session et peut être désactivé dans les paramètres.]=],
-		GEN_VERSION = "Version: %s (Build %s)",
+		GEN_VERSION = "Version: %s",
 		GEN_WELCOME_MESSAGE = "Merci d'utiliser Total RP 3 (v %s) ! Amusez-vous bien !",
 		MAP_BUTTON_NO_SCAN = "Pas de scan disponible", -- Needs review
 		MAP_BUTTON_SCANNING = "Scan en cours", -- Needs review
