@@ -265,14 +265,14 @@
 			<!-- custom trait left icon -->
 			<Button name="$parentLeftIcon" inherits="TRP3_SimpleIconButton">
 				<Anchors>
-					<Anchor point="RIGHT" relativePoint="LEFT" x="-7" y="2" relativeTo="$parentBar" />
+					<Anchor point="RIGHT" relativePoint="LEFT" x="-27" y="0" relativeTo="$parentBar" />
 				</Anchors>
 			</Button>
 
 			<!-- custom trait right icon -->
 			<Button name="$parentRightIcon" inherits="TRP3_SimpleIconButton">
 				<Anchors>
-					<Anchor point="LEFT" relativePoint="RIGHT" x="7" y="2" relativeTo="$parentBar" />
+					<Anchor point="LEFT" relativePoint="RIGHT" x="27" y="0" relativeTo="$parentBar" />
 				</Anchors>
 			</Button>
 

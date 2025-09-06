@@ -146,12 +146,14 @@ end
 
 TRP3_API.register.getPlayerCompleteName = getPlayerCompleteName;
 
-local function refreshPsycho(psychoLine, value, traitID)
+local function refreshPsycho(psychoLine, value, traitID, customColors)
 	local normalizedValue = math.max(0, math.min(10, (value or 5)));
 	
 	-- Get dynamic colors for this trait
 	local colors = nil;
-	if traitID and traitID > 0 and traitID <= #TRAIT_PRESETS then
+	if customColors and customColors.leftColor and customColors.rightColor then
+		colors = customColors;
+	elseif traitID and traitID > 0 and traitID <= #TRAIT_PRESETS then
 		colors = TRAIT_PRESETS[traitID];
 	elseif traitID and traitID == 0 then
 		colors = TRAIT_PRESETS_UNKNOWN;
@@ -193,11 +195,9 @@ local function refreshPsycho(psychoLine, value, traitID)
 			statusBar:Show();
 		end
 		
-		-- Position the thumb based on value (thumb is on the container)
 		if container.Thumb then
-			-- Calculate position within the StatusBar area (accounting for container insets)
 			local containerWidth = container:GetWidth();
-			local inset = 10; -- Account for StatusBar insets (5 pixels on each side)
+			local inset = 10;
 			local barWidth = containerWidth - inset;
 			local fillPercent = normalizedValue / 10;
 			local thumbPos = (fillPercent - 0.5) * barWidth;
@@ -205,7 +205,6 @@ local function refreshPsycho(psychoLine, value, traitID)
 			container.Thumb:SetPoint("CENTER", container, "CENTER", thumbPos, 0);
 		end
 		
-		-- Make sure container is visible
 		container:SetAlpha(1);
 		container:Show();
 	end
@@ -358,7 +357,6 @@ local function setConsultDisplay(context)
 			leftText:SetText(psychoStructure.LT or "");
 			rightText:SetText(psychoStructure.RT or "");
 			
-			-- Apply dynamic colors based on trait ID
 			local colors = nil;
 			if originalID and originalID > 0 and originalID <= #TRAIT_PRESETS then
 				colors = TRAIT_PRESETS[originalID];
@@ -369,10 +367,20 @@ local function setConsultDisplay(context)
 			if colors then
 				leftText:SetTextColor(colors.leftColor[1], colors.leftColor[2], colors.leftColor[3]);
 				rightText:SetTextColor(colors.rightColor[1], colors.rightColor[2], colors.rightColor[3]);
-			else
-				-- Fallback colors if no trait ID or colors defined
-				leftText:SetTextColor(1.0, 0.9, 0.0); -- Yellow
-				rightText:SetTextColor(0.6, 0.8, 1.0); -- Light blue
+			elseif not originalID then
+				if psychoStructure.LC then
+					local leftR, leftG, leftB = hexaToNumber(psychoStructure.LC);
+					leftText:SetTextColor(leftR/255, leftG/255, leftB/255);
+				else
+					leftText:SetTextColor(1.0, 0.9, 0.0);
+				end
+				
+				if psychoStructure.RC then
+					local rightR, rightG, rightB = hexaToNumber(psychoStructure.RC);
+					rightText:SetTextColor(rightR/255, rightG/255, rightB/255);
+				else
+					rightText:SetTextColor(0.6, 0.8, 1.0);
+				end
 			end
 			
 			-- Update icons using TRP3_SimpleIcon template
@@ -394,7 +402,28 @@ local function setConsultDisplay(context)
 				end
 			end
 			
-			refreshPsycho(frame, value or 5, originalID);
+			local customColors = nil;
+			if not originalID then
+				local leftColor = {0.2, 0.8, 0.2}; -- Default green
+				local rightColor = {0.8, 0.2, 0.2}; -- Default red
+				
+				if psychoStructure.LC then
+					local r, g, b = hexaToNumber(psychoStructure.LC);
+					leftColor = {r/255, g/255, b/255};
+				end
+				
+				if psychoStructure.RC then
+					local r, g, b = hexaToNumber(psychoStructure.RC);
+					rightColor = {r/255, g/255, b/255};
+				end
+				
+				customColors = {
+					leftColor = leftColor,
+					rightColor = rightColor
+				};
+			end
+			
+			refreshPsycho(frame, value or 5, originalID, customColors);
 			frame:Show();
 			previous = frame;
 		end
@@ -442,6 +471,16 @@ local function saveInDraft()
 				end
 				if rightIcon and rightIcon.IC then
 					psychoStructure.RI = rightIcon.IC;
+				end
+				
+				-- custom trait colours
+				local leftColorButton = _G[psychoEditCharFrame[index]:GetName() .. "LeftColor"];
+				local rightColorButton = _G[psychoEditCharFrame[index]:GetName() .. "RightColor"];
+				if leftColorButton and leftColorButton.colorR then
+					psychoStructure.LC = numberToHexa(leftColorButton.colorR, leftColorButton.colorG, leftColorButton.colorB);
+				end
+				if rightColorButton and rightColorButton.colorR then
+					psychoStructure.RC = numberToHexa(rightColorButton.colorR, rightColorButton.colorG, rightColorButton.colorB);
 				end
 			else
 				-- Don't save preset data !
@@ -716,12 +755,12 @@ function setEditDisplay()
 			if not frame.simpleLeftIcon then
 				frame.simpleLeftIcon = CreateFrame("Frame", frame:GetName() .. "SimpleLeftIcon", frame, "TRP3_SimpleIcon");
 				frame.simpleLeftIcon:SetSize(32, 32);
-				frame.simpleLeftIcon:SetPoint("RIGHT", _G[frame:GetName() .. "Bar"], "LEFT", -7, 2);
+				frame.simpleLeftIcon:SetPoint("RIGHT", _G[frame:GetName() .. "Bar"], "LEFT", -7, 0);
 			end
 			if not frame.simpleRightIcon then
 				frame.simpleRightIcon = CreateFrame("Frame", frame:GetName() .. "SimpleRightIcon", frame, "TRP3_SimpleIcon");
 				frame.simpleRightIcon:SetSize(32, 32);
-				frame.simpleRightIcon:SetPoint("LEFT", _G[frame:GetName() .. "Bar"], "RIGHT", 7, 2);
+				frame.simpleRightIcon:SetPoint("LEFT", _G[frame:GetName() .. "Bar"], "RIGHT", 7, 0);
 			end
 
 			frame.simpleLeftIcon:Show();
@@ -735,6 +774,14 @@ function setEditDisplay()
 			end
 			if rightIconTexture then
 				rightIconTexture:SetTexture("Interface\\ICONS\\" .. (preset.RI or Globals.icons.default));
+			end
+			
+			if frame.leftColorButton then frame.leftColorButton:Hide(); end
+			if frame.rightColorButton then frame.rightColorButton:Hide(); end
+			
+			local barContainer = _G[frame:GetName() .. "Bar"];
+			if barContainer then
+				barContainer:SetSize(120, 18);
 			end
 		else
 			local leftIcon = _G[frame:GetName() .. "LeftIcon"];
@@ -750,6 +797,19 @@ function setEditDisplay()
 			_G[frame:GetName() .. "RightField"]:Show();
 			_G[frame:GetName() .. "LeftField"]:SetText(psychoStructure.LT or "");
 			_G[frame:GetName() .. "RightField"]:SetText(psychoStructure.RT or "");
+			
+			local leftField = _G[frame:GetName() .. "LeftField"];
+			local rightField = _G[frame:GetName() .. "RightField"];
+			
+			if leftField and psychoStructure.LC then
+				local leftR, leftG, leftB = hexaToNumber(psychoStructure.LC);
+				leftField:SetTextColor(leftR/255, leftG/255, leftB/255);
+			end
+			
+			if rightField and psychoStructure.RC then
+				local rightR, rightG, rightB = hexaToNumber(psychoStructure.RC);
+				rightField:SetTextColor(rightR/255, rightG/255, rightB/255);
+			end
 
 			if frame.simpleLeftIcon then frame.simpleLeftIcon:Hide(); end
 			if frame.simpleRightIcon then frame.simpleRightIcon:Hide(); end
@@ -775,6 +835,105 @@ function setEditDisplay()
 			
 			refreshEditIcon(leftIcon);
 			refreshEditIcon(rightIcon);
+			
+			-- custom trait colour pickers
+			if not frame.leftColorButton then
+				local slider = _G[frame:GetName() .. "Slider"];
+				frame.leftColorButton = CreateFrame("Button", frame:GetName() .. "LeftColor", frame, "TRP3_ColorPickerButton");
+				frame.leftColorButton:SetSize(18, 18);
+				frame.leftColorButton:SetPoint("RIGHT", slider, "LEFT", 14, 0);
+
+				if slider then
+					frame.leftColorButton:SetFrameLevel(slider:GetFrameLevel() + 1);
+				end
+			end
+			
+			if not frame.rightColorButton then
+				local slider = _G[frame:GetName() .. "Slider"];
+				frame.rightColorButton = CreateFrame("Button", frame:GetName() .. "RightColor", frame, "TRP3_ColorPickerButton");
+				frame.rightColorButton:SetSize(18, 18);
+				frame.rightColorButton:SetPoint("LEFT", slider, "RIGHT", -14, 0);
+
+				if slider then
+					frame.rightColorButton:SetFrameLevel(slider:GetFrameLevel() + 1);
+				end
+			end
+			
+			local function onLeftColorSelected(red, green, blue)
+				if red and green and blue then
+					local hexa = strconcat(numberToHexa(red), numberToHexa(green), numberToHexa(blue));
+					psychoStructure.LC = hexa;
+					
+					local leftField = _G[frame:GetName() .. "LeftField"];
+					if leftField then
+						leftField:SetTextColor(red/255, green/255, blue/255);
+					end
+					
+					local customColors = {
+						leftColor = {red/255, green/255, blue/255},
+						rightColor = psychoStructure.RC and (function() 
+							local r, g, b = hexaToNumber(psychoStructure.RC); 
+							return {r/255, g/255, b/255}; 
+						end)() or {0.8, 0.2, 0.2}
+					};
+					refreshPsycho(frame, psychoStructure.VA or 5, psychoStructure.ID, customColors);
+				else
+					psychoStructure.LC = nil;
+				end
+			end
+			
+			local function onRightColorSelected(red, green, blue)
+				if red and green and blue then
+					local hexa = strconcat(numberToHexa(red), numberToHexa(green), numberToHexa(blue));
+					psychoStructure.RC = hexa;
+					
+					local rightField = _G[frame:GetName() .. "RightField"];
+					if rightField then
+						rightField:SetTextColor(red/255, green/255, blue/255);
+					end
+					
+					local customColors = {
+						leftColor = psychoStructure.LC and (function() 
+							local r, g, b = hexaToNumber(psychoStructure.LC); 
+							return {r/255, g/255, b/255}; 
+						end)() or {0.8, 0.2, 0.2},
+						rightColor = {red/255, green/255, blue/255}
+					};
+					refreshPsycho(frame, psychoStructure.VA or 5, psychoStructure.ID, customColors);
+				else
+					psychoStructure.RC = nil;
+				end
+			end
+			
+			frame.leftColorButton.onSelection = onLeftColorSelected;
+			frame.rightColorButton.onSelection = onRightColorSelected;
+			
+			local leftRed, leftGreen, leftBlue = 1.0, 0.9, 0.0; -- yellow
+			local rightRed, rightGreen, rightBlue = 0.6, 0.8, 1.0; -- blue
+			
+			if psychoStructure.LC and psychoStructure.LC ~= "" then
+				leftRed, leftGreen, leftBlue = hexaToNumber(psychoStructure.LC);
+			else
+				psychoStructure.LC = ("%02x%02x%02x"):format(leftRed*255, leftGreen*255, leftBlue*255);
+			end
+			
+			if psychoStructure.RC and psychoStructure.RC ~= "" then
+				rightRed, rightGreen, rightBlue = hexaToNumber(psychoStructure.RC);
+			else
+				psychoStructure.RC = ("%02x%02x%02x"):format(rightRed*255, rightGreen*255, rightBlue*255);
+			end
+			
+			frame.leftColorButton.setColor(hexaToNumber(psychoStructure.LC));
+			frame.rightColorButton.setColor(hexaToNumber(psychoStructure.RC));
+			
+			frame.leftColorButton:Show();
+			frame.rightColorButton:Show();
+			
+			-- custom trait bar is smaller to make room for color picker buttons
+			local barContainer = _G[frame:GetName() .. "Bar"];
+			if barContainer then
+				barContainer:SetSize(80, 18);
+			end
 		end
 
 		-- store trait index for reference
@@ -788,11 +947,52 @@ function setEditDisplay()
 			slider:SetValue(psychoStructure.VA or 5);
 			slider:SetScript("OnValueChanged", function(self, value)
 				local parentFrame = self:GetParent();
-				refreshPsycho(parentFrame, value, psychoStructure.ID);
+				local customColors = nil;
+				if not psychoStructure.ID then
+					local leftColor = {0.2, 0.8, 0.2}; -- Default green
+					local rightColor = {0.8, 0.2, 0.2}; -- Default red
+					
+					if psychoStructure.LC then
+						local r, g, b = hexaToNumber(psychoStructure.LC);
+						leftColor = {r/255, g/255, b/255};
+					end
+					
+					if psychoStructure.RC then
+						local r, g, b = hexaToNumber(psychoStructure.RC);
+						rightColor = {r/255, g/255, b/255};
+					end
+					
+					customColors = {
+						leftColor = leftColor,
+						rightColor = rightColor
+					};
+				end
+				refreshPsycho(parentFrame, value, psychoStructure.ID, customColors);
 			end);
 		end
 		
-		refreshPsycho(frame, psychoStructure.VA or 5, psychoStructure.ID);
+		local customColors = nil;
+		if not psychoStructure.ID then
+			local leftColor = {0.2, 0.8, 0.2}; -- Default green
+			local rightColor = {0.8, 0.2, 0.2}; -- Default red
+			
+			if psychoStructure.LC then
+				local r, g, b = hexaToNumber(psychoStructure.LC);
+				leftColor = {r/255, g/255, b/255};
+			end
+			
+			if psychoStructure.RC then
+				local r, g, b = hexaToNumber(psychoStructure.RC);
+				rightColor = {r/255, g/255, b/255};
+			end
+			
+			customColors = {
+				leftColor = leftColor,
+				rightColor = rightColor
+			};
+		end
+		
+		refreshPsycho(frame, psychoStructure.VA or 5, psychoStructure.ID, customColors);
 		frame:Show();
 		previous = frame;
 	end

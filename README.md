@@ -2,8 +2,6 @@
 
 Download the latest release [here](https://github.com/joyvanderveeken/Total-RP-3-WotLK/releases/latest).
 
-</div>
-
 ## Installing
 
 - download the latest release above
@@ -19,3 +17,19 @@ Download the latest release [here](https://github.com/joyvanderveeken/Total-RP-3
 ## Support / questions
 
 [Epoch Roleplay](https://discord.gg/UfWG4rT3) and look for the `addons` channel.
+
+## Licensing
+
+This project is a fork of [Total RP 3](https://github.com/Ellypse/Total-RP-3), originally licensed under the Apache License 2.0.
+
+Please contact the maintainer before including this fork in any launcher, automated repository, or commercial distribution.
+
+---
+
+### A Note from the Maintainer
+
+This fork was shaped in quiet hours, for the sake of community and immersion. It is offered in trust, not for profit. Inclusion in third-party launchers, automated repositories, or commercial bundles requires **explicit written permission** from the maintainer.
+
+Support is only provided for versions downloaded directly from this repository. If the addon is obtained through any other source—including launchers or automated repositories—please do not expect troubleshooting or updates.
+
+If you wish to collaborate, contribute, or distribute this work beyond personal use, please reach out. Respect is the first ritual.

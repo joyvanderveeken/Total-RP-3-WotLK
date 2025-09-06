@@ -158,7 +158,7 @@ TRP3_API = {
 		addon_id_length = 15,
 
 		version = 11,
-		version_display = "1.0.11",
+		version_display = "1.0.12",
 
 		player = UnitName("player"),
 		player_race_loc = race_loc,

@@ -435,6 +435,15 @@ end
 -- Utils
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
+local function getCharacterInfoTab(unitID)
+	if unitID == Globals.player_id then
+		return get("player");
+	elseif IsUnitIDKnown(unitID) then
+		return getUnitIDCurrentProfile(unitID) or {};
+	end
+	return {};
+end
+
 local function getCharacterClassColor(chatInfo, event, text, characterID, language, arg4, arg5, arg6, arg7, arg8, arg9, arg10, messageID, GUID)
 	local color;
 	local shouldUseClassColor = false;
@@ -462,15 +471,6 @@ local function getCharacterClassColor(chatInfo, event, text, characterID, langua
 			return ("|cff%.2x%.2x%.2x"):format(classColorTable.r*255, classColorTable.g*255, classColorTable.b*255);
 		end
 	end
-end
-
-local function getCharacterInfoTab(unitID)
-	if unitID == Globals.player_id then
-		return get("player");
-	elseif IsUnitIDKnown(unitID) then
-		return getUnitIDCurrentProfile(unitID) or {};
-	end
-	return {};
 end
 
 --*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

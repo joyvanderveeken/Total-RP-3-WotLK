@@ -26,7 +26,7 @@ local LOCALE_EN = {
 		-- GENERAL
 		--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 		
-		GEN_WELCOME_MESSAGE = "Thank you for using Total RP 3 (v %s) ! Have fun !",
+		GEN_WELCOME_MESSAGE = "Thank you for using Total RP 3 (v %s)! Have fun !",
 		GEN_VERSION = "Version: %s (Build %s)",
 		GEN_NEW_VERSION_AVAILABLE = "A new version for Total RP 3 is available.\n\n|cffff0000Your version: %s\n|c0000ff00New version: %s|r\n\n|cffff9900We strongly encourage you to stay up-to-date.|r\n\nThis message will only appear once per session and can be disabled in the settings.",
 		
@@ -55,6 +55,7 @@ local LOCALE_EN = {
 		REG_PLAYER_COLOR_CLASS = "Class color",
 		REG_PLAYER_COLOR_CLASS_TT = "This will also determines the name color.\n\n",
 		REG_PLAYER_COLOR_TT = "|cffffff00Click:|r Select a color\n|cffffff00Right-click:|r Discard color",
+		REG_PLAYER_COLOR_TT_CUSTOM = "Select a color for this trait side\n\n|cffffff00Click:|r Select a color\n|cffffff00Right-click:|r Reset to default",
 		REG_PLAYER_FULLTITLE = "Full title",
 		REG_PLAYER_FULLTITLE_TT = "Here you can write down your character's full title. It can either be a longer version of the Title or another title entirely.\n\nHowever, you may want to avoid repetitions, in case there's no additional info to mention.",
 		REG_PLAYER_RACE = "Race",
